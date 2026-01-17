@@ -1,0 +1,10 @@
+# Build output
+build/
+out/
+
+# xmake
+.xmake/
+xmake-requires.lock
+
+# test
+example/
