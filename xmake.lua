@@ -22,7 +22,7 @@ add_requires("libxcursor 1.2.3")
 target("ani2xcursor")
     set_kind("binary")
     add_files("src/*.cpp")
-    add_includedirs("src")
+    add_includedirs("include")
     add_packages("spdlog", "stb", "libxcursor")
     
     if is_plat("linux") then
@@ -40,6 +40,6 @@ target("ani2xcursor_test")
     add_files("src/ani_parser.cpp")
     add_files("src/ico_cur_decoder.cpp")
     
-    add_includedirs("src")
+    add_includedirs("include")
     add_packages("spdlog", "stb")
 
