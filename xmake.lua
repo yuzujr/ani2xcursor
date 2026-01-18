@@ -24,7 +24,6 @@ target("ani2xcursor")
     
     -- Source files
     add_files("src/*.cpp")
-    add_files("src/utils/*.cpp")
     
     -- Header paths
     add_includedirs("src")
@@ -47,7 +46,6 @@ target("ani2xcursor_test")
     add_files("src/riff_reader.cpp")
     add_files("src/ani_parser.cpp")
     add_files("src/ico_cur_decoder.cpp")
-    add_files("src/utils/*.cpp")
     
     add_includedirs("src")
     add_packages("spdlog", "stb")

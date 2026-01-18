@@ -5,32 +5,13 @@
 
 #include <algorithm>
 #include <cctype>
-#include <regex>
 #include <sstream>
-#include <stdexcept>
 
 namespace ani2xcursor {
 
-std::optional<std::string> InfData::get_filename(std::string_view role) const {
-    for (const auto& m : mappings) {
-        if (m.role == role) {
-            return m.filename;
-        }
-    }
-    return std::nullopt;
-}
-
-InfData InfParser::parse(const fs::path& path) {
-    spdlog::debug("Parsing INF file: {}", path.string());
-    auto content = utils::read_file_string(path);
-    return parse_string(content);
-}
-
-InfData InfParser::parse_string(std::string_view content) {
-    InfParser parser;
-    parser.parse_impl(content);
-    return std::move(parser.result_);
-}
+// ============================================================================
+// Helper Functions (anonymous namespace)
+// ============================================================================
 
 namespace {
 
@@ -64,6 +45,7 @@ std::string to_lower(std::string_view s) {
 
 // Remove quotes from a string value
 std::string unquote(std::string_view s) {
+    s = trim(s);
     if (s.size() >= 2 && s.front() == '"' && s.back() == '"') {
         s = s.substr(1, s.size() - 2);
     }
@@ -72,10 +54,148 @@ std::string unquote(std::string_view s) {
 
 } // anonymous namespace
 
-void InfParser::parse_impl(std::string_view content) {
-    // Split into sections
-    // Sections start with [SectionName]
+// ============================================================================
+// InfResult Implementation
+// ============================================================================
+
+std::optional<std::string> InfResult::get_value(std::string_view role) const {
+    for (const auto& m : mappings) {
+        if (m.role == role) {
+            return m.value;
+        }
+    }
+    return std::nullopt;
+}
+
+std::string InfResult::extract_filename(std::string_view path) {
+    // Find the last path separator (either \ or /)
+    auto last_backslash = path.rfind('\\');
+    auto last_slash = path.rfind('/');
     
+    size_t last_sep = std::string_view::npos;
+    if (last_backslash != std::string_view::npos && last_slash != std::string_view::npos) {
+        last_sep = std::max(last_backslash, last_slash);
+    } else if (last_backslash != std::string_view::npos) {
+        last_sep = last_backslash;
+    } else if (last_slash != std::string_view::npos) {
+        last_sep = last_slash;
+    }
+    
+    if (last_sep != std::string_view::npos) {
+        return std::string(path.substr(last_sep + 1));
+    }
+    
+    return std::string(path);
+}
+
+// ============================================================================
+// RegLineParser Implementation
+// ============================================================================
+
+std::string RegLineParser::parse_field(std::string_view line, size_t& pos) {
+    if (pos >= line.size()) {
+        return "";
+    }
+    
+    // Skip leading whitespace
+    while (pos < line.size() && std::isspace(static_cast<unsigned char>(line[pos]))) {
+        ++pos;
+    }
+    
+    if (pos >= line.size()) {
+        return "";
+    }
+    
+    std::string result;
+    
+    if (line[pos] == '"') {
+        // Quoted field
+        ++pos;
+        while (pos < line.size()) {
+            char c = line[pos];
+            if (c == '"') {
+                ++pos;
+                // Check for escaped quote ""
+                if (pos < line.size() && line[pos] == '"') {
+                    result += '"';
+                    ++pos;
+                } else {
+                    // End of quoted field
+                    break;
+                }
+            } else {
+                result += c;
+                ++pos;
+            }
+        }
+    } else {
+        // Unquoted field - read until comma
+        while (pos < line.size() && line[pos] != ',') {
+            result += line[pos];
+            ++pos;
+        }
+        // Trim trailing whitespace from unquoted field
+        while (!result.empty() && std::isspace(static_cast<unsigned char>(result.back()))) {
+            result.pop_back();
+        }
+    }
+    
+    // Skip past comma separator
+    while (pos < line.size() && (line[pos] == ',' || std::isspace(static_cast<unsigned char>(line[pos])))) {
+        if (line[pos] == ',') {
+            ++pos;
+            break;
+        }
+        ++pos;
+    }
+    
+    return result;
+}
+
+RegEntry RegLineParser::parse(std::string_view line) {
+    RegEntry entry;
+    size_t pos = 0;
+    
+    // Parse: ROOT,"SubKey","ValueName",Flags,"Data"
+    // or: ROOT,"SubKey","ValueName",,"Data"
+    // or: ROOT,"SubKey",,,  (just sets default value or creates key)
+    
+    entry.root = parse_field(line, pos);
+    if (entry.root.empty()) {
+        return entry; // invalid
+    }
+    
+    entry.subkey = parse_field(line, pos);
+    entry.value_name = parse_field(line, pos);
+    entry.flags = parse_field(line, pos);
+    entry.data = parse_field(line, pos);
+    
+    entry.valid = true;
+    return entry;
+}
+
+// ============================================================================
+// InfParser Implementation
+// ============================================================================
+
+InfResult InfParser::parse(const fs::path& path) {
+    spdlog::debug("Parsing INF file: {}", path.string());
+    auto content = utils::read_file_string(path);
+    return parse_string(content);
+}
+
+InfResult InfParser::parse_string(std::string_view content) {
+    InfParser parser;
+    parser.parse_impl(content);
+    return std::move(parser.result_);
+}
+
+// ----------------------------------------------------------------------------
+// Main parsing implementation
+// ----------------------------------------------------------------------------
+
+void InfParser::parse_impl(std::string_view content) {
+    // Phase 1: Split content into sections
     std::string current_section;
     std::string section_content;
     
@@ -83,9 +203,9 @@ void InfParser::parse_impl(std::string_view content) {
     std::istringstream stream{content_str};
     std::string line;
     
-    auto process_section = [&]() {
+    auto store_section = [&]() {
         if (!current_section.empty()) {
-            parse_section(current_section, section_content);
+            sections_[to_lower(current_section)] = section_content;
         }
         section_content.clear();
     };
@@ -108,7 +228,7 @@ void InfParser::parse_impl(std::string_view content) {
         
         // Check for section header
         if (trimmed.front() == '[' && trimmed.back() == ']') {
-            process_section();
+            store_section();
             current_section = std::string(trimmed.substr(1, trimmed.size() - 2));
             spdlog::debug("INF: Found section [{}]", current_section);
             continue;
@@ -118,27 +238,47 @@ void InfParser::parse_impl(std::string_view content) {
         section_content += line;
         section_content += '\n';
     }
+    store_section();
     
-    // Process last section
-    process_section();
-    
-    // Validate required data
-    if (result_.theme_name.empty()) {
-        throw std::runtime_error("INF parsing failed: SCHEME_NAME not found in [Strings] section");
+    // Phase 2: Parse [Strings] first (variables needed for expansion)
+    if (auto it = sections_.find("strings"); it != sections_.end()) {
+        parse_strings_section(it->second);
     }
     
-    spdlog::info("INF parsed: theme='{}', {} cursor mappings", 
-                 result_.theme_name, result_.mappings.size());
+    // Extract theme name and cursor dir from variables
+    if (auto it = variables_.find("scheme_name"); it != variables_.end()) {
+        result_.theme_name = it->second;
+    }
+    if (auto it = variables_.find("cur_dir"); it != variables_.end()) {
+        result_.cursor_dir = it->second;
+    }
+    
+    // Phase 3: Parse [DefaultInstall] to get CopyFiles and AddReg references
+    if (auto it = sections_.find("defaultinstall"); it != sections_.end()) {
+        parse_default_install_section(it->second);
+    }
+    
+    // Phase 4: Build final mappings from role_mappings_
+    for (const auto& [role, value] : role_mappings_) {
+        result_.mappings.push_back({role, value});
+    }
+    
+    // Log results
+    if (result_.theme_name.empty()) {
+        add_warning("SCHEME_NAME not found in [Strings] section");
+    }
+    
+    spdlog::info("INF parsed: theme='{}', {} cursor mappings, {} warnings", 
+                 result_.theme_name, result_.mappings.size(), result_.warnings.size());
+    
+    for (const auto& w : result_.warnings) {
+        spdlog::warn("INF: {}", w);
+    }
 }
 
-void InfParser::parse_section(std::string_view section_name, std::string_view content) {
-    if (iequals(section_name, "Strings")) {
-        parse_strings_section(content);
-    } else if (iequals(section_name, "Wreg")) {
-        parse_wreg_section(content);
-    }
-    // Other sections are ignored
-}
+// ----------------------------------------------------------------------------
+// [Strings] section parsing
+// ----------------------------------------------------------------------------
 
 void InfParser::parse_strings_section(std::string_view content) {
     std::string content_str{content};
@@ -155,79 +295,343 @@ void InfParser::parse_strings_section(std::string_view content) {
         variables_[lower_key] = unquote(value);
         spdlog::debug("INF [Strings]: {} = {}", lower_key, variables_[lower_key]);
     }
+}
+
+// ----------------------------------------------------------------------------
+// [DefaultInstall] section parsing
+// ----------------------------------------------------------------------------
+
+void InfParser::parse_default_install_section(std::string_view content) {
+    std::string content_str{content};
+    std::istringstream stream{content_str};
+    std::string line;
     
-    // Extract theme name and cursor dir
-    if (auto it = variables_.find("scheme_name"); it != variables_.end()) {
-        result_.theme_name = it->second;
-    }
-    if (auto it = variables_.find("cur_dir"); it != variables_.end()) {
-        result_.cursor_dir = it->second;
-    }
-    
-    // Build role->filename mappings from string variables
-    // These are the standard Windows cursor role names
-    static const std::vector<std::string> roles = {
-        "pointer", "help", "working", "busy", "precision", "text",
-        "hand", "unavailable", "vert", "horz", "dgn1", "dgn2",
-        "move", "alternate", "link", "person", "pin"
-    };
-    
-    for (const auto& role : roles) {
-        if (auto it = variables_.find(role); it != variables_.end()) {
-            result_.mappings.push_back({role, it->second});
-            spdlog::debug("INF mapping: {} -> {}", role, it->second);
+    while (std::getline(stream, line)) {
+        auto kv = parse_key_value(trim(line));
+        if (!kv) continue;
+        
+        auto& [key, value] = *kv;
+        std::string lower_key = to_lower(key);
+        
+        if (lower_key == "copyfiles") {
+            // CopyFiles = Section1, Section2, ...
+            std::istringstream sections_stream{value};
+            std::string section_name;
+            while (std::getline(sections_stream, section_name, ',')) {
+                auto trimmed_name = std::string(trim(section_name));
+                if (!trimmed_name.empty()) {
+                    parse_copy_files_section(trimmed_name);
+                }
+            }
+        } else if (lower_key == "addreg") {
+            // AddReg = Section1, Section2, ...
+            std::istringstream sections_stream{value};
+            std::string section_name;
+            while (std::getline(sections_stream, section_name, ',')) {
+                auto trimmed_name = std::string(trim(section_name));
+                if (!trimmed_name.empty()) {
+                    parse_add_reg_section(trimmed_name);
+                }
+            }
         }
     }
 }
 
-void InfParser::parse_wreg_section([[maybe_unused]] std::string_view content) {
-    // [Wreg] section contains registry entries that map cursor roles to files
-    // We can extract additional mappings from here if needed
-    // Format: HKCU,"Control Panel\Cursors",<key>,<flags>,<value>
+// ----------------------------------------------------------------------------
+// CopyFiles section parsing
+// ----------------------------------------------------------------------------
+
+void InfParser::parse_copy_files_section(const std::string& section_name) {
+    auto it = sections_.find(to_lower(section_name));
+    if (it == sections_.end()) {
+        add_warning("CopyFiles section not found: [" + section_name + "]");
+        return;
+    }
     
-    // For now, the [Strings] section already provides what we need
-    // This is here for completeness and potential future use
+    spdlog::debug("INF: Parsing CopyFiles section [{}]", section_name);
     
-    spdlog::debug("INF: Processed [Wreg] section (using [Strings] mappings)");
+    std::istringstream stream{it->second};
+    std::string line;
+    
+    while (std::getline(stream, line)) {
+        auto trimmed = trim(line);
+        if (trimmed.empty() || trimmed[0] == ';') continue;
+        
+        // Each line is a filename (possibly quoted)
+        std::string filename = unquote(trimmed);
+        if (!filename.empty()) {
+            result_.files_to_copy.push_back(filename);
+            spdlog::debug("INF CopyFiles: {}", filename);
+        }
+    }
 }
 
-std::string InfParser::resolve_vars(std::string_view input) const {
-    std::string result(input);
+// ----------------------------------------------------------------------------
+// AddReg section parsing
+// ----------------------------------------------------------------------------
+
+void InfParser::parse_add_reg_section(const std::string& section_name) {
+    auto it = sections_.find(to_lower(section_name));
+    if (it == sections_.end()) {
+        add_warning("AddReg section not found: [" + section_name + "]");
+        return;
+    }
     
-    // Replace %VAR% patterns with their values
-    std::regex var_pattern(R"(%([^%]+)%)");
-    std::string output;
+    spdlog::debug("INF: Parsing AddReg section [{}]", section_name);
     
-    std::string input_str(input);
-    std::sregex_iterator it(input_str.begin(), input_str.end(), var_pattern);
-    std::sregex_iterator end;
+    std::istringstream stream{it->second};
+    std::string line;
     
-    size_t last_pos = 0;
-    for (; it != end; ++it) {
-        const auto& match = *it;
-        output += input_str.substr(last_pos, match.position() - last_pos);
+    while (std::getline(stream, line)) {
+        auto trimmed = trim(line);
+        if (trimmed.empty() || trimmed[0] == ';') continue;
         
-        std::string var_name = to_lower(match[1].str());
-        if (auto vit = variables_.find(var_name); vit != variables_.end()) {
-            output += vit->second;
+        RegEntry entry = RegLineParser::parse(trimmed);
+        if (!entry.valid) {
+            add_warning("Failed to parse reg line: " + std::string(trimmed));
+            continue;
+        }
+        
+        // Only process HKCU entries for cursor configuration
+        if (!iequals(entry.root, "HKCU")) {
+            continue;
+        }
+        
+        // Check subkey to determine entry type
+        std::string lower_subkey = to_lower(entry.subkey);
+        
+        if (lower_subkey == "control panel\\cursors\\schemes") {
+            // Scheme.Reg style: comma-separated cursor paths
+            process_scheme_reg_entry(entry);
+        } else if (lower_subkey == "control panel\\cursors") {
+            // Wreg style: individual cursor key mapping
+            process_cursor_reg_entry(entry);
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Registry entry processing
+// ----------------------------------------------------------------------------
+
+void InfParser::process_cursor_reg_entry(const RegEntry& entry) {
+    // Individual cursor mapping: value_name is the Windows cursor key
+    // data is the path (may contain %VAR%)
+    
+    if (entry.value_name.empty()) {
+        // Default value - often contains scheme name, can be used to set theme name
+        if (!entry.data.empty() && result_.theme_name.empty()) {
+            result_.theme_name = expand_vars(entry.data);
+        }
+        return;
+    }
+    
+    // Map Windows cursor key to internal role
+    auto role = win_key_to_role(entry.value_name);
+    if (!role) {
+        // Unknown cursor key - log but don't fail
+        spdlog::debug("INF: Unknown cursor key '{}', skipping", entry.value_name);
+        return;
+    }
+    
+    // Expand variables in the path
+    std::string expanded_path = expand_vars(entry.data);
+    
+    // Add mapping with high priority (Wreg overrides Scheme)
+    add_mapping(*role, expanded_path, true);
+    
+    spdlog::debug("INF Wreg: {} ({}) -> {}", entry.value_name, *role, expanded_path);
+}
+
+void InfParser::process_scheme_reg_entry(const RegEntry& entry) {
+    // Scheme entry: data is a comma-separated list of cursor paths
+    // value_name is usually the scheme name
+    
+    if (entry.data.empty()) {
+        return;
+    }
+    
+    // Update theme name if we found it in scheme
+    if (!entry.value_name.empty()) {
+        std::string scheme_name = expand_vars(entry.value_name);
+        if (result_.theme_name.empty()) {
+            result_.theme_name = scheme_name;
+        }
+    }
+    
+    // Parse the scheme string
+    parse_scheme_string(entry.data);
+}
+
+// ----------------------------------------------------------------------------
+// Scheme string parsing
+// ----------------------------------------------------------------------------
+
+void InfParser::parse_scheme_string(std::string_view scheme_data) {
+    // Split by comma, map to roles by position
+    std::vector<std::string> paths;
+    
+    std::string current;
+    
+    for (size_t i = 0; i < scheme_data.size(); ++i) {
+        char c = scheme_data[i];
+        
+        if (c == ',') {
+            paths.push_back(current);
+            current.clear();
         } else {
-            // Keep original if variable not found
-            output += match.str();
-            spdlog::warn("INF: Unresolved variable %{}%", var_name);
+            current += c;
         }
-        
-        last_pos = match.position() + match.length();
     }
     
-    output += input_str.substr(last_pos);
-    return output;
+    // Don't forget the last item
+    if (!current.empty()) {
+        paths.push_back(current);
+    }
+    
+    // Map to roles by slot position
+    for (size_t i = 0; i < paths.size() && i < kSchemeSlotCount; ++i) {
+        std::string path = std::string(trim(paths[i]));
+        if (path.empty()) continue;
+        
+        // Expand variables
+        std::string expanded = expand_vars(path);
+        
+        // Add with low priority (Wreg takes precedence)
+        add_mapping(kSchemeSlots[i], expanded, false);
+        
+        spdlog::debug("INF Scheme[{}]: {} -> {}", i, kSchemeSlots[i], expanded);
+    }
+    
+    if (paths.size() > kSchemeSlotCount) {
+        add_warning("Scheme string has more entries (" + std::to_string(paths.size()) + 
+                   ") than expected slots (" + std::to_string(kSchemeSlotCount) + ")");
+    }
 }
+
+// ----------------------------------------------------------------------------
+// Variable expansion
+// ----------------------------------------------------------------------------
+
+std::string InfParser::expand_vars(std::string_view input) const {
+    std::string result{input};
+    
+    // Maximum iterations to prevent infinite loops from circular references
+    constexpr int kMaxIterations = 5;
+    
+    for (int iter = 0; iter < kMaxIterations; ++iter) {
+        bool found_var = false;
+        std::string output;
+        size_t i = 0;
+        
+        while (i < result.size()) {
+            // Look for %
+            size_t start = result.find('%', i);
+            if (start == std::string::npos) {
+                output += result.substr(i);
+                break;
+            }
+            
+            // Copy everything before %
+            output += result.substr(i, start - i);
+            
+            // Find closing %
+            size_t end = result.find('%', start + 1);
+            if (end == std::string::npos) {
+                // No closing %, copy rest and done
+                output += result.substr(start);
+                break;
+            }
+            
+            // Extract variable name
+            std::string var_name = to_lower(result.substr(start + 1, end - start - 1));
+            
+            // Special handling for %10% (Windows directory ID)
+            // We preserve it as-is for the caller to handle
+            if (var_name == "10") {
+                output += "%10%";
+                i = end + 1;
+                continue;
+            }
+            
+            // Look up variable
+            if (auto it = variables_.find(var_name); it != variables_.end()) {
+                output += it->second;
+                found_var = true;
+            } else {
+                // Variable not found - preserve original and warn
+                output += result.substr(start, end - start + 1);
+                // Only warn on first iteration to avoid duplicate warnings
+                if (iter == 0) {
+                    const_cast<InfParser*>(this)->add_warning(
+                        "Unresolved variable: %" + var_name + "%");
+                }
+            }
+            
+            i = end + 1;
+        }
+        
+        result = std::move(output);
+        
+        // If no variables were expanded, we're done
+        if (!found_var) {
+            break;
+        }
+    }
+    
+    return result;
+}
+
+// ----------------------------------------------------------------------------
+// Helper: Windows cursor key to internal role mapping
+// ----------------------------------------------------------------------------
+
+std::optional<std::string> InfParser::win_key_to_role(std::string_view win_key) {
+    std::string lower_key = to_lower(win_key);
+    
+    for (const auto& mapping : kWinCursorKeyTable) {
+        if (to_lower(mapping.win_key) == lower_key) {
+            return std::string(mapping.role);
+        }
+    }
+    
+    return std::nullopt;
+}
+
+// ----------------------------------------------------------------------------
+// Helper: Add mapping with priority handling
+// ----------------------------------------------------------------------------
+
+void InfParser::add_mapping(const std::string& role, const std::string& value, bool high_priority) {
+    auto it = role_mappings_.find(role);
+    
+    if (it == role_mappings_.end()) {
+        // New mapping
+        role_mappings_[role] = value;
+        role_from_wreg_[role] = high_priority;
+    } else if (high_priority && !role_from_wreg_[role]) {
+        // High priority (Wreg) overrides low priority (Scheme)
+        role_mappings_[role] = value;
+        role_from_wreg_[role] = true;
+        spdlog::debug("INF: Wreg overrides Scheme for role '{}'", role);
+    }
+    // Otherwise, keep existing mapping (first Wreg wins, or first Scheme if no Wreg)
+}
+
+// ----------------------------------------------------------------------------
+// Helper: Add warning
+// ----------------------------------------------------------------------------
+
+void InfParser::add_warning(const std::string& msg) {
+    result_.warnings.push_back(msg);
+}
+
+// ----------------------------------------------------------------------------
+// Helper: Parse key=value line
+// ----------------------------------------------------------------------------
 
 std::optional<std::pair<std::string, std::string>> 
 InfParser::parse_key_value(std::string_view line) {
-    // Handle continuation lines (ending with \)
-    // For simplicity, we don't support multi-line values
-    
     auto eq_pos = line.find('=');
     if (eq_pos == std::string_view::npos) {
         return std::nullopt;

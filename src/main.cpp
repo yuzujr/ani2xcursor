@@ -9,12 +9,47 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cstring>
 #include <iostream>
 #include <string>
 #include <vector>
 
 namespace fs = std::filesystem;
+
+// Case-insensitive file finder for Windows theme compatibility
+// Windows filesystems are case-insensitive, so theme authors often have
+// mismatched cases between INF references and actual filenames
+std::optional<fs::path> find_file_icase(const fs::path& dir, const std::string& filename) {
+    // First try exact match (fast path)
+    auto exact_path = dir / filename;
+    if (fs::exists(exact_path)) {
+        return exact_path;
+    }
+    
+    // Convert target filename to lowercase for comparison
+    std::string lower_target = filename;
+    std::transform(lower_target.begin(), lower_target.end(), lower_target.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    
+    // Scan directory for case-insensitive match
+    std::error_code ec;
+    for (const auto& entry : fs::directory_iterator(dir, ec)) {
+        if (!entry.is_regular_file()) continue;
+        
+        std::string entry_name = entry.path().filename().string();
+        std::string lower_entry = entry_name;
+        std::transform(lower_entry.begin(), lower_entry.end(), lower_entry.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+        
+        if (lower_entry == lower_target) {
+            spdlog::debug("Case-insensitive match: '{}' -> '{}'", filename, entry_name);
+            return entry.path();
+        }
+    }
+    
+    return std::nullopt;
+}
 
 // Command line arguments
 struct Args {
@@ -161,16 +196,22 @@ int main(int argc, char* argv[]) {
         int error_count = 0;
         
         for (const auto& mapping : inf_data.mappings) {
-            auto ani_path = args.input_dir / mapping.filename;
+            // Extract just the filename from the (possibly full Windows) path
+            auto filename = ani2xcursor::InfResult::extract_filename(mapping.value);
             
-            if (!fs::exists(ani_path)) {
-                spdlog::error("Cursor file not found: {}", ani_path.string());
+            // Find file with case-insensitive matching (Windows compatibility)
+            auto ani_path_opt = find_file_icase(args.input_dir, filename);
+            
+            if (!ani_path_opt) {
+                spdlog::error("Cursor file not found: {}", filename);
                 if (!args.skip_broken) {
                     return 1;
                 }
                 ++error_count;
                 continue;
             }
+            
+            auto ani_path = *ani_path_opt;
             
             try {
                 // Process ANI file
@@ -192,7 +233,7 @@ int main(int argc, char* argv[]) {
                 ++success_count;
                 
             } catch (const std::exception& e) {
-                spdlog::error("Failed to convert {}: {}", mapping.filename, e.what());
+                spdlog::error("Failed to convert {}: {}", filename, e.what());
                 if (!args.skip_broken) {
                     return 1;
                 }

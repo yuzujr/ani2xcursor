@@ -1,4 +1,5 @@
 # Build output
+.cache/
 build/
 out/
 
