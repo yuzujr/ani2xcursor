@@ -6,7 +6,15 @@ Convert Windows animated cursor themes (.ani/.cur with Install.inf) to Linux Xcu
 
 - Full .ani/.cur format support
 - Multi-size export
-- Manual mapping mode: generate previews + mapping template, then customize roles (useful for overrides even without Install.inf)
+- Manual mapping mode: generate cursor previews + mapping template, then customize roles (useful for overrides even without Install.inf)
+  ### Screenshots
+  cursor preview:
+
+  <img width="798" height="277" alt="图片" src="https://github.com/user-attachments/assets/ea4983dd-e476-4212-9c23-1704d8d39364" />
+
+  corrupted cursor preview:
+
+  <img width="798" height="277" alt="output" src="https://github.com/user-attachments/assets/90b56fa2-6b11-4fde-8f30-d7ea2448c5dd" />
 
 ## Build
 
@@ -14,7 +22,7 @@ Convert Windows animated cursor themes (.ani/.cur with Install.inf) to Linux Xcu
 xmake
 ```
 
-Requirements: Linux, xmake, libXcursor-dev
+Requirements: Linux, xmake
 
 ## Usage
 
@@ -87,6 +95,7 @@ cursor {
 ```
 
 **Hyprland:**
+Add to `~/.config/hypr/hyprland.conf`:
 ```bash
 hyprctl setcursor ThemeName 24
 ```
