@@ -90,7 +90,7 @@ plasma-apply-cursortheme ThemeName
 Add to `~/.config/niri/config.kdl`:
 ```
 cursor {
-    xcursor-theme "YourThemeName"
+    xcursor-theme "ThemeName"
 }
 ```
 
