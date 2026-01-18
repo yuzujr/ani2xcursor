@@ -18,12 +18,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libxcursor-dev
     
-    - name: Install xmake
-      run: |
-        wget https://github.com/xmake-io/xmake/releases/download/v2.9.6/xmake-v2.9.6.gz.run
-        chmod +x xmake-v2.9.6.gz.run
-        sudo ./xmake-v2.9.6.gz.run --noexec --target /usr/local
-        rm xmake-v2.9.6.gz.run
+    - name: Setup xmake
+      uses: xmake-io/github-action-setup-xmake@v1
+      with:
+        xmake-version: latest
     
     - name: Build
       run: |

@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g., v1.0.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -14,22 +20,27 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.tag || github.ref }}
     
     - name: Get version from tag
       id: get_version
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      run: |
+        if [ -n "${{ github.event.inputs.tag }}" ]; then
+          echo "VERSION=${GITHUB_EVENT_INPUTS_TAG#v}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        fi
     
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y libxcursor-dev
     
-    - name: Install xmake
-      run: |
-        wget https://github.com/xmake-io/xmake/releases/download/v2.9.6/xmake-v2.9.6.gz.run
-        chmod +x xmake-v2.9.6.gz.run
-        sudo ./xmake-v2.9.6.gz.run --noexec --target /usr/local
-        rm xmake-v2.9.6.gz.run
+    - name: Setup xmake
+      uses: xmake-io/github-action-setup-xmake@v1
+      with:
+        xmake-version: latest
     
     - name: Build
       run: |
