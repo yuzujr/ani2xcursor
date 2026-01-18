@@ -6,6 +6,7 @@ Convert Windows animated cursor themes (.ani/.cur with Install.inf) to Linux Xcu
 
 - Full .ani/.cur format support
 - Multi-size export
+- Manual mapping mode: generate previews + mapping template, then customize roles (useful for overrides even without Install.inf)
 
 ## Build
 
@@ -27,6 +28,7 @@ ani2xcursor /path/to/cursor/folder
 -v, --verbose        Verbose output
 --sizes <mode>       Size export: all (default) | max | 24,32,48
 --skip-broken        Continue on errors
+--manual-mapping     Generate previews + mapping.toml then exit
 -h, --help           Show help
 ```
 
@@ -37,6 +39,20 @@ ThemeName/
 ├── Install.inf
 └── *.ani files
 ```
+
+## Manual Mapping Fallback (no Install.inf)
+
+If `Install.inf` is missing, ani2xcursor generates previews and a mapping template.
+You can also force this mode with `--manual-mapping`:
+
+```
+<input_dir>/ani2xcursor/
+├── mapping.toml
+└── previews/
+    └── *.png
+```
+
+Edit `mapping.toml` and re-run the same command. If `mapping.toml` exists, it takes priority over `Install.inf`.
 
 ## Output Structure
 

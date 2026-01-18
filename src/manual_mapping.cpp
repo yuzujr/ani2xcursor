@@ -1,0 +1,258 @@
+#include "manual_mapping.h"
+#include "utils/fs.h"
+
+#include <algorithm>
+#include <cctype>
+#include <sstream>
+#include <stdexcept>
+
+namespace ani2xcursor {
+
+namespace {
+
+std::string_view trim(std::string_view s) {
+    while (!s.empty() && std::isspace(static_cast<unsigned char>(s.front()))) {
+        s.remove_prefix(1);
+    }
+    while (!s.empty() && std::isspace(static_cast<unsigned char>(s.back()))) {
+        s.remove_suffix(1);
+    }
+    return s;
+}
+
+std::string to_lower(std::string_view s) {
+    std::string out(s);
+    std::transform(out.begin(), out.end(), out.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    return out;
+}
+
+std::string strip_comment(std::string_view line) {
+    bool in_quote = false;
+    char quote_char = '\0';
+
+    for (size_t i = 0; i < line.size(); ++i) {
+        char c = line[i];
+        if ((c == '"' || c == '\'') && (i == 0 || line[i - 1] != '\\')) {
+            if (!in_quote) {
+                in_quote = true;
+                quote_char = c;
+            } else if (quote_char == c) {
+                in_quote = false;
+            }
+        } else if (c == '#' && !in_quote) {
+            return std::string(line.substr(0, i));
+        }
+    }
+    return std::string(line);
+}
+
+std::string unquote(std::string_view s) {
+    s = trim(s);
+    if (s.size() >= 2) {
+        char first = s.front();
+        char last = s.back();
+        if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
+            s = s.substr(1, s.size() - 2);
+        }
+    }
+    return std::string(s);
+}
+
+std::string escape_quotes(std::string_view s) {
+    std::string out;
+    out.reserve(s.size());
+    for (char c : s) {
+        if (c == '"') {
+            out += "\\\"";
+        } else {
+            out += c;
+        }
+    }
+    return out;
+}
+
+} // namespace
+
+const std::vector<std::string>& known_roles() {
+    static const std::vector<std::string> roles = {
+        "pointer",
+        "help",
+        "working",
+        "busy",
+        "precision",
+        "text",
+        "hand",
+        "unavailable",
+        "vert",
+        "horz",
+        "dgn1",
+        "dgn2",
+        "move",
+        "alternate",
+        "link",
+        "person",
+        "pin",
+    };
+    return roles;
+}
+
+bool is_known_role(std::string_view role) {
+    auto& roles = known_roles();
+    return std::find(roles.begin(), roles.end(), role) != roles.end();
+}
+
+bool is_optional_role(std::string_view role) {
+    return role == "person" || role == "pin";
+}
+
+MappingLoadResult load_mapping_toml(const fs::path& path) {
+    auto content = utils::read_file_string(path);
+    std::istringstream stream(content);
+
+    std::string current_section;
+    std::map<std::string, std::map<std::string, std::string>> sections;
+    std::string line;
+    bool first_line = true;
+
+    while (std::getline(stream, line)) {
+        if (first_line) {
+            first_line = false;
+            if (line.size() >= 3 &&
+                static_cast<unsigned char>(line[0]) == 0xEF &&
+                static_cast<unsigned char>(line[1]) == 0xBB &&
+                static_cast<unsigned char>(line[2]) == 0xBF) {
+                line = line.substr(3);
+            }
+        }
+
+        std::string no_comment = strip_comment(line);
+        auto trimmed = trim(no_comment);
+        if (trimmed.empty()) {
+            continue;
+        }
+
+        if (trimmed.front() == '[' && trimmed.back() == ']') {
+            current_section = to_lower(trimmed.substr(1, trimmed.size() - 2));
+            continue;
+        }
+
+        auto eq = trimmed.find('=');
+        if (eq == std::string_view::npos) {
+            throw std::runtime_error("Invalid line in mapping.toml: " + std::string(trimmed));
+        }
+
+        auto key = to_lower(trim(trimmed.substr(0, eq)));
+        auto value = trim(trimmed.substr(eq + 1));
+
+        if (key.empty()) {
+            throw std::runtime_error("Empty key in mapping.toml");
+        }
+
+        sections[current_section][key] = unquote(value);
+    }
+
+    MappingLoadResult result;
+
+    std::string theme_override;
+    if (auto input_it = sections.find("input"); input_it != sections.end()) {
+        auto theme_it = input_it->second.find("theme");
+        if (theme_it != input_it->second.end() && !theme_it->second.empty()) {
+            theme_override = theme_it->second;
+        }
+    }
+
+    auto files_it = sections.find("files");
+    if (files_it == sections.end()) {
+        throw std::runtime_error("mapping.toml missing [files] section");
+    }
+
+    for (const auto& [key, value] : files_it->second) {
+        std::string role = key;
+        if (!is_known_role(role)) {
+            result.warnings.push_back("Unknown role in [files]: '" + key + "'");
+            continue;
+        }
+
+        result.role_to_path[role] = value;
+    }
+
+    if (!theme_override.empty()) {
+        result.theme_name = theme_override;
+    }
+
+    return result;
+}
+
+void write_mapping_toml_template(const fs::path& path,
+                                 const fs::path& input_dir,
+                                 const std::map<std::string, std::string>& guesses) {
+    std::error_code ec;
+    auto abs_dir = fs::absolute(input_dir, ec);
+    if (ec) {
+        abs_dir = input_dir;
+    }
+
+    std::string content;
+    content += "# ani2xcursor manual mapping (no Install.inf detected)\n";
+    content += "# Fill in the relative paths (relative to input_dir) for each Windows role.\n";
+    content += "# Use the preview images in ani2xcursor/previews/ to decide.\n";
+    content += "# Leave empty to skip a role.\n";
+    content += "#\n";
+    content += "# Roles (Windows role -> common meaning):\n";
+    content += "# pointer      = Normal Select (Arrow)\n";
+    content += "# help         = Help Select (Question mark)\n";
+    content += "# working      = Working in Background (Arrow + Busy)\n";
+    content += "# busy         = Busy / Wait (Spinner)\n";
+    content += "# precision    = Precision Select (Crosshair)\n";
+    content += "# text         = Text Select (I-beam)\n";
+    content += "# hand         = Handwriting / Pen (NWPen)\n";
+    content += "# unavailable  = Not Allowed / Unavailable (No)\n";
+    content += "# vert         = Vertical Resize (SizeNS)\n";
+    content += "# horz         = Horizontal Resize (SizeWE)\n";
+    content += "# dgn1         = Diagonal Resize 1 (NW-SE, SizeNWSE)\n";
+    content += "# dgn2         = Diagonal Resize 2 (NE-SW, SizeNESW)\n";
+    content += "# move         = Move / Size All (Fleur)\n";
+    content += "# alternate    = Alternate Select (Up Arrow)\n";
+    content += "# link         = Link Select (Hand)\n";
+    content += "# person       = Person Select (optional)\n";
+    content += "# pin          = Pin Select (optional)\n";
+    content += "\n";
+    content += "[input]\n";
+    content += "# Theme name override (optional)\n";
+    content += "theme = \"\"\n";
+    content += "# for reference only (do not edit)\n";
+    content += "dir = \"" + escape_quotes(abs_dir.string()) + "\"\n";
+    content += "\n";
+    content += "[files]\n";
+    content += "# Put relative paths here. Examples:\n";
+    content += "# pointer = \"Normal.ani\"\n";
+    content += "# text    = \"Text.ani\"\n";
+    content += "\n";
+
+    size_t max_role_len = 0;
+    for (const auto& role : known_roles()) {
+        max_role_len = std::max(max_role_len, role.size());
+    }
+
+    for (const auto& role : known_roles()) {
+        std::string padded = role;
+        padded.append(max_role_len + 1 - role.size(), ' ');
+        content += padded;
+        content += "= \"";
+        auto it = guesses.find(role);
+        if (it != guesses.end()) {
+            content += escape_quotes(it->second);
+        }
+        content += "\"";
+        if (it != guesses.end()) {
+            content += " # guessed";
+        }
+        content += "\n";
+    }
+
+    content += "\n";
+    utils::write_file_string(path, content);
+}
+
+} // namespace ani2xcursor
