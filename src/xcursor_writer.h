@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ani_parser.h"
 #include "ico_cur_decoder.h"
 
 #include <filesystem>
@@ -42,9 +41,6 @@ public:
     static void create_aliases(const fs::path& cursors_dir,
                                const std::string& primary_name,
                                const std::vector<std::string>& aliases);
-    
-    // Get all known Windows cursor roles
-    [[nodiscard]] static const std::vector<std::string>& known_roles();
 
 private:
     // Initialize cursor name mapping table

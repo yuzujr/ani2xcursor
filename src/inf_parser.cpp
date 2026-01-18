@@ -245,12 +245,9 @@ void InfParser::parse_impl(std::string_view content) {
         parse_strings_section(it->second);
     }
     
-    // Extract theme name and cursor dir from variables
+    // Extract theme name from variables
     if (auto it = variables_.find("scheme_name"); it != variables_.end()) {
         result_.theme_name = it->second;
-    }
-    if (auto it = variables_.find("cur_dir"); it != variables_.end()) {
-        result_.cursor_dir = it->second;
     }
     
     // Phase 3: Parse [DefaultInstall] to get CopyFiles and AddReg references
@@ -313,17 +310,7 @@ void InfParser::parse_default_install_section(std::string_view content) {
         auto& [key, value] = *kv;
         std::string lower_key = to_lower(key);
         
-        if (lower_key == "copyfiles") {
-            // CopyFiles = Section1, Section2, ...
-            std::istringstream sections_stream{value};
-            std::string section_name;
-            while (std::getline(sections_stream, section_name, ',')) {
-                auto trimmed_name = std::string(trim(section_name));
-                if (!trimmed_name.empty()) {
-                    parse_copy_files_section(trimmed_name);
-                }
-            }
-        } else if (lower_key == "addreg") {
+        if (lower_key == "addreg") {
             // AddReg = Section1, Section2, ...
             std::istringstream sections_stream{value};
             std::string section_name;
@@ -333,35 +320,6 @@ void InfParser::parse_default_install_section(std::string_view content) {
                     parse_add_reg_section(trimmed_name);
                 }
             }
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------
-// CopyFiles section parsing
-// ----------------------------------------------------------------------------
-
-void InfParser::parse_copy_files_section(const std::string& section_name) {
-    auto it = sections_.find(to_lower(section_name));
-    if (it == sections_.end()) {
-        add_warning("CopyFiles section not found: [" + section_name + "]");
-        return;
-    }
-    
-    spdlog::debug("INF: Parsing CopyFiles section [{}]", section_name);
-    
-    std::istringstream stream{it->second};
-    std::string line;
-    
-    while (std::getline(stream, line)) {
-        auto trimmed = trim(line);
-        if (trimmed.empty() || trimmed[0] == ';') continue;
-        
-        // Each line is a filename (possibly quoted)
-        std::string filename = unquote(trimmed);
-        if (!filename.empty()) {
-            result_.files_to_copy.push_back(filename);
-            spdlog::debug("INF CopyFiles: {}", filename);
         }
     }
 }

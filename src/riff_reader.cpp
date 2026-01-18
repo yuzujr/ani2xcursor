@@ -1,8 +1,7 @@
 #include "riff_reader.h"
+#include "utils/bytes.h"
 
 #include <spdlog/spdlog.h>
-
-#include <stdexcept>
 
 namespace ani2xcursor {
 

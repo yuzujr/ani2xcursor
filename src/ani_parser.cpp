@@ -1,4 +1,5 @@
 #include "ani_parser.h"
+#include "utils/bytes.h"
 #include "utils/fs.h"
 
 #include <spdlog/spdlog.h>

@@ -1,108 +1,68 @@
 # ani2xcursor
 
-Convert Windows Animated Cursors (.ani) with Install.inf to Linux Xcursor themes.
+Convert Windows animated cursor themes (.ani/.cur with Install.inf) to Linux Xcursor format.
 
-## Requirements
+## Features
 
-- Linux (tested on X11 and Wayland)
-- xmake build system
-- libXcursor development files
+- Full .ani/.cur format support
+- Multi-size export
 
-## Building
+## Build
 
 ```bash
-# Clone and build
-cd ani2xcursor
 xmake
-
-# Or with verbose output
-xmake -v
 ```
+
+Requirements: Linux, xmake, libXcursor-dev
 
 ## Usage
 
 ```bash
-# Basic conversion
-./build/linux/x86_64/release/ani2xcursor /path/to/cursor/folder
+# Convert theme
+ani2xcursor /path/to/cursor/folder
 
-# Specify output directory
-./build/linux/x86_64/release/ani2xcursor /path/to/cursor/folder -o ./my-themes
-
-# Convert and install
-./build/linux/x86_64/release/ani2xcursor /path/to/cursor/folder -i
-
-# Verbose output for debugging
-./build/linux/x86_64/release/ani2xcursor /path/to/cursor/folder -v
-
-# Skip broken files and continue
-./build/linux/x86_64/release/ani2xcursor /path/to/cursor/folder -s
+# Options
+-o, --out <dir>      Output directory (default: ./out)
+-i, --install        Install to ~/.local/share/icons
+-v, --verbose        Verbose output
+--sizes <mode>       Size export: all (default) | max | 24,32,48
+--skip-broken        Continue on errors
+-h, --help           Show help
 ```
 
-### Input Directory Structure
+## Input Structure
 
-The input directory should contain:
 ```
-MyCursor/
+ThemeName/
 ├── Install.inf
-├── Normal.ani
-├── Help.ani
-├── Working.ani
-├── Busy.ani
-├── Precision.ani
-├── Text.ani
-├── Handwriting.ani
-├── Unavailable.ani
-├── Vertical.ani
-├── Horizontal.ani
-├── Diagonal1.ani
-├── Diagonal2.ani
-├── Move.ani
-├── Alternate.ani
-├── Link.ani
-├── Person.ani
-└── Pin.ani
+└── *.ani files
 ```
 
-### Output Directory Structure
+## Output Structure
 
 ```
-out/
-└── MyCursor/
-    ├── index.theme
-    └── cursors/
-        ├── left_ptr          (from Normal.ani)
-        ├── default -> left_ptr
-        ├── arrow -> left_ptr
-        ├── help              (from Help.ani)
-        ├── question_arrow -> help
-        ├── watch             (from Busy.ani)
-        ├── wait -> watch
-        ├── left_ptr_watch    (from Working.ani)
-        ├── progress -> left_ptr_watch
-        ├── xterm             (from Text.ani)
-        ├── text -> xterm
-        ├── ibeam -> xterm
-        └── ... (more cursors and aliases)
+out/ThemeName/
+├── index.theme
+└── cursors/
+    ├── left_ptr (+ symlinks)
+    ├── watch
+    ├── xterm
+    └── ...
 ```
 
-## Enabling the Cursor Theme
+## Enable Theme
 
-### GNOME / GTK
-
+**GNOME/GTK:**
 ```bash
-gsettings set org.gnome.desktop.interface cursor-theme 'YourThemeName'
+gsettings set org.gnome.desktop.interface cursor-theme 'ThemeName'
 ```
 
-### KDE Plasma
-
-Open System Settings → Appearance → Cursors
-
-Or via command line:
+**KDE Plasma:**
 ```bash
-plasma-apply-cursortheme YourThemeName
+plasma-apply-cursortheme ThemeName
 ```
 
-### Niri
+**Niri:**
 Add to `~/.config/niri/config.kdl`:
 ```
 cursor {
@@ -110,100 +70,43 @@ cursor {
 }
 ```
 
-### Hyprland
-
-Add to `~/.config/hypr/hyprland.conf`:
-```
-exec-once = hyprctl setcursor YourThemeName 24
-```
-
-Or run immediately:
+**Hyprland:**
 ```bash
-hyprctl setcursor YourThemeName 24
+hyprctl setcursor ThemeName 24
 ```
 
-### Sway
-
+**Sway:**
 Add to `~/.config/sway/config`:
 ```
-seat * xcursor_theme YourThemeName 24
+seat * xcursor_theme ThemeName 24
 ```
 
-### X11 (Generic)
-
-Add to `~/.Xresources`:
+**X11 (~/.Xresources):**
 ```
-Xcursor.theme: YourThemeName
+Xcursor.theme: ThemeName
 Xcursor.size: 24
 ```
 
-Then run:
-```bash
-xrdb -merge ~/.Xresources
-```
+## Cursor Mappings
 
-### Environment Variables (Universal)
-
-```bash
-export XCURSOR_THEME=YourThemeName
-export XCURSOR_SIZE=24
-```
-
-Add these to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.) for persistence.
-
-## Technical Details
-
-### ANI File Format
-
-The .ani format is based on RIFF (Resource Interchange File Format):
-- Container: `RIFF ACON`
-- Required chunks:
-  - `anih`: Animation header (frame count, display rate, flags)
-  - `LIST fram`: Contains `icon` sub-chunks (one per frame)
-- Optional chunks:
-  - `rate`: Per-frame delays (in jiffies = 1/60 second)
-  - `seq `: Playback sequence (frame indices)
-  - `LIST INFO`: Metadata (ignored)
-
-### ICO/CUR Format
-
-Each animation frame is stored as an ICO/CUR file, which can contain:
-- PNG-encoded images (modern cursors)
-- BMP/DIB-encoded images (legacy cursors)
-
-The decoder supports:
-- 1, 4, 8, 24, and 32-bit BMP images
-- PNG images with alpha channel
-- Hotspot extraction from CUR header
-
-### Xcursor Format
-
-Output uses libXcursor to create X11 cursor files with:
-- Multiple frames for animations
-- Per-frame delays (in milliseconds)
-- Hotspot coordinates
-- ARGB pixel format
-
-## Cursor Role Mappings
-
-| Windows Role | Primary X11 Name | Common Aliases |
-|--------------|------------------|----------------|
-| pointer | left_ptr | default, arrow |
-| help | help | question_arrow, whats_this |
-| working | left_ptr_watch | progress |
-| busy | watch | wait, clock |
-| precision | crosshair | cross |
-| text | xterm | ibeam, text |
-| hand | pencil | handwriting |
-| unavailable | not-allowed | no-drop, forbidden |
-| vert | sb_v_double_arrow | ns-resize, size_ver |
-| horz | sb_h_double_arrow | ew-resize, size_hor |
-| dgn1 | bd_double_arrow | nwse-resize |
-| dgn2 | fd_double_arrow | nesw-resize |
-| move | fleur | move, size_all |
-| alternate | center_ptr | up-arrow |
-| link | pointer | hand, hand1, hand2 |
+| Windows    | Linux           | Aliases                      |
+|------------|-----------------|------------------------------|
+| pointer    | left_ptr        | default, arrow               |
+| help       | help            | question_arrow, whats_this   |
+| working    | left_ptr_watch  | progress                     |
+| busy       | watch           | wait, clock                  |
+| precision  | crosshair       | cross                        |
+| text       | xterm           | ibeam, text                  |
+| hand       | pencil          | handwriting                  |
+| unavailable| not-allowed     | no-drop, forbidden           |
+| vert       | sb_v_double_arrow | ns-resize, size_ver        |
+| horz       | sb_h_double_arrow | ew-resize, size_hor        |
+| dgn1       | bd_double_arrow | nwse-resize                  |
+| dgn2       | fd_double_arrow | nesw-resize                  |
+| move       | fleur           | move, size_all               |
+| alternate  | center_ptr      | up-arrow                     |
+| link       | hand2           | hand, hand1, pointing_hand   |
 
 ## License
 
-MIT License
+MIT

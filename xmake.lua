@@ -21,22 +21,15 @@ add_requires("libxcursor 1.2.3")
 -- Main target
 target("ani2xcursor")
     set_kind("binary")
-    
-    -- Source files
     add_files("src/*.cpp")
-    
-    -- Header paths
     add_includedirs("src")
-    
-    -- Link dependencies
     add_packages("spdlog", "stb", "libxcursor")
     
-    -- Linux specific
     if is_plat("linux") then
         add_syslinks("pthread")
     end
 
--- Optional: test target
+-- Test target
 target("ani2xcursor_test")
     set_kind("binary")
     set_default(false)
@@ -49,3 +42,4 @@ target("ani2xcursor_test")
     
     add_includedirs("src")
     add_packages("spdlog", "stb")
+

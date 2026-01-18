@@ -39,7 +39,6 @@ working      = "Working.ani"
     auto result = ani2xcursor::InfParser::parse_string(inf_content);
     
     assert(result.theme_name == "TestTheme");
-    assert(result.cursor_dir == "Cursors\\TestTheme");
     
     // Should have 3 mappings from scheme slots
     assert(result.mappings.size() == 3);
@@ -56,9 +55,6 @@ working      = "Working.ani"
     auto working = result.get_value("working");
     assert(working.has_value());
     assert(working->find("Working.ani") != std::string::npos);
-    
-    // Check files_to_copy
-    assert(result.files_to_copy.size() == 3);
     
     std::cout << "  PASSED!\n";
 }
@@ -290,47 +286,7 @@ SCHEME_NAME  = "CaseInsensitive"
 }
 
 // ============================================================================
-// Test 7: CopyFiles parsing
-// ============================================================================
-void test_copy_files() {
-    std::cout << "Test: CopyFiles section parsing...\n";
-    
-    const char* inf_content = R"(
-[Version]
-signature="$CHICAGO$"
-
-[DefaultInstall]
-CopyFiles = FilesA, FilesB
-
-[FilesA]
-"Normal.ani"
-Help.ani
-
-[FilesB]
-"Busy.ani"
-
-[Strings]
-SCHEME_NAME  = "CopyFilesTest"
-)";
-    
-    auto result = ani2xcursor::InfParser::parse_string(inf_content);
-    
-    assert(result.files_to_copy.size() == 3);
-    
-    // Check all files are listed
-    bool found_normal = false, found_help = false, found_busy = false;
-    for (const auto& f : result.files_to_copy) {
-        if (f == "Normal.ani") found_normal = true;
-        if (f == "Help.ani") found_help = true;
-        if (f == "Busy.ani") found_busy = true;
-    }
-    assert(found_normal && found_help && found_busy);
-    
-    std::cout << "  PASSED!\n";
-}
-
-// ============================================================================
-// Test 8: RegLineParser edge cases
+// Test 7: RegLineParser edge cases
 // ============================================================================
 void test_reg_line_parser() {
     std::cout << "Test: RegLineParser edge cases...\n";
@@ -407,7 +363,6 @@ int main() {
         test_variable_expansion();
         test_missing_variable_warning();
         test_case_insensitive_vars();
-        test_copy_files();
         test_reg_line_parser();
         test_theme_name_sources();
         

@@ -3,12 +3,14 @@
 
 #include <spdlog/spdlog.h>
 
+#include <algorithm>
+#include <numeric>
+
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
 #define STBI_NO_STDIO
 #include <stb_image.h>
 
-#include <algorithm>
 #include <cstring>
 #include <stdexcept>
 
@@ -59,35 +61,63 @@ std::vector<CursorImage> IcoCurDecoder::decode_all(std::span<const uint8_t> data
         entries.push_back(parse_dir_entry(data, i));
     }
     
-    // Sort by quality (largest, highest bpp first) and decode
-    size_t best = select_best_image(entries);
-    
     std::vector<CursorImage> results;
     
-    // Decode best image first
-    const auto& entry = entries[best];
+    // Decode ALL images (for multi-size xcursor support)
+    // Sort by size (largest first) to ensure consistent ordering
+    std::vector<size_t> indices(entries.size());
+    std::iota(indices.begin(), indices.end(), 0);
+    std::sort(indices.begin(), indices.end(), [&entries](size_t a, size_t b) {
+        const auto& ea = entries[a];
+        const auto& eb = entries[b];
+        uint32_t wa = ea.width == 0 ? 256 : ea.width;
+        uint32_t ha = ea.height == 0 ? 256 : ea.height;
+        uint32_t wb = eb.width == 0 ? 256 : eb.width;
+        uint32_t hb = eb.height == 0 ? 256 : eb.height;
+        uint32_t size_a = std::max(wa, ha);
+        uint32_t size_b = std::max(wb, hb);
+        return size_a > size_b;  // Larger first
+    });
     
-    spdlog::debug("ICO/CUR: Best image #{}: {}x{}, offset={}, size={}",
-                  best, entry.width == 0 ? 256 : entry.width,
-                  entry.height == 0 ? 256 : entry.height,
-                  entry.offset, entry.size);
+    spdlog::debug("ICO/CUR: Decoding {} images (multi-size support)", entries.size());
     
-    if (entry.offset + entry.size > data.size()) {
-        throw std::runtime_error("ICO/CUR: Image data extends beyond file");
+    for (size_t idx : indices) {
+        const auto& entry = entries[idx];
+        
+        uint32_t w = entry.width == 0 ? 256 : entry.width;
+        uint32_t h = entry.height == 0 ? 256 : entry.height;
+        
+        spdlog::debug("ICO/CUR: Image #{}: {}x{}, offset={}, size={}",
+                      idx, w, h, entry.offset, entry.size);
+        
+        if (entry.offset + entry.size > data.size()) {
+            spdlog::warn("ICO/CUR: Image #{} data extends beyond file, skipping", idx);
+            continue;
+        }
+        
+        auto img_data = data.subspan(entry.offset, entry.size);
+        
+        try {
+            if (is_png(img_data)) {
+                spdlog::debug("ICO/CUR: Image #{} is PNG format", idx);
+                uint16_t hx = is_cursor ? entry.planes_or_hotspot_x : 0;
+                uint16_t hy = is_cursor ? entry.bpp_or_hotspot_y : 0;
+                results.push_back(decode_png(img_data, hx, hy));
+            } else {
+                spdlog::debug("ICO/CUR: Image #{} is BMP/DIB format", idx);
+                results.push_back(decode_bmp(img_data, entry, is_cursor));
+            }
+        } catch (const std::exception& e) {
+            spdlog::warn("ICO/CUR: Failed to decode image #{}: {}", idx, e.what());
+            // Continue with other sizes
+        }
     }
     
-    auto img_data = data.subspan(entry.offset, entry.size);
-    
-    if (is_png(img_data)) {
-        spdlog::debug("ICO/CUR: Image is PNG format");
-        uint16_t hx = is_cursor ? entry.planes_or_hotspot_x : 0;
-        uint16_t hy = is_cursor ? entry.bpp_or_hotspot_y : 0;
-        results.push_back(decode_png(img_data, hx, hy));
-    } else {
-        spdlog::debug("ICO/CUR: Image is BMP/DIB format");
-        results.push_back(decode_bmp(img_data, entry, is_cursor));
+    if (results.empty()) {
+        throw std::runtime_error("ICO/CUR: Failed to decode any images");
     }
     
+    spdlog::debug("ICO/CUR: Successfully decoded {} images", results.size());
     return results;
 }
 

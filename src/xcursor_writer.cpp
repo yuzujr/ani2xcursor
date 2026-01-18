@@ -159,6 +159,22 @@ void XcursorWriter::write_cursor(const std::vector<CursorImage>& images,
         throw std::runtime_error("No images to write");
     }
     
+    // Multi-size support: images should be grouped by nominal size
+    // i.e., [all frames of size1, all frames of size2, ...]
+    // Xcursor format stores all images with their size field, and the loader
+    // selects appropriate size based on display DPI/scale
+    //
+    // For animated cursors: frames of the same size form an animation sequence
+    // Important: XcursorImagesLoadImages() uses the 'size' field (max(w,h))
+    // to group images for size selection, and 'delay' for animation timing.
+    
+    // Log size distribution for debugging
+    std::map<uint32_t, size_t> size_counts;
+    for (const auto& img : images) {
+        uint32_t nominal_size = std::max(img.width, img.height);
+        size_counts[nominal_size]++;
+    }
+    
     // Create directory if needed
     fs::create_directories(output_path.parent_path());
     
@@ -183,6 +199,9 @@ void XcursorWriter::write_cursor(const std::vector<CursorImage>& images,
             if (!xcur_img) {
                 throw std::runtime_error("Failed to create XcursorImage");
             }
+            
+            // XcursorImageCreate sets xcur_img->size = max(width, height)
+            // This is the "nominal size" used by the loader for size selection
             
             xcur_img->xhot = img.hotspot_x;
             xcur_img->yhot = img.hotspot_y;
@@ -216,7 +235,7 @@ void XcursorWriter::write_cursor(const std::vector<CursorImage>& images,
             throw std::runtime_error("Failed to write Xcursor file: " + output_path.string());
         }
         
-        spdlog::debug("Wrote Xcursor: {} ({} frames)", output_path.string(), images.size());
+        spdlog::debug("Wrote {}", output_path.filename().string());
         
     } catch (...) {
         cleanup();
@@ -240,7 +259,7 @@ void XcursorWriter::write_index_theme(const fs::path& theme_dir,
     content += "Inherits=default\n";
     
     utils::write_file_string(index_path, content);
-    spdlog::info("Wrote index.theme for '{}'", theme_name);
+    spdlog::debug("Wrote index.theme");
 }
 
 XcursorWriter::CursorNames XcursorWriter::get_cursor_names(const std::string& win_role) {
@@ -281,19 +300,8 @@ void XcursorWriter::create_aliases(const fs::path& cursors_dir,
         if (ec) {
             spdlog::warn("Failed to create symlink {} -> {}: {}", 
                         alias, primary_name, ec.message());
-        } else {
-            spdlog::debug("Created alias: {} -> {}", alias, primary_name);
         }
     }
-}
-
-const std::vector<std::string>& XcursorWriter::known_roles() {
-    static const std::vector<std::string> roles = {
-        "pointer", "help", "working", "busy", "precision", "text",
-        "hand", "unavailable", "vert", "horz", "dgn1", "dgn2",
-        "move", "alternate", "link", "person", "pin"
-    };
-    return roles;
 }
 
 } // namespace ani2xcursor

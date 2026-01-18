@@ -1,14 +1,11 @@
 #pragma once
 
-#include "utils/bytes.h"
-
 #include <cstdint>
 #include <functional>
 #include <optional>
 #include <span>
 #include <string>
 #include <string_view>
-#include <vector>
 
 namespace ani2xcursor {
 

@@ -24,8 +24,6 @@ struct CursorMapping {
 // Parsed INF data with full installation intent
 struct InfResult {
     std::string theme_name;                   // From SCHEME_NAME or reg writes
-    std::string cursor_dir;                   // CUR_DIR expanded (relative path)
-    std::vector<std::string> files_to_copy;   // From CopyFiles sections
     std::vector<CursorMapping> mappings;      // Final role->path mappings
     std::vector<std::string> warnings;        // Parse warnings (non-fatal issues)
     
@@ -148,7 +146,6 @@ private:
     // Section parsing
     void parse_strings_section(std::string_view content);
     void parse_default_install_section(std::string_view content);
-    void parse_copy_files_section(const std::string& section_name);
     void parse_add_reg_section(const std::string& section_name);
     
     // Registry entry processing

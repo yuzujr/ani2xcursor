@@ -3,7 +3,6 @@
 #include "ico_cur_decoder.h"
 #include "xcursor_writer.h"
 #include "theme_installer.h"
-#include "utils/fs.h"
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -12,27 +11,22 @@
 #include <cctype>
 #include <cstring>
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
 
 namespace fs = std::filesystem;
 
-// Case-insensitive file finder for Windows theme compatibility
-// Windows filesystems are case-insensitive, so theme authors often have
-// mismatched cases between INF references and actual filenames
 std::optional<fs::path> find_file_icase(const fs::path& dir, const std::string& filename) {
-    // First try exact match (fast path)
     auto exact_path = dir / filename;
     if (fs::exists(exact_path)) {
         return exact_path;
     }
     
-    // Convert target filename to lowercase for comparison
     std::string lower_target = filename;
     std::transform(lower_target.begin(), lower_target.end(), lower_target.begin(),
                    [](unsigned char c) { return std::tolower(c); });
     
-    // Scan directory for case-insensitive match
     std::error_code ec;
     for (const auto& entry : fs::directory_iterator(dir, ec)) {
         if (!entry.is_regular_file()) continue;
@@ -43,7 +37,6 @@ std::optional<fs::path> find_file_icase(const fs::path& dir, const std::string& 
                        [](unsigned char c) { return std::tolower(c); });
         
         if (lower_entry == lower_target) {
-            spdlog::debug("Case-insensitive match: '{}' -> '{}'", filename, entry_name);
             return entry.path();
         }
     }
@@ -51,7 +44,8 @@ std::optional<fs::path> find_file_icase(const fs::path& dir, const std::string& 
     return std::nullopt;
 }
 
-// Command line arguments
+enum class SizeFilter { All, Max, Specific };
+
 struct Args {
     fs::path input_dir;
     fs::path output_dir;
@@ -59,6 +53,8 @@ struct Args {
     bool verbose = false;
     bool skip_broken = false;
     bool help = false;
+    SizeFilter size_filter = SizeFilter::All;
+    std::vector<uint32_t> specific_sizes;
 };
 
 void print_usage(const char* program) {
@@ -70,10 +66,16 @@ void print_usage(const char* program) {
               << "  --out, -o <dir>       Output directory (default: ./out)\n"
               << "  --install, -i         Install theme to $XDG_DATA_HOME/icons\n"
               << "  --verbose, -v         Enable verbose logging\n"
-              << "  --skip-broken, -s         Continue on conversion errors\n"
+              << "  --skip-broken         Continue on conversion errors\n"
+              << "  --sizes <mode>        Size selection mode:\n"
+              << "                          all    - Export all sizes (default)\n"
+              << "                          max    - Export only largest size\n"
+              << "                          24,32  - Export specific sizes (comma-separated)\n"
               << "  --help, -h            Show this help message\n\n"
-              << "Example:\n"
-              << "  " << program << " ~/Downloads/MyCursor -o ./themes -i\n";
+              << "Examples:\n"
+              << "  " << program << " ~/Downloads/MyCursor -o ./themes -i\n"
+              << "  " << program << " ~/Downloads/MyCursor --sizes max\n"
+              << "  " << program << " ~/Downloads/MyCursor --sizes 32,48\n";
 }
 
 Args parse_args(int argc, char* argv[]) {
@@ -90,10 +92,40 @@ Args parse_args(int argc, char* argv[]) {
             args.verbose = true;
         } else if (arg == "--install" || arg == "-i") {
             args.install = true;
-        } else if (arg == "--skip-broken" || arg == "-s") {
+        } else if (arg == "--skip-broken") {
             args.skip_broken = true;
         } else if ((arg == "--out" || arg == "-o") && i + 1 < argc) {
             args.output_dir = argv[++i];
+        } else if (arg == "--sizes" && i + 1 < argc) {
+            std::string sizes_arg = argv[++i];
+            if (sizes_arg == "all") {
+                args.size_filter = SizeFilter::All;
+            } else if (sizes_arg == "max") {
+                args.size_filter = SizeFilter::Max;
+            } else {
+                // Parse comma-separated list of sizes
+                args.size_filter = SizeFilter::Specific;
+                size_t pos = 0;
+                while (pos < sizes_arg.length()) {
+                    size_t comma = sizes_arg.find(',', pos);
+                    std::string size_str = sizes_arg.substr(pos, comma == std::string::npos ? std::string::npos : comma - pos);
+                    try {
+                        uint32_t size = std::stoul(size_str);
+                        if (size > 0 && size <= 256) {
+                            args.specific_sizes.push_back(size);
+                        } else {
+                            throw std::runtime_error("Size must be between 1 and 256");
+                        }
+                    } catch (const std::exception& e) {
+                        throw std::runtime_error("Invalid size value: " + size_str);
+                    }
+                    if (comma == std::string::npos) break;
+                    pos = comma + 1;
+                }
+                if (args.specific_sizes.empty()) {
+                    throw std::runtime_error("No valid sizes specified");
+                }
+            }
         } else if (!arg.starts_with("-") && args.input_dir.empty()) {
             args.input_dir = arg;
         } else {
@@ -104,32 +136,102 @@ Args parse_args(int argc, char* argv[]) {
     return args;
 }
 
-// Process a single .ani file and return decoded frames
+// Process a single .ani file and return decoded frames with multi-size support
 std::pair<std::vector<ani2xcursor::CursorImage>, std::vector<uint32_t>>
-process_ani_file(const fs::path& ani_path) {
+process_ani_file(const fs::path& ani_path, SizeFilter filter, const std::vector<uint32_t>& specific_sizes) {
     spdlog::info("Processing: {}", ani_path.filename().string());
     
-    // Parse ANI file
     auto animation = ani2xcursor::AniParser::parse(ani_path);
+    
+    std::vector<std::vector<ani2xcursor::CursorImage>> frames_by_step;
+    std::vector<uint32_t> step_delays;
+    
+    for (size_t step = 0; step < animation.num_steps; ++step) {
+        const auto& frame = animation.get_step_frame(step);
+        uint32_t delay = frame.delay_ms;
+        
+        auto images = ani2xcursor::IcoCurDecoder::decode_all(frame.icon_data);
+        
+        if (images.empty()) {
+            throw std::runtime_error("No images decoded from frame " + std::to_string(step));
+        }
+        
+        spdlog::debug("Frame {}: {} sizes", step, images.size());
+        
+        frames_by_step.push_back(std::move(images));
+        step_delays.push_back(delay);
+    }
+    
+    size_t num_sizes = frames_by_step[0].size();
+    for (size_t i = 1; i < frames_by_step.size(); ++i) {
+        if (frames_by_step[i].size() != num_sizes) {
+            spdlog::warn("Inconsistent sizes, using first size only");
+            num_sizes = 1;
+            break;
+        }
+    }
+    
+    std::vector<size_t> size_indices_to_export;
+    
+    if (filter == SizeFilter::All) {
+        for (size_t i = 0; i < num_sizes; ++i) {
+            size_indices_to_export.push_back(i);
+        }
+    } else if (filter == SizeFilter::Max) {
+        if (num_sizes > 0) {
+            size_indices_to_export.push_back(0);
+        }
+    } else if (filter == SizeFilter::Specific) {
+        for (uint32_t target_size : specific_sizes) {
+            size_t best_idx = 0;
+            uint32_t best_diff = UINT32_MAX;
+            
+            for (size_t idx = 0; idx < num_sizes && idx < frames_by_step[0].size(); ++idx) {
+                const auto& img = frames_by_step[0][idx];
+                uint32_t nominal_size = std::max(img.width, img.height);
+                uint32_t diff = (nominal_size > target_size) ? 
+                               (nominal_size - target_size) : (target_size - nominal_size);
+                
+                if (diff < best_diff) {
+                    best_diff = diff;
+                    best_idx = idx;
+                }
+            }
+            
+            if (std::find(size_indices_to_export.begin(), size_indices_to_export.end(), best_idx) 
+                == size_indices_to_export.end()) {
+                size_indices_to_export.push_back(best_idx);
+            }
+        }
+    }
+    
+    if (size_indices_to_export.empty()) {
+        throw std::runtime_error("No sizes selected for export");
+    }
     
     std::vector<ani2xcursor::CursorImage> decoded_frames;
     std::vector<uint32_t> delays;
+    std::map<uint32_t, size_t> size_frame_counts;
     
-    // Decode each frame
-    for (size_t step = 0; step < animation.num_steps; ++step) {
-        const auto& frame = animation.get_step_frame(step);
+    for (size_t size_idx : size_indices_to_export) {
+        uint32_t nominal_size = 0;
         
-        // Decode ICO/CUR data
-        auto image = ani2xcursor::IcoCurDecoder::decode(frame.icon_data);
+        for (size_t step = 0; step < frames_by_step.size(); ++step) {
+            const auto& img = frames_by_step[step][size_idx];
+            nominal_size = std::max(img.width, img.height);
+            
+            decoded_frames.push_back(img);
+            delays.push_back(step_delays[step]);
+        }
         
-        // Use hotspot from decoded image
-        spdlog::debug("Frame {}: {}x{}, hotspot ({}, {}), delay {}ms",
-                      step, image.width, image.height,
-                      image.hotspot_x, image.hotspot_y,
-                      frame.delay_ms);
-        
-        decoded_frames.push_back(std::move(image));
-        delays.push_back(frame.delay_ms);
+        size_frame_counts[nominal_size] = frames_by_step.size();
+    }
+    
+    if (spdlog::get_level() <= spdlog::level::info) {
+        spdlog::info("Exported {} sizes:", size_indices_to_export.size());
+        for (const auto& [size, count] : size_frame_counts) {
+            spdlog::info("  {}x{}: {} frames", size, size, count);
+        }
     }
     
     if (decoded_frames.empty()) {
@@ -177,19 +279,15 @@ int main(int argc, char* argv[]) {
             }
         }
         
-        // Parse INF file
-        spdlog::info("Parsing Install.inf...");
         auto inf_data = ani2xcursor::InfParser::parse(inf_path);
         
-        spdlog::info("Theme: {}", inf_data.theme_name);
-        spdlog::info("Found {} cursor mappings", inf_data.mappings.size());
+        spdlog::info("Theme: {} ({} cursors)", inf_data.theme_name, inf_data.mappings.size());
         
         // Create output directory structure
         auto theme_dir = args.output_dir / inf_data.theme_name;
         auto cursors_dir = theme_dir / "cursors";
         
         fs::create_directories(cursors_dir);
-        spdlog::info("Output directory: {}", theme_dir.string());
         
         // Process each cursor
         int success_count = 0;
@@ -214,8 +312,8 @@ int main(int argc, char* argv[]) {
             auto ani_path = *ani_path_opt;
             
             try {
-                // Process ANI file
-                auto [frames, delays] = process_ani_file(ani_path);
+                // Process ANI file with size filter
+                auto [frames, delays] = process_ani_file(ani_path, args.size_filter, args.specific_sizes);
                 
                 // Get X11 cursor name and aliases
                 auto names = ani2xcursor::XcursorWriter::get_cursor_names(mapping.role);
@@ -228,8 +326,7 @@ int main(int argc, char* argv[]) {
                 ani2xcursor::XcursorWriter::create_aliases(cursors_dir, names.primary, 
                                                             names.aliases);
                 
-                spdlog::info("Converted '{}' -> {} ({} aliases)", 
-                            mapping.role, names.primary, names.aliases.size());
+                spdlog::debug("Converted '{}' -> {}", mapping.role, names.primary);
                 ++success_count;
                 
             } catch (const std::exception& e) {
@@ -257,7 +354,6 @@ int main(int argc, char* argv[]) {
             ani2xcursor::ThemeInstaller::install(theme_dir);
         } else {
             spdlog::info("Theme created at: {}", theme_dir.string());
-            spdlog::info("Use --install to install to ~/.local/share/icons");
         }
         
         return 0;
