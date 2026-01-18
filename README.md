@@ -132,6 +132,9 @@ Xcursor.size: 24
 | alternate  | center_ptr      | up-arrow                     |
 | link       | hand2           | hand, hand1, pointing_hand   |
 
+## Acknowledgements
+This project was inspired by [ani-to-xcursor](https://github.com/nicdgonzalez/ani-to-xcursor). Its clear end-to-end workflow (INF mapping → ANI frame extraction → Xcursor theme output) helped me understand the pipeline and implement my own tool.
+
 ## License
 
 MIT
