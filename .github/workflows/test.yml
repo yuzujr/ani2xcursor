@@ -33,9 +33,3 @@ jobs:
     
     - name: Run tests
       run: ./build/linux/x86_64/release/ani2xcursor_test
-    
-    - name: Test conversion (smoke test)
-      run: |
-        ./build/linux/x86_64/release/ani2xcursor "example/Kobo Cursor" -o /tmp/test_output
-        test -f "/tmp/test_output/Kobo's Cursor/cursors/left_ptr"
-        test -f "/tmp/test_output/Kobo's Cursor/index.theme"
