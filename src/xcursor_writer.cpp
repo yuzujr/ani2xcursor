@@ -15,86 +15,140 @@ bool XcursorWriter::mappings_initialized_ = false;
 
 void XcursorWriter::init_cursor_mappings() {
     if (mappings_initialized_) return;
-    
-    // Windows role -> X11 cursor name + aliases
-    // Based on common X11/freedesktop cursor naming conventions
-    
+
+    // Windows role -> X11 cursor "primary name" + aliases
+    //
+    // Notes:
+    // - Prefer *standard X11 cursorfont names* (X11/cursorfont.h without the XC_ prefix) as primary names
+    //   so themes/tooling that expect standard names can resolve them reliably.
+    // - Non-standard/common extra names (like "pointer") are kept as aliases.
+    //
+    // Canonical X11 cursorfont primaries we use here:
+    // left_ptr, help, left_ptr_watch, watch, crosshair, xterm,
+    // pencil, not-allowed (non-standard but widely used), sb_v_double_arrow, sb_h_double_arrow,
+    // bd_double_arrow, fd_double_arrow, fleur, center_ptr, hand2
+
+    // Arrow / default pointer
     cursor_mappings_["pointer"] = {"left_ptr", {
-        "default", "arrow", "top_left_arrow"
+        "default", "arrow", "top_left_arrow",
+        // some themes use these
+        "left_ptr"
     }};
-    
+
+    // Help
     cursor_mappings_["help"] = {"help", {
-        "question_arrow", "whats_this", "d9ce0ab605698f320427677b458ad60b"
+        "question_arrow", "whats_this",
+        "d9ce0ab605698f320427677b458ad60b"
     }};
-    
+
+    // AppStarting / working-in-background (Windows)
     cursor_mappings_["working"] = {"left_ptr_watch", {
-        "progress", "half-busy", "00000000000000020006000e7e9ffc3f",
-        "3ecb610c1bf2410f44200f48c40d3599", "08e8e1c95fe2fc01f976f1e063a24ccd"
+        "progress", "half-busy",
+        // common hashed aliases seen in popular themes
+        "00000000000000020006000e7e9ffc3f",
+        "3ecb610c1bf2410f44200f48c40d3599",
+        "08e8e1c95fe2fc01f976f1e063a24ccd",
+        // some themes use these literal names
+        "left_ptr_watch"
     }};
-    
+
+    // Wait / busy (Windows)
     cursor_mappings_["busy"] = {"watch", {
-        "wait", "clock", "0426c94ea35c87780ff01dc239897213"
+        "wait", "clock",
+        "0426c94ea35c87780ff01dc239897213",
+        "watch"
     }};
-    
+
+    // Precision / crosshair
     cursor_mappings_["precision"] = {"crosshair", {
-        "cross", "cross_reverse", "tcross", "diamond_cross"
+        "cross", "cross_reverse", "tcross", "diamond_cross",
+        "crosshair"
+        // (Optional) add hashed crosshair aliases here if you encounter them in the wild
     }};
-    
+
+    // Text / IBeam
     cursor_mappings_["text"] = {"xterm", {
-        "ibeam", "text"
+        "ibeam", "text",
+        "xterm"
     }};
-    
+
+    // Handwriting / pen
     cursor_mappings_["hand"] = {"pencil", {
-        "handwriting"
+        "handwriting",
+        "pencil"
     }};
-    
+
+    // Unavailable / No
     cursor_mappings_["unavailable"] = {"not-allowed", {
-        "no-drop", "crossed_circle", "forbidden", "03b6e0fcb3499374a867c041f52298f0",
-        "circle"
+        "no-drop", "crossed_circle", "forbidden",
+        "03b6e0fcb3499374a867c041f52298f0",
+        "circle",
+        "not-allowed"
     }};
-    
+
+    // Vertical resize
     cursor_mappings_["vert"] = {"sb_v_double_arrow", {
         "ns-resize", "size_ver", "v_double_arrow", "row-resize",
-        "n-resize", "s-resize", "00008160000006810000408080010102",
-        "split_v", "top_side", "bottom_side"
+        "n-resize", "s-resize",
+        "00008160000006810000408080010102",
+        "split_v", "top_side", "bottom_side",
+        "sb_v_double_arrow"
     }};
-    
+
+    // Horizontal resize
     cursor_mappings_["horz"] = {"sb_h_double_arrow", {
         "ew-resize", "size_hor", "h_double_arrow", "col-resize",
-        "e-resize", "w-resize", "028006030e0e7ebffc7f7070c0600140",
-        "split_h", "left_side", "right_side"
+        "e-resize", "w-resize",
+        "028006030e0e7ebffc7f7070c0600140",
+        "split_h", "left_side", "right_side",
+        "sb_h_double_arrow"
     }};
-    
+
+    // Diagonal resize (NW-SE)
     cursor_mappings_["dgn1"] = {"bd_double_arrow", {
         "nwse-resize", "size_fdiag", "fd_double_arrow",
-        "nw-resize", "se-resize", "c7088f0f3e6c8088236ef8e1e3e70000",
-        "top_left_corner", "bottom_right_corner"
+        "nw-resize", "se-resize",
+        "c7088f0f3e6c8088236ef8e1e3e70000",
+        "top_left_corner", "bottom_right_corner",
+        "bd_double_arrow"
     }};
-    
+
+    // Diagonal resize (NE-SW)
     cursor_mappings_["dgn2"] = {"fd_double_arrow", {
         "nesw-resize", "size_bdiag",
-        "ne-resize", "sw-resize", "fcf1c3c7cd4491d801f1e1c78f100000",
-        "top_right_corner", "bottom_left_corner"
+        "ne-resize", "sw-resize",
+        "fcf1c3c7cd4491d801f1e1c78f100000",
+        "top_right_corner", "bottom_left_corner",
+        "fd_double_arrow"
     }};
-    
+
+    // Move / size all
     cursor_mappings_["move"] = {"fleur", {
         "move", "size_all", "all-scroll", "grabbing",
-        "4498f0e0c1937ffe01fd06f973665830", "9081237383d90e509aa00f00170e968f"
+        "4498f0e0c1937ffe01fd06f973665830",
+        "9081237383d90e509aa00f00170e968f",
+        "fleur"
     }};
-    
+
+    // Alternate / up arrow / center_ptr
     cursor_mappings_["alternate"] = {"center_ptr", {
-        "up-arrow", "up_arrow"
+        "up-arrow", "up_arrow",
+        "center_ptr"
     }};
-    
-    cursor_mappings_["link"] = {"pointer", {
-        "hand", "hand1", "hand2", "pointing_hand", "openhand",
-        "e29285e634086352946a0e7090d73106", "9d800788f1b08800ae810202380a0822"
+
+    // Link / hand cursor
+    cursor_mappings_["link"] = {"hand2", {
+        "hand", "hand1", "hand2",
+        "pointer", // non-standard but appears in some themes
+        "pointing_hand", "openhand",
+        "e29285e634086352946a0e7090d73106",
+        "9d800788f1b08800ae810202380a0822"
     }};
-    
+
+    // Optional newer roles (Windows 10/11 packs sometimes include these)
     cursor_mappings_["person"] = {"person", {}};
-    
     cursor_mappings_["pin"] = {"pin", {}};
-    
+
     mappings_initialized_ = true;
 }
 
