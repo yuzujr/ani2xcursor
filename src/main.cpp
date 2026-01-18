@@ -67,13 +67,13 @@ void print_usage(const char* program) {
               << "Arguments:\n"
               << "  <input_dir>       Directory containing Install.inf and .ani files\n\n"
               << "Options:\n"
-              << "  --out <dir>       Output directory (default: ./out)\n"
-              << "  --install         Install theme to $XDG_DATA_HOME/icons\n"
-              << "  --verbose, -v     Enable verbose logging\n"
-              << "  --skip-broken     Continue on conversion errors\n"
-              << "  --help, -h        Show this help message\n\n"
+              << "  --out, -o <dir>       Output directory (default: ./out)\n"
+              << "  --install, -i         Install theme to $XDG_DATA_HOME/icons\n"
+              << "  --verbose, -v         Enable verbose logging\n"
+              << "  --skip-broken, -s         Continue on conversion errors\n"
+              << "  --help, -h            Show this help message\n\n"
               << "Example:\n"
-              << "  " << program << " ~/Downloads/MyCursor --out ./themes --install\n";
+              << "  " << program << " ~/Downloads/MyCursor -o ./themes -i\n";
 }
 
 Args parse_args(int argc, char* argv[]) {
@@ -88,11 +88,11 @@ Args parse_args(int argc, char* argv[]) {
             return args;
         } else if (arg == "--verbose" || arg == "-v") {
             args.verbose = true;
-        } else if (arg == "--install") {
+        } else if (arg == "--install" || arg == "-i") {
             args.install = true;
-        } else if (arg == "--skip-broken") {
+        } else if (arg == "--skip-broken" || arg == "-s") {
             args.skip_broken = true;
-        } else if (arg == "--out" && i + 1 < argc) {
+        } else if ((arg == "--out" || arg == "-o") && i + 1 < argc) {
             args.output_dir = argv[++i];
         } else if (!arg.starts_with("-") && args.input_dir.empty()) {
             args.input_dir = arg;

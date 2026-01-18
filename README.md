@@ -26,16 +26,16 @@ xmake -v
 ./build/linux/x86_64/release/ani2xcursor /path/to/cursor/folder
 
 # Specify output directory
-./build/linux/x86_64/release/ani2xcursor /path/to/cursor/folder --out ./my-themes
+./build/linux/x86_64/release/ani2xcursor /path/to/cursor/folder -o ./my-themes
 
 # Convert and install
-./build/linux/x86_64/release/ani2xcursor /path/to/cursor/folder --install
+./build/linux/x86_64/release/ani2xcursor /path/to/cursor/folder -i
 
 # Verbose output for debugging
 ./build/linux/x86_64/release/ani2xcursor /path/to/cursor/folder -v
 
 # Skip broken files and continue
-./build/linux/x86_64/release/ani2xcursor /path/to/cursor/folder --skip-broken
+./build/linux/x86_64/release/ani2xcursor /path/to/cursor/folder -s
 ```
 
 ### Input Directory Structure
