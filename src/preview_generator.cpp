@@ -83,13 +83,13 @@ std::string guess_role_from_name(std::string_view name) {
     if (has_sub("unavail") || has_tok("no") || has_tok("not")) return "unavailable";
     if (has_sub("vertical") || has_sub("size_ver") || has_sub("sizens") || has_sub("size_ns") || has_tok("ns")) return "vert";
     if (has_sub("horizontal") || has_sub("size_hor") || has_sub("sizewe") || has_sub("size_we") || has_tok("we")) return "horz";
-    if (has_sub("diagonal1") || has_sub("diag1") || has_sub("nwse")) return "dgn1";
-    if (has_sub("diagonal2") || has_sub("diag2") || has_sub("nesw")) return "dgn2";
+    if ((has_sub("diag") && has_sub("1")) || has_sub("nwse")) return "dgn1";
+    if ((has_sub("diag") && has_sub("2")) || has_sub("nesw")) return "dgn2";
     if (has_sub("move") || has_sub("fleur") || has_tok("all")) return "move";
     if (has_sub("alternate") || has_tok("up")) return "alternate";
     if (has_sub("link") || has_sub("hand")) return "link";
     if (has_sub("person")) return "person";
-    if (has_sub("pin")) return "pin";
+    if (has_sub("pin") || has_sub("location")) return "pin";
 
     return "";
 }

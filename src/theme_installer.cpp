@@ -44,44 +44,10 @@ void ThemeInstaller::install(const fs::path& theme_dir, bool overwrite) {
     }
     
     spdlog::info("Theme installed successfully!");
-    print_usage_instructions(theme_name);
 }
 
 fs::path ThemeInstaller::get_install_path(const std::string& theme_name) {
     return utils::get_xdg_data_home() / "icons" / theme_name;
-}
-
-bool ThemeInstaller::is_installed(const std::string& theme_name) {
-    return fs::exists(get_install_path(theme_name));
-}
-
-void ThemeInstaller::print_usage_instructions(const std::string& theme_name) {
-    std::cout << "\n"
-              << "=== Cursor Theme Usage Instructions ===\n\n"
-              << "To enable the '" << theme_name << "' cursor theme:\n\n"
-              << "GNOME / GTK:\n"
-              << "  gsettings set org.gnome.desktop.interface cursor-theme '" << theme_name << "'\n\n"
-              << "KDE Plasma:\n"
-              << "  Open System Settings > Appearance > Cursors\n"
-              << "  Or: plasma-apply-cursortheme " << theme_name << "\n\n"
-              << "Niri:\n"
-              << "  Add to ~/.config/niri/config.kdl:\n"
-              << "    cursor {\n"
-              << "        xcursor-theme \"" << theme_name << "\"\n"
-              << "    }\n\n"
-              << "Hyprland:\n"
-              << "  Add to ~/.config/hypr/hyprland.conf:\n"
-              << "    exec-once = hyprctl setcursor " << theme_name << " 24\n"
-              << "  Or run: hyprctl setcursor " << theme_name << " 24\n\n"
-              << "Sway:\n"
-              << "  Add to ~/.config/sway/config:\n"
-              << "    seat * xcursor_theme " << theme_name << " 24\n\n"
-              << "X11 (~/.Xresources):\n"
-              << "  Xcursor.theme: " << theme_name << "\n"
-              << "  Then run: xrdb -merge ~/.Xresources\n\n"
-              << "Environment variable (works everywhere):\n"
-              << "  export XCURSOR_THEME=" << theme_name << "\n"
-              << "  export XCURSOR_SIZE=24\n\n";
 }
 
 } // namespace ani2xcursor

@@ -48,6 +48,9 @@ std::string unquote(std::string_view s) {
     s = trim(s);
     if (s.size() >= 2 && s.front() == '"' && s.back() == '"') {
         s = s.substr(1, s.size() - 2);
+    } else if (!s.empty() && s.front() == '"') {
+        // Handle unterminated quote gracefully (common in some INF files)
+        s = s.substr(1);
     }
     return std::string(s);
 }
@@ -506,8 +509,11 @@ std::string InfParser::expand_vars(std::string_view input) const {
             
             // Special handling for %10% (Windows directory ID)
             // We preserve it as-is for the caller to handle
-            if (var_name == "10") {
-                output += "%10%";
+            if (!var_name.empty() &&
+                std::all_of(var_name.begin(), var_name.end(),
+                            [](unsigned char c) { return std::isdigit(c); })) {
+                // Preserve numeric DIRID variables like %10% and %24%
+                output += "%" + var_name + "%";
                 i = end + 1;
                 continue;
             }

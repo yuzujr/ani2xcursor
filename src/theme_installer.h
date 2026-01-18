@@ -16,12 +16,6 @@ public:
     
     // Get the installation path for a theme
     [[nodiscard]] static fs::path get_install_path(const std::string& theme_name);
-    
-    // Check if a theme is already installed
-    [[nodiscard]] static bool is_installed(const std::string& theme_name);
-    
-    // Print instructions for enabling the cursor theme
-    static void print_usage_instructions(const std::string& theme_name);
 };
 
 } // namespace ani2xcursor

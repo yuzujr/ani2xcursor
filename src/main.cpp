@@ -13,11 +13,13 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cctype>
 #include <cstring>
 #include <iostream>
 #include <map>
 #include <optional>
+#include <set>
 #include <span>
 #include <string>
 #include <vector>
@@ -58,10 +60,121 @@ struct Args {
     bool verbose = false;
     bool skip_broken = false;
     bool manual_mapping = false;
+    bool list_sizes = false;
     bool help = false;
     SizeFilter size_filter = SizeFilter::All;
     std::vector<uint32_t> specific_sizes;
 };
+
+uint32_t nominal_size(const ani2xcursor::CursorImage& img) {
+    return std::max(img.width, img.height);
+}
+
+std::optional<size_t> find_exact_size_index(std::span<const ani2xcursor::CursorImage> images,
+                                            uint32_t target_size) {
+    for (size_t idx = 0; idx < images.size(); ++idx) {
+        if (nominal_size(images[idx]) == target_size) {
+            return idx;
+        }
+    }
+    return std::nullopt;
+}
+
+size_t find_closest_size_index(std::span<const ani2xcursor::CursorImage> images,
+                               uint32_t target_size) {
+    size_t best_idx = 0;
+    uint32_t best_diff = UINT32_MAX;
+
+    for (size_t idx = 0; idx < images.size(); ++idx) {
+        uint32_t size = nominal_size(images[idx]);
+        uint32_t diff = (size > target_size) ? (size - target_size) : (target_size - size);
+        if (diff < best_diff) {
+            best_diff = diff;
+            best_idx = idx;
+        }
+    }
+
+    return best_idx;
+}
+
+ani2xcursor::CursorImage rescale_cursor(const ani2xcursor::CursorImage& src, uint32_t target_size) {
+    if (target_size == 0) {
+        throw std::runtime_error("Invalid target size");
+    }
+    uint32_t src_nominal = nominal_size(src);
+    if (src_nominal == target_size) {
+        return src;
+    }
+
+    double scale = static_cast<double>(target_size) / static_cast<double>(src_nominal);
+    uint32_t new_w = std::max<uint32_t>(1, static_cast<uint32_t>(std::lround(src.width * scale)));
+    uint32_t new_h = std::max<uint32_t>(1, static_cast<uint32_t>(std::lround(src.height * scale)));
+
+    if (std::max(new_w, new_h) != target_size) {
+        if (src.width >= src.height) {
+            new_w = target_size;
+            new_h = std::max<uint32_t>(
+                1, static_cast<uint32_t>(std::lround(static_cast<double>(src.height) *
+                                                     static_cast<double>(target_size) /
+                                                     static_cast<double>(src.width))));
+        } else {
+            new_h = target_size;
+            new_w = std::max<uint32_t>(
+                1, static_cast<uint32_t>(std::lround(static_cast<double>(src.width) *
+                                                     static_cast<double>(target_size) /
+                                                     static_cast<double>(src.height))));
+        }
+    }
+
+    ani2xcursor::CursorImage out;
+    out.width = new_w;
+    out.height = new_h;
+    out.pixels.resize(static_cast<size_t>(new_w) * new_h * 4);
+
+    double scale_x = static_cast<double>(new_w) / static_cast<double>(src.width);
+    double scale_y = static_cast<double>(new_h) / static_cast<double>(src.height);
+    out.hotspot_x = static_cast<uint16_t>(
+        std::clamp(std::round(src.hotspot_x * scale_x), 0.0, static_cast<double>(new_w - 1)));
+    out.hotspot_y = static_cast<uint16_t>(
+        std::clamp(std::round(src.hotspot_y * scale_y), 0.0, static_cast<double>(new_h - 1)));
+
+    auto sample = [&](int x, int y, int c) -> uint8_t {
+        size_t idx = (static_cast<size_t>(y) * src.width + static_cast<size_t>(x)) * 4 + c;
+        return src.pixels[idx];
+    };
+
+    for (uint32_t y = 0; y < new_h; ++y) {
+        double src_y = (static_cast<double>(y) + 0.5) * src.height / new_h - 0.5;
+        int y0 = static_cast<int>(std::floor(src_y));
+        int y1 = y0 + 1;
+        double fy = src_y - y0;
+        y0 = std::clamp(y0, 0, static_cast<int>(src.height) - 1);
+        y1 = std::clamp(y1, 0, static_cast<int>(src.height) - 1);
+
+        for (uint32_t x = 0; x < new_w; ++x) {
+            double src_x = (static_cast<double>(x) + 0.5) * src.width / new_w - 0.5;
+            int x0 = static_cast<int>(std::floor(src_x));
+            int x1 = x0 + 1;
+            double fx = src_x - x0;
+            x0 = std::clamp(x0, 0, static_cast<int>(src.width) - 1);
+            x1 = std::clamp(x1, 0, static_cast<int>(src.width) - 1);
+
+            for (int c = 0; c < 4; ++c) {
+                double v00 = sample(x0, y0, c);
+                double v10 = sample(x1, y0, c);
+                double v01 = sample(x0, y1, c);
+                double v11 = sample(x1, y1, c);
+                double v0 = v00 + (v10 - v00) * fx;
+                double v1 = v01 + (v11 - v01) * fx;
+                double v = v0 + (v1 - v0) * fy;
+                out.pixels[(static_cast<size_t>(y) * new_w + x) * 4 + c] =
+                    static_cast<uint8_t>(std::clamp(std::round(v), 0.0, 255.0));
+            }
+        }
+    }
+
+    return out;
+}
 
 void print_usage(const char* program) {
     std::cout << "Usage: " << program << " <input_dir> [options]\n\n"
@@ -74,15 +187,12 @@ void print_usage(const char* program) {
               << "  --verbose, -v         Enable verbose logging\n"
               << "  --skip-broken         Continue on conversion errors\n"
               << "  --manual-mapping      Generate previews + mapping.toml then exit\n"
+              << "  --list-sizes          Show available sizes in cursor files then exit\n"
               << "  --sizes <mode>        Size selection mode:\n"
               << "                          all    - Export all sizes (default)\n"
               << "                          max    - Export only largest size\n"
-              << "                          24,32  - Export specific sizes (comma-separated)\n"
-              << "  --help, -h            Show this help message\n\n"
-              << "Examples:\n"
-              << "  " << program << " ~/Downloads/MyCursor -o ./themes -i\n"
-              << "  " << program << " ~/Downloads/MyCursor --sizes max\n"
-              << "  " << program << " ~/Downloads/MyCursor --sizes 32,48\n";
+              << "                          24,32  - Ensure sizes (reuse if present, rescale if missing)\n"
+              << "  --help, -h            Show this help message\n";
 }
 
 Args parse_args(int argc, char* argv[]) {
@@ -103,6 +213,8 @@ Args parse_args(int argc, char* argv[]) {
             args.skip_broken = true;
         } else if (arg == "--manual-mapping") {
             args.manual_mapping = true;
+        } else if (arg == "--list-sizes") {
+            args.list_sizes = true;
         } else if ((arg == "--out" || arg == "-o") && i + 1 < argc) {
             args.output_dir = argv[++i];
         } else if (arg == "--sizes" && i + 1 < argc) {
@@ -145,6 +257,86 @@ Args parse_args(int argc, char* argv[]) {
     return args;
 }
 
+std::set<uint32_t> collect_sizes_from_images(std::span<const ani2xcursor::CursorImage> images) {
+    std::set<uint32_t> sizes;
+    for (const auto& img : images) {
+        sizes.insert(nominal_size(img));
+    }
+    return sizes;
+}
+
+std::set<uint32_t> collect_sizes_from_ani(const fs::path& ani_path) {
+    std::set<uint32_t> sizes;
+    auto animation = ani2xcursor::AniParser::parse(ani_path);
+    for (size_t step = 0; step < animation.num_steps; ++step) {
+        const auto& frame = animation.get_step_frame(step);
+        auto images = ani2xcursor::IcoCurDecoder::decode_all(frame.icon_data);
+        auto frame_sizes = collect_sizes_from_images(images);
+        sizes.insert(frame_sizes.begin(), frame_sizes.end());
+    }
+    return sizes;
+}
+
+std::set<uint32_t> collect_sizes_from_cur(const fs::path& cur_path) {
+    auto data = ani2xcursor::utils::read_file(cur_path);
+    auto images = ani2xcursor::IcoCurDecoder::decode_all(data);
+    return collect_sizes_from_images(images);
+}
+
+void list_available_sizes(const fs::path& input_dir) {
+    std::map<std::string, std::set<uint32_t>> per_file_sizes;
+    std::set<uint32_t> all_sizes;
+
+    std::error_code ec;
+    for (const auto& entry : fs::directory_iterator(input_dir, ec)) {
+        if (!entry.is_regular_file()) continue;
+        auto path = entry.path();
+        auto ext = path.extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+        if (ext != ".ani" && ext != ".cur") {
+            continue;
+        }
+
+        try {
+            std::set<uint32_t> sizes = (ext == ".ani") ?
+                collect_sizes_from_ani(path) : collect_sizes_from_cur(path);
+            per_file_sizes[path.filename().string()] = sizes;
+            all_sizes.insert(sizes.begin(), sizes.end());
+        } catch (const std::exception& e) {
+            spdlog::warn("Failed to read sizes from {}: {}", path.filename().string(), e.what());
+        }
+    }
+
+    if (per_file_sizes.empty()) {
+        spdlog::warn("No .ani or .cur files found in {}", input_dir.string());
+        return;
+    }
+
+    spdlog::info("Available sizes by file:");
+    for (const auto& [name, sizes] : per_file_sizes) {
+        if (sizes.empty()) {
+            spdlog::info("  {}: (none)", name);
+            continue;
+        }
+        std::string line;
+        for (uint32_t size : sizes) {
+            if (!line.empty()) line += ", ";
+            line += std::to_string(size);
+        }
+        spdlog::info("  {}: {}", name, line);
+    }
+
+    if (!all_sizes.empty()) {
+        std::string summary;
+        for (uint32_t size : all_sizes) {
+            if (!summary.empty()) summary += ", ";
+            summary += std::to_string(size);
+        }
+        spdlog::info("All sizes in directory: {}", summary);
+    }
+}
+
 // Process a single .ani file and return decoded frames with multi-size support
 std::pair<std::vector<ani2xcursor::CursorImage>, std::vector<uint32_t>>
 process_ani_file(const fs::path& ani_path, SizeFilter filter, const std::vector<uint32_t>& specific_sizes) {
@@ -180,33 +372,68 @@ process_ani_file(const fs::path& ani_path, SizeFilter filter, const std::vector<
         }
     }
 
-    std::span<const ani2xcursor::CursorImage> size_span(frames_by_step[0].data(), num_sizes);
-    auto size_indices_to_export = ani2xcursor::select_size_indices(size_span, filter, specific_sizes);
-
-    if (size_indices_to_export.empty()) {
-        throw std::runtime_error("No sizes selected for export");
-    }
-    
     std::vector<ani2xcursor::CursorImage> decoded_frames;
     std::vector<uint32_t> delays;
     std::map<uint32_t, size_t> size_frame_counts;
-    
-    for (size_t size_idx : size_indices_to_export) {
-        uint32_t nominal_size = 0;
-        
-        for (size_t step = 0; step < frames_by_step.size(); ++step) {
-            const auto& img = frames_by_step[step][size_idx];
-            nominal_size = std::max(img.width, img.height);
-            
-            decoded_frames.push_back(img);
-            delays.push_back(step_delays[step]);
+
+    std::span<const ani2xcursor::CursorImage> size_span(frames_by_step[0].data(), num_sizes);
+
+    if (filter == SizeFilter::Specific) {
+        std::vector<uint32_t> targets;
+        targets.reserve(specific_sizes.size());
+        for (uint32_t size : specific_sizes) {
+            if (std::find(targets.begin(), targets.end(), size) == targets.end()) {
+                targets.push_back(size);
+            }
+        }
+
+        for (uint32_t target_size : targets) {
+            auto exact_idx = find_exact_size_index(size_span, target_size);
+            bool needs_rescale = !exact_idx.has_value();
+            size_t source_idx = exact_idx.value_or(find_closest_size_index(size_span, target_size));
+            uint32_t source_size = nominal_size(frames_by_step[0][source_idx]);
+
+            if (needs_rescale) {
+                spdlog::info("Rescaling {}x{} -> {}x{}", source_size, source_size,
+                             target_size, target_size);
+            }
+
+            for (size_t step = 0; step < frames_by_step.size(); ++step) {
+                const auto& img = frames_by_step[step][source_idx];
+                if (needs_rescale) {
+                    decoded_frames.push_back(rescale_cursor(img, target_size));
+                } else {
+                    decoded_frames.push_back(img);
+                }
+                delays.push_back(step_delays[step]);
+            }
+
+            size_frame_counts[target_size] = frames_by_step.size();
+        }
+    } else {
+        auto size_indices_to_export = ani2xcursor::select_size_indices(size_span, filter, specific_sizes);
+
+        if (size_indices_to_export.empty()) {
+            throw std::runtime_error("No sizes selected for export");
         }
         
-        size_frame_counts[nominal_size] = frames_by_step.size();
+        for (size_t size_idx : size_indices_to_export) {
+            uint32_t nominal = 0;
+            
+            for (size_t step = 0; step < frames_by_step.size(); ++step) {
+                const auto& img = frames_by_step[step][size_idx];
+                nominal = nominal_size(img);
+                
+                decoded_frames.push_back(img);
+                delays.push_back(step_delays[step]);
+            }
+            
+            size_frame_counts[nominal] = frames_by_step.size();
+        }
     }
     
     if (spdlog::get_level() <= spdlog::level::info) {
-        spdlog::info("Exported {} sizes:", size_indices_to_export.size());
+        spdlog::info("Exported {} sizes:", size_frame_counts.size());
         for (const auto& [size, count] : size_frame_counts) {
             spdlog::info("  {}x{}: {} frames", size, size, count);
         }
@@ -226,28 +453,55 @@ process_cur_file(const fs::path& cur_path, SizeFilter filter, const std::vector<
     auto data = ani2xcursor::utils::read_file(cur_path);
     auto images = ani2xcursor::IcoCurDecoder::decode_all(data);
 
-    std::span<const ani2xcursor::CursorImage> image_span(images.data(), images.size());
-    auto size_indices = ani2xcursor::select_size_indices(image_span, filter, specific_sizes);
-    if (size_indices.empty()) {
-        throw std::runtime_error("No sizes selected for export");
-    }
-
     std::vector<ani2xcursor::CursorImage> decoded_images;
     std::vector<uint32_t> delays;
-    decoded_images.reserve(size_indices.size());
-    delays.reserve(size_indices.size());
-
     std::map<uint32_t, size_t> size_counts;
+    std::span<const ani2xcursor::CursorImage> image_span(images.data(), images.size());
 
-    for (size_t idx : size_indices) {
-        const auto& img = images[idx];
-        decoded_images.push_back(img);
-        delays.push_back(0);
-        size_counts[std::max(img.width, img.height)]++;
+    if (filter == SizeFilter::Specific) {
+        std::vector<uint32_t> targets;
+        targets.reserve(specific_sizes.size());
+        for (uint32_t size : specific_sizes) {
+            if (std::find(targets.begin(), targets.end(), size) == targets.end()) {
+                targets.push_back(size);
+            }
+        }
+
+        for (uint32_t target_size : targets) {
+            auto exact_idx = find_exact_size_index(image_span, target_size);
+            bool needs_rescale = !exact_idx.has_value();
+            size_t source_idx = exact_idx.value_or(find_closest_size_index(image_span, target_size));
+            uint32_t source_size = nominal_size(images[source_idx]);
+
+            if (needs_rescale) {
+                spdlog::info("Rescaling {}x{} -> {}x{}", source_size, source_size,
+                             target_size, target_size);
+                decoded_images.push_back(rescale_cursor(images[source_idx], target_size));
+            } else {
+                decoded_images.push_back(images[source_idx]);
+            }
+            delays.push_back(0);
+            size_counts[target_size]++;
+        }
+    } else {
+        auto size_indices = ani2xcursor::select_size_indices(image_span, filter, specific_sizes);
+        if (size_indices.empty()) {
+            throw std::runtime_error("No sizes selected for export");
+        }
+
+        decoded_images.reserve(size_indices.size());
+        delays.reserve(size_indices.size());
+
+        for (size_t idx : size_indices) {
+            const auto& img = images[idx];
+            decoded_images.push_back(img);
+            delays.push_back(0);
+            size_counts[nominal_size(img)]++;
+        }
     }
 
     if (spdlog::get_level() <= spdlog::level::info) {
-        spdlog::info("Exported {} sizes:", size_indices.size());
+        spdlog::info("Exported {} sizes:", size_counts.size());
         for (const auto& [size, count] : size_counts) {
             spdlog::info("  {}x{}: {} frames", size, size, count);
         }
@@ -302,33 +556,53 @@ int main(int argc, char* argv[]) {
             spdlog::error("Input directory does not exist: {}", args.input_dir.string());
             return 1;
         }
+
+        if (args.list_sizes) {
+            list_available_sizes(args.input_dir);
+            return 0;
+        }
         
         auto mapping_dir = args.input_dir / "ani2xcursor";
         auto mapping_path = mapping_dir / "mapping.toml";
         bool mapping_present = fs::exists(mapping_path);
 
-        if (args.manual_mapping) {
-            spdlog::info("Manual mapping requested; generating previews and mapping.toml.");
-            auto preview_dir = mapping_dir / "previews";
-            auto preview_result = ani2xcursor::generate_previews(
-                args.input_dir, preview_dir, args.size_filter, args.specific_sizes);
-            ani2xcursor::write_mapping_toml_template(mapping_path, args.input_dir, preview_result.guesses);
+        std::optional<ani2xcursor::MappingLoadResult> manual_mapping;
 
-            std::error_code abs_ec;
-            auto abs_mapping = fs::absolute(mapping_path, abs_ec);
-            auto abs_previews = fs::absolute(preview_dir, abs_ec);
-            if (abs_ec) {
-                abs_mapping = mapping_path;
-                abs_previews = preview_dir;
+        if (args.manual_mapping) {
+            if (mapping_present) {
+                try {
+                    manual_mapping = ani2xcursor::load_mapping_toml(mapping_path);
+                    for (const auto& warning : manual_mapping->warnings) {
+                        spdlog::warn("mapping.toml: {}", warning);
+                    }
+                    spdlog::info("Manual mapping requested; using existing mapping.toml.");
+                } catch (const std::exception& e) {
+                    spdlog::warn("Manual mapping requested but mapping.toml failed to parse: {}", e.what());
+                }
             }
-            spdlog::info("Generated: {} and {}", abs_mapping.string(),
-                         (abs_previews / "*.png").string());
-            spdlog::info("Edit mapping.toml and re-run the same command.");
-            return 0;
+
+            if (!manual_mapping) {
+                spdlog::info("Manual mapping requested; generating previews and mapping.toml.");
+                auto preview_dir = mapping_dir / "previews";
+                auto preview_result = ani2xcursor::generate_previews(
+                    args.input_dir, preview_dir, args.size_filter, args.specific_sizes);
+                ani2xcursor::write_mapping_toml_template(mapping_path, args.input_dir, preview_result.guesses);
+
+                std::error_code abs_ec;
+                auto abs_mapping = fs::absolute(mapping_path, abs_ec);
+                auto abs_previews = fs::absolute(preview_dir, abs_ec);
+                if (abs_ec) {
+                    abs_mapping = mapping_path;
+                    abs_previews = preview_dir;
+                }
+                spdlog::info("Generated: {} and {}", abs_mapping.string(),
+                             (abs_previews / "*.png").string());
+                spdlog::info("Edit mapping.toml and re-run the same command.");
+                return 0;
+            }
         }
 
-        std::optional<ani2xcursor::MappingLoadResult> manual_mapping;
-        if (mapping_present) {
+        if (!manual_mapping && mapping_present) {
             try {
                 manual_mapping = ani2xcursor::load_mapping_toml(mapping_path);
                 for (const auto& warning : manual_mapping->warnings) {

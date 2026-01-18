@@ -27,7 +27,10 @@ RiffReader::RiffReader(std::span<const uint8_t> data) : data_(data), valid_(fals
     
     // Validate size
     if (size + 8 > data_.size()) {
-        spdlog::warn("RIFF: Declared size {} exceeds file size {}", size + 8, data_.size());
+        if (size != data_.size()) {
+            spdlog::warn("RIFF: Declared size {} exceeds file size {} (non-fatal; continuing)",
+                         size + 8, data_.size());
+        }
         // Continue anyway, some files have incorrect sizes
     }
     
