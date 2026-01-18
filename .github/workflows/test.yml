@@ -1,0 +1,43 @@
+name: Test
+
+on:
+  push:
+    branches: [ main, master, dev, develop ]
+  pull_request:
+    branches: [ main, master, dev, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libxcursor-dev
+    
+    - name: Install xmake
+      run: |
+        wget https://github.com/xmake-io/xmake/releases/download/v2.9.6/xmake-v2.9.6.gz.run
+        chmod +x xmake-v2.9.6.gz.run
+        sudo ./xmake-v2.9.6.gz.run --noexec --target /usr/local
+        rm xmake-v2.9.6.gz.run
+    
+    - name: Build
+      run: |
+        xmake config -y
+        xmake build
+    
+    - name: Build test binary
+      run: xmake build ani2xcursor_test
+    
+    - name: Run tests
+      run: ./build/linux/x86_64/release/ani2xcursor_test
+    
+    - name: Test conversion (smoke test)
+      run: |
+        ./build/linux/x86_64/release/ani2xcursor "example/Kobo Cursor" -o /tmp/test_output
+        test -f "/tmp/test_output/Kobo's Cursor/cursors/left_ptr"
+        test -f "/tmp/test_output/Kobo's Cursor/index.theme"

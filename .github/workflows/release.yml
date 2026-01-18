@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Get version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libxcursor-dev
+    
+    - name: Install xmake
+      run: |
+        wget https://github.com/xmake-io/xmake/releases/download/v2.9.6/xmake-v2.9.6.gz.run
+        chmod +x xmake-v2.9.6.gz.run
+        sudo ./xmake-v2.9.6.gz.run --noexec --target /usr/local
+        rm xmake-v2.9.6.gz.run
+    
+    - name: Build
+      run: |
+        xmake config -m release -y
+        xmake build
+    
+    - name: Run tests
+      run: |
+        xmake build ani2xcursor_test
+        ./build/linux/x86_64/release/ani2xcursor_test
+    
+    - name: Package binary
+      run: |
+        mkdir -p release
+        cp build/linux/x86_64/release/ani2xcursor release/
+        cp README.md LICENSE release/
+        cd release
+        tar -czf ani2xcursor-v${{ steps.get_version.outputs.VERSION }}-linux-x86_64.tar.gz *
+        cd ..
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: release/ani2xcursor-v${{ steps.get_version.outputs.VERSION }}-linux-x86_64.tar.gz
+        body: |
+          ## ani2xcursor v${{ steps.get_version.outputs.VERSION }}
+          
+          Convert Windows animated cursor themes (.ani/.cur) to Linux Xcursor format.
+          
+          ### Installation
+          
+          ```bash
+          tar -xzf ani2xcursor-v${{ steps.get_version.outputs.VERSION }}-linux-x86_64.tar.gz
+          sudo mv ani2xcursor /usr/local/bin/
+          ```
+          
+          ### Usage
+          
+          ```bash
+          ani2xcursor /path/to/cursor/folder
+          ```
+          
+          See [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) for detailed documentation.
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
