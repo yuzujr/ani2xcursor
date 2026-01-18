@@ -5,7 +5,7 @@ Convert Windows animated cursor themes (.ani/.cur with Install.inf) to Linux Xcu
 ## Features
 
 - Full .ani/.cur format support
-- Multi-size export
+- Multi-size export with auto-rescale for missing target sizes
 - Manual mapping mode: generate cursor previews + mapping template, then customize roles (useful for overrides with or without Install.inf)
   ### Screenshots
   cursor preview:
@@ -31,21 +31,17 @@ Requirements: Linux, xmake
 ani2xcursor /path/to/cursor/folder
 
 # Options
--o, --out <dir>      Output directory (default: ./out)
--i, --install        Install to ~/.local/share/icons
--v, --verbose        Verbose output
---sizes <mode>       Size export: all (default) | max | 24,32,48
---skip-broken        Continue on errors
---manual-mapping     Generate previews + mapping.toml then exit
--h, --help           Show help
-```
-
-## Input Structure
-
-```
-ThemeName/
-├── Install.inf
-└── *.ani files
+--out, -o <dir>       Output directory (default: ./out)
+--install, -i         Install theme to $XDG_DATA_HOME/icons
+--verbose, -v         Enable verbose logging
+--skip-broken         Continue on conversion errors
+--manual-mapping      Generate previews + mapping.toml then exit
+--list-sizes          Show available sizes in cursor files then exit
+--sizes <mode>        Size selection mode:
+                          all    - Export all sizes (default)
+                          max    - Export only largest size
+                          24,32  - Ensure sizes (reuse if present, rescale if missing)
+--help, -h            Show this help message
 ```
 
 ## Manual Mapping (fallback or forced)
@@ -61,18 +57,6 @@ You can also force this mode with `--manual-mapping` or by removing `Install.inf
 ```
 
 Edit `mapping.toml` and re-run the same command. If `mapping.toml` exists, it takes priority over `Install.inf`.
-
-## Output Structure
-
-```
-out/ThemeName/
-├── index.theme
-└── cursors/
-    ├── left_ptr (+ symlinks)
-    ├── watch
-    ├── xterm
-    └── ...
-```
 
 ## Enable Theme
 
