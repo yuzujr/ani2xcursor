@@ -319,7 +319,7 @@ void test_reg_line_parser() {
 }
 
 // ============================================================================
-// Test 9: Theme name from various sources
+// Test 8: Theme name from various sources
 // ============================================================================
 void test_theme_name_sources() {
     std::cout << "Test: Theme name from various sources...\n";
