@@ -16,6 +16,31 @@ Convert Windows animated cursor themes (.ani/.cur with Install.inf) to Linux Xcu
 
   <img width="798" height="277" alt="output" src="https://github.com/user-attachments/assets/90b56fa2-6b11-4fde-8f30-d7ea2448c5dd" />
 
+## Installation
+
+### Releases
+Install from [releases](https://github.com/yuzujr/ani2xcursor/releases).
+
+### Arch Linux (AUR)
+* `ani2xcursor` — build from source (xmake)
+* `ani2xcursor-bin` — prebuilt from Releases
+
+Install one of them:
+
+use `paru`:
+```bash
+paru -S ani2xcursor
+# or
+paru -S ani2xcursor-bin
+```
+
+or use `yay`:
+```bash
+yay -S ani2xcursor
+# or
+yay -S ani2xcursor-bin
+```
+
 ## Build
 
 ```bash
