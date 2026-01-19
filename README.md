@@ -118,6 +118,7 @@ Xcursor.size: 24
 
 ## Acknowledgements
 This project was inspired by [ani-to-xcursor](https://github.com/nicdgonzalez/ani-to-xcursor). Its clear end-to-end workflow (INF mapping → ANI frame extraction → Xcursor theme output) helped me understand the pipeline and implement my own tool.
+See also [win2xcur](https://github.com/quantum5/win2xcur), a related project in the same space. I didn’t use it as a direct reference (it’s Python-based), but it appears to include some features that aren’t currently covered by this project.
 
 ## License
 
