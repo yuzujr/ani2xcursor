@@ -1,6 +1,6 @@
 # ani2xcursor
 
-Convert Windows animated cursor themes (.ani/.cur with Install.inf) to Linux Xcursor format.
+Convert Windows animated cursor themes (.ani/.cur) to Linux Xcursor format.
 
 ## Features
 
