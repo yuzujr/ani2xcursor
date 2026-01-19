@@ -81,7 +81,7 @@ cursor {
 **Hyprland:**
 Add to `~/.config/hypr/hyprland.conf`:
 ```bash
-hyprctl setcursor ThemeName 24
+exec = hyprctl setcursor ThemeName 24
 ```
 
 **Sway:**
