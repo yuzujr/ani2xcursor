@@ -1,6 +1,6 @@
 // Comprehensive tests for refactored INF parser
 // Tests cover: Scheme.Reg only, Wreg override, variable expansion, warnings
-#include "../src/inf_parser.h"
+#include "inf_parser.h"
 
 #include <cassert>
 #include <iostream>
