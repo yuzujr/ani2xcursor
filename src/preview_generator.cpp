@@ -57,37 +57,28 @@ std::vector<std::string> tokenize(std::string_view s) {
     return tokens;
 }
 
-bool has_token(const std::vector<std::string>& tokens, std::string_view token) {
-    return std::any_of(tokens.begin(), tokens.end(), [token](const std::string& t) {
-        return t == token;
-    });
-}
-
 std::string guess_role_from_name(std::string_view name) {
     std::string lower = to_lower(name);
     auto tokens = tokenize(lower);
     auto has_sub = [&](std::string_view sub) {
         return lower.find(sub) != std::string::npos;
     };
-    auto has_tok = [&](std::string_view tok) {
-        return has_token(tokens, tok);
-    };
 
     if (has_sub("normal") || has_sub("arrow") || has_sub("left_ptr")) return "pointer";
     if (has_sub("help") || has_sub("question")) return "help";
     if (has_sub("work") || has_sub("progress") || has_sub("starting")) return "working";
     if (has_sub("wait") || has_sub("busy") || has_sub("watch")) return "busy";
-    if (has_sub("precision") || has_sub("cross") || has_sub("crosshair")) return "precision";
-    if (has_sub("ibeam") || has_sub("text") || has_sub("xterm") || has_sub("font")) return "text";
-    if (has_sub("handwriting") || has_sub("pen") || has_sub("pencil") || has_sub("nwpen")) return "hand";
-    if (has_sub("unavail") || has_tok("no") || has_tok("not")) return "unavailable";
-    if (has_sub("vertical") || has_sub("size_ver") || has_sub("sizens") || has_sub("size_ns") || has_tok("ns")) return "vert";
-    if (has_sub("horizontal") || has_sub("size_hor") || has_sub("sizewe") || has_sub("size_we") || has_tok("we")) return "horz";
-    if ((has_sub("diag") && has_sub("1")) || has_sub("nwse")) return "dgn1";
-    if ((has_sub("diag") && has_sub("2")) || has_sub("nesw")) return "dgn2";
-    if (has_sub("move") || has_sub("fleur") || has_tok("all")) return "move";
-    if (has_sub("alternate") || has_tok("up")) return "alternate";
-    if (has_sub("link") || has_sub("hand")) return "link";
+    if (has_sub("precision") || has_sub("cross")) return "precision";
+    if (has_sub("text")|| has_sub("font")) return "text";
+    if (has_sub("hand") || has_sub("pen")) return "hand";
+    if (has_sub("unavail") || has_sub("not")) return "unavailable";
+    if (has_sub("vert")) return "vert";
+    if (has_sub("hori")|| has_sub("horz")) return "horz";
+    if ((has_sub("dgn") && has_sub("1"))  || (has_sub("diag") && has_sub("1"))) return "dgn1";
+    if ((has_sub("dgn") && has_sub("2")) || (has_sub("diag") && has_sub("2"))) return "dgn2";
+    if (has_sub("move")) return "move";
+    if (has_sub("alt")) return "alternate";
+    if (has_sub("link")) return "link";
     if (has_sub("person")) return "person";
     if (has_sub("pin") || has_sub("location")) return "pin";
 

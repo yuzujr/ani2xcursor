@@ -73,16 +73,18 @@ std::optional<ani2xcursor::MappingLoadResult> handle_manual_mapping_request(
 std::string resolve_theme_name(const ani2xcursor::Args& args,
                                const ani2xcursor::MappingLoadResult& mapping) {
     std::error_code name_ec;
-    auto abs_input = fs::absolute(args.input_dir, name_ec);
+    auto abs_input = fs::weakly_canonical(args.input_dir, name_ec);
     fs::path name_source = name_ec ? args.input_dir : abs_input;
     if (!mapping.theme_name.empty()) {
         return mapping.theme_name;
     }
-    if (!name_source.filename().string().empty()) {
-        return name_source.filename().string();
+    auto filename = name_source.filename().string();
+    if (!filename.empty() && filename != "." && filename != "..") {
+        return filename;
     }
-    if (!name_source.parent_path().filename().string().empty()) {
-        return name_source.parent_path().filename().string();
+    auto parent_name = name_source.parent_path().filename().string();
+    if (!parent_name.empty() && parent_name != "." && parent_name != "..") {
+        return parent_name;
     }
     return "cursor_theme";
 }
