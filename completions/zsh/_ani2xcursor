@@ -1,0 +1,15 @@
+#compdef ani2xcursor
+
+_arguments -s \
+  '1:cursor theme folder:_files -/' \
+  '(-o --out)'{-o,--out}'[Output directory]:dir:_files -/' \
+  '--install[Install theme to $XDG_DATA_HOME/icons]' \
+  '(-i --install)'{-i,--install}'[Install theme]' \
+  '--verbose[Enable verbose logging]' \
+  '(-v --verbose)'{-v,--verbose}'[Enable verbose logging]' \
+  '--skip-broken[Continue on conversion errors]' \
+  '--manual-mapping[Generate previews + mapping.toml then exit]' \
+  '--list-sizes[Show available sizes then exit]' \
+  '--sizes[Size selection mode]:mode:(all max)' \
+  '(-h --help)'{-h,--help}'[Show help message]'
+

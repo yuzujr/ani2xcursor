@@ -71,6 +71,7 @@ jobs:
         mkdir -p release
         cp build/linux/x86_64/release/ani2xcursor release/
         cp README.md LICENSE release/
+        cp -r completions release/
         cd release
         tar -czf ani2xcursor-v${{ steps.get_version.outputs.VERSION }}-linux-x86_64.tar.gz *
         cd ..
