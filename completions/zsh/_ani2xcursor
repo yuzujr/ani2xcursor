@@ -10,6 +10,6 @@ _arguments -s \
   '--skip-broken[Continue on conversion errors]' \
   '--manual-mapping[Generate previews + mapping.toml then exit]' \
   '--list-sizes[Show available sizes then exit]' \
+  '--format[Output format]:mode:(xcursor source)' \
   '--sizes[Size selection mode]:mode:(all max)' \
   '(-h --help)'{-h,--help}'[Show help message]'
-

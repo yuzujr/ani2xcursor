@@ -6,15 +6,21 @@
 namespace ani2xcursor {
 
 void ThemeInstaller::install(const fs::path& theme_dir, bool overwrite) {
-    if (!fs::exists(theme_dir)) {
-        throw std::runtime_error("Theme directory does not exist: " + theme_dir.string());
-    }
-    
     auto theme_dir_abs = fs::weakly_canonical(theme_dir);
     auto theme_name = theme_dir_abs.filename().string();
     if (theme_name.empty() || theme_name == "." || theme_name == "..") {
         throw std::runtime_error("Invalid theme directory name: " + theme_dir.string());
     }
+    install(theme_dir, theme_name, overwrite);
+}
+
+void ThemeInstaller::install(const fs::path& theme_dir,
+                             const std::string& theme_name,
+                             bool overwrite) {
+    if (!fs::exists(theme_dir)) {
+        throw std::runtime_error("Theme directory does not exist: " + theme_dir.string());
+    }
+
     auto install_path = get_install_path(theme_name);
     auto icons_dir = utils::get_xdg_data_home() / "icons";
     if (install_path == icons_dir) {

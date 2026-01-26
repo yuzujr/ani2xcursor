@@ -14,6 +14,7 @@ void print_usage(const char* program) {
               << "  <input_dir>       Directory containing Install.inf and .ani files\n\n"
               << "Options:\n"
               << "  --out, -o <dir>       Output directory (default: ./out)\n"
+              << "  --format <mode>       Output format: xcursor (default) or source\n"
               << "  --install, -i         Install theme to $XDG_DATA_HOME/icons\n"
               << "  --verbose, -v         Enable verbose logging\n"
               << "  --skip-broken         Continue on conversion errors\n"
@@ -46,6 +47,15 @@ Args parse_args(int argc, char* argv[]) {
             args.manual_mapping = true;
         } else if (arg == "--list-sizes") {
             args.list_sizes = true;
+        } else if (arg == "--format" && i + 1 < argc) {
+            std::string fmt = argv[++i];
+            if (fmt == "xcursor") {
+                args.format = OutputFormat::Xcursor;
+            } else if (fmt == "source") {
+                args.format = OutputFormat::Source;
+            } else {
+                throw std::runtime_error("Invalid format: " + fmt);
+            }
         } else if ((arg == "--out" || arg == "-o") && i + 1 < argc) {
             args.output_dir = argv[++i];
         } else if (arg == "--sizes" && i + 1 < argc) {

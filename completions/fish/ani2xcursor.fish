@@ -30,6 +30,11 @@ complete -c ani2xcursor -l manual-mapping \
 complete -c ani2xcursor -l list-sizes \
     -d "Show available sizes then exit"
 
+# --format <mode>
+complete -c ani2xcursor -l format -r -f \
+    -a "xcursor source" \
+    -d "Output format (default: xcursor)"
+
 # --sizes <mode>
 complete -c ani2xcursor -l sizes -r -f \
     -a "all max" \

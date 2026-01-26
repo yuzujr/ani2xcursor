@@ -6,6 +6,7 @@ Convert Windows animated cursor themes (.ani/.cur) to Linux Xcursor format.
 
 - Full .ani/.cur format support
 - Multi-size export with auto-rescale for missing target sizes
+- Optional source output, enable further processing.
 - Manual mapping mode: generate cursor previews + mapping template, then customize roles (useful for overrides with or without Install.inf)
   ### Screenshots
   cursor preview:
@@ -57,6 +58,7 @@ ani2xcursor /path/to/cursor/folder
 
 # Options
 --out, -o <dir>       Output directory (default: ./out)
+--format <mode>       Output format: xcursor (default) or source
 --install, -i         Install theme to $XDG_DATA_HOME/icons
 --verbose, -v         Enable verbose logging
 --skip-broken         Continue on conversion errors

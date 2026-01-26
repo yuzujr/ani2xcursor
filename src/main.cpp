@@ -4,6 +4,7 @@
 #include "manual_mapping.h"
 #include "path_utils.h"
 #include "preview_generator.h"
+#include "source_writer.h"
 #include "size_tools.h"
 #include "theme_installer.h"
 #include "xcursor_writer.h"
@@ -15,6 +16,7 @@
 #include <iostream>
 #include <optional>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace {
@@ -229,15 +231,23 @@ int main(int argc, char* argv[]) {
 
         // Create output directory structure
         auto theme_dir = args.output_dir / theme_name;
-        auto cursors_dir = theme_dir / "cursors";
+        auto src_dir = theme_dir / "src";
+        auto xcursor_dir = theme_dir / "xcursor";
+        auto cursors_dir = xcursor_dir / "cursors";
 
-        std::filesystem::create_directories(cursors_dir);
+        if (args.format == ani2xcursor::OutputFormat::Xcursor) {
+            std::filesystem::create_directories(cursors_dir);
+        } else {
+            std::filesystem::create_directories(src_dir);
+        }
 
         // Process each cursor
         int success_count = 0;
         int error_count = 0;
 
         bool using_manual = loaded_mapping.has_value();
+        std::vector<ani2xcursor::CursorListEntry> cursor_list_entries;
+        std::unordered_set<std::string> cursor_list_seen;
 
         for (const auto& mapping : mappings) {
             std::filesystem::path cursor_path;
@@ -294,13 +304,26 @@ int main(int argc, char* argv[]) {
                 // Get X11 cursor name and aliases
                 auto names = ani2xcursor::XcursorWriter::get_cursor_names(mapping.role);
 
-                // Write Xcursor file
-                auto output_cursor_path = cursors_dir / names.primary;
-                ani2xcursor::XcursorWriter::write_cursor(frames, delays, output_cursor_path);
+                if (args.format == ani2xcursor::OutputFormat::Xcursor) {
+                    // Write Xcursor file
+                    auto output_cursor_path = cursors_dir / names.primary;
+                    ani2xcursor::XcursorWriter::write_cursor(frames, delays, output_cursor_path);
 
-                // Create aliases
-                ani2xcursor::XcursorWriter::create_aliases(cursors_dir, names.primary,
-                                                           names.aliases);
+                    // Create aliases
+                    ani2xcursor::XcursorWriter::create_aliases(cursors_dir, names.primary,
+                                                               names.aliases);
+                } else {
+                    ani2xcursor::SourceWriter::write_cursor(src_dir, names.primary, frames, delays);
+
+                    for (const auto& alias : names.aliases) {
+                        if (alias == names.primary) {
+                            continue;
+                        }
+                        if (cursor_list_seen.insert(alias).second) {
+                            cursor_list_entries.push_back({alias, names.primary});
+                        }
+                    }
+                }
 
                 spdlog::debug("Converted '{}' -> {}", mapping.role, names.primary);
                 ++success_count;
@@ -319,17 +342,29 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        // Write index.theme
-        ani2xcursor::XcursorWriter::write_index_theme(theme_dir, theme_name);
+        if (args.format == ani2xcursor::OutputFormat::Xcursor) {
+            // Write index.theme
+            ani2xcursor::XcursorWriter::write_index_theme(xcursor_dir, theme_name);
+        } else {
+            ani2xcursor::SourceWriter::write_cursor_list(src_dir, cursor_list_entries);
+        }
 
         spdlog::info("Conversion complete: {} cursors converted, {} errors",
                      success_count, error_count);
 
         // Install if requested
         if (args.install) {
-            ani2xcursor::ThemeInstaller::install(theme_dir);
+            if (args.format == ani2xcursor::OutputFormat::Xcursor) {
+                ani2xcursor::ThemeInstaller::install(xcursor_dir, theme_name);
+            } else {
+                spdlog::warn("--install ignored for source output format");
+            }
         } else {
-            spdlog::info("Theme created at: {}", theme_dir.string());
+            if (args.format == ani2xcursor::OutputFormat::Xcursor) {
+                spdlog::info("Theme created at: {}", xcursor_dir.string());
+            } else {
+                spdlog::info("Source files created at: {}", src_dir.string());
+            }
         }
 
         return 0;

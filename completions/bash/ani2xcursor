@@ -14,11 +14,16 @@ _ani2xcursor() {
       COMPREPLY=( $(compgen -W "all max" -- "$cur") )
       return 0
       ;;
+    --format)
+      COMPREPLY=( $(compgen -W "xcursor source" -- "$cur") )
+      return 0
+      ;;
   esac
 
   if [[ "$cur" == -* ]]; then
     COMPREPLY=( $(compgen -W "
       --out -o
+      --format
       --install -i
       --verbose -v
       --skip-broken
@@ -34,4 +39,3 @@ _ani2xcursor() {
 }
 
 complete -F _ani2xcursor ani2xcursor
-
