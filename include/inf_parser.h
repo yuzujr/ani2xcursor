@@ -23,18 +23,18 @@ struct CursorMapping {
 
 // Parsed INF data with full installation intent
 struct InfResult {
-    std::string theme_name;                   // From SCHEME_NAME or reg writes
-    std::vector<CursorMapping> mappings;      // Final role->path mappings
-    std::vector<std::string> warnings;        // Parse warnings (non-fatal issues)
-    
+    std::string theme_name;               // From SCHEME_NAME or reg writes
+    std::vector<CursorMapping> mappings;  // Final role->path mappings
+    std::vector<std::string> warnings;    // Parse warnings (non-fatal issues)
+
     // Get filename/path for a role, returns nullopt if not found
     [[nodiscard]] std::optional<std::string> get_value(std::string_view role) const;
-    
+
     // Compatibility alias for existing code
     [[nodiscard]] std::optional<std::string> get_filename(std::string_view role) const {
         return get_value(role);
     }
-    
+
     // Extract just the filename from a full path value
     // Handles Windows paths with %10% prefixes, backslashes, etc.
     [[nodiscard]] static std::string extract_filename(std::string_view path);
@@ -47,32 +47,32 @@ struct InfResult {
 // Windows registry cursor value names -> internal role names
 // Used by Wreg parsing (AddReg with individual cursor entries)
 struct WinCursorKeyMapping {
-    const char* win_key;    // Windows registry value name (case-insensitive)
-    const char* role;       // Internal role name
+    const char* win_key;  // Windows registry value name (case-insensitive)
+    const char* role;     // Internal role name
 };
 
 // Standard Windows cursor registry keys to internal roles
 // Reference: https://docs.microsoft.com/en-us/windows/win32/menurc/about-cursors
 inline constexpr WinCursorKeyMapping kWinCursorKeyTable[] = {
-    {"Arrow",       "pointer"},
-    {"Help",        "help"},
+    {"Arrow", "pointer"},
+    {"Help", "help"},
     {"AppStarting", "working"},
-    {"Wait",        "busy"},
-    {"Crosshair",   "precision"},
-    {"IBeam",       "text"},
-    {"NWPen",       "hand"},        // Handwriting cursor
-    {"No",          "unavailable"},
-    {"SizeNS",      "vert"},        // Vertical resize
-    {"SizeWE",      "horz"},        // Horizontal resize  
-    {"SizeNWSE",    "dgn1"},        // Diagonal resize NW-SE
-    {"SizeNESW",    "dgn2"},        // Diagonal resize NE-SW
-    {"SizeAll",     "move"},        // Move/drag all directions
-    {"UpArrow",     "alternate"},   // Alternate select
-    {"Hand",        "link"},        // Hand/link cursor
-    {"Person",      "person"},      // Person select (Windows 10+)
-    {"Pin",         "pin"},         // Pin cursor (Windows 10+)
+    {"Wait", "busy"},
+    {"Crosshair", "precision"},
+    {"IBeam", "text"},
+    {"NWPen", "hand"},  // Handwriting cursor
+    {"No", "unavailable"},
+    {"SizeNS", "vert"},        // Vertical resize
+    {"SizeWE", "horz"},        // Horizontal resize
+    {"SizeNWSE", "dgn1"},      // Diagonal resize NW-SE
+    {"SizeNESW", "dgn2"},      // Diagonal resize NE-SW
+    {"SizeAll", "move"},       // Move/drag all directions
+    {"UpArrow", "alternate"},  // Alternate select
+    {"Hand", "link"},          // Hand/link cursor
+    {"Person", "person"},      // Person select (Windows 10+)
+    {"Pin", "pin"},            // Pin cursor (Windows 10+)
     // Additional aliases that some themes use
-    {"precisionhair", "precision"}, // Alias for crosshair
+    {"precisionhair", "precision"},  // Alias for crosshair
 };
 
 // Scheme slot order - position in comma-separated scheme string
@@ -121,7 +121,7 @@ public:
     // Format: ROOT,"SubKey","ValueName",Flags,"Data"
     // or: ROOT,"SubKey","ValueName",,"Data"
     [[nodiscard]] static RegEntry parse(std::string_view line);
-    
+
 private:
     // Parse a potentially quoted field from a comma-separated line
     // Returns the field value and advances pos past the field and comma
@@ -133,51 +133,51 @@ class InfParser {
 public:
     // Parse INF file from path
     [[nodiscard]] static InfResult parse(const fs::path& path);
-    
+
     // Parse INF content from string
     [[nodiscard]] static InfResult parse_string(std::string_view content);
 
 private:
     InfParser() = default;
-    
+
     // Main parsing entry point
     void parse_impl(std::string_view content);
-    
+
     // Section parsing
     void parse_strings_section(std::string_view content);
     void parse_default_install_section(std::string_view content);
     void parse_add_reg_section(const std::string& section_name);
-    
+
     // Registry entry processing
     void process_cursor_reg_entry(const RegEntry& entry);
     void process_scheme_reg_entry(const RegEntry& entry);
-    
+
     // Variable expansion with nested %VAR% support
     [[nodiscard]] std::string expand_vars(std::string_view input) const;
-    
+
     // Parse scheme string (comma-separated cursor paths)
     void parse_scheme_string(std::string_view scheme_data);
-    
+
     // Helper: map Windows cursor key to internal role
     [[nodiscard]] static std::optional<std::string> win_key_to_role(std::string_view win_key);
-    
+
     // Helper: extract key=value from a line
-    [[nodiscard]] static std::optional<std::pair<std::string, std::string>> 
-        parse_key_value(std::string_view line);
-    
+    [[nodiscard]] static std::optional<std::pair<std::string, std::string>> parse_key_value(
+        std::string_view line);
+
     // Add a mapping (handles priority: Wreg > Scheme)
     void add_mapping(const std::string& role, const std::string& value, bool high_priority);
-    
+
     // Add a warning
     void add_warning(const std::string& msg);
-    
+
     // Data members
-    std::map<std::string, std::string, std::less<>> variables_;   // [Strings] variables
-    std::map<std::string, std::string, std::less<>> sections_;    // Section name -> content
-    std::map<std::string, std::string> role_mappings_;            // role -> expanded path
-    std::map<std::string, bool> role_from_wreg_;                  // track if from Wreg (high priority)
-    
+    std::map<std::string, std::string, std::less<>> variables_;  // [Strings] variables
+    std::map<std::string, std::string, std::less<>> sections_;   // Section name -> content
+    std::map<std::string, std::string> role_mappings_;           // role -> expanded path
+    std::map<std::string, bool> role_from_wreg_;  // track if from Wreg (high priority)
+
     InfResult result_;
 };
 
-} // namespace ani2xcursor
+}  // namespace ani2xcursor

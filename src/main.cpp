@@ -1,16 +1,5 @@
-#include "cli.h"
-#include "converter.h"
-#include "inf_parser.h"
-#include "manual_mapping.h"
-#include "path_utils.h"
-#include "preview_generator.h"
-#include "source_writer.h"
-#include "size_tools.h"
-#include "theme_installer.h"
-#include "xcursor_writer.h"
-
-#include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
 #include <filesystem>
 #include <iostream>
@@ -18,6 +7,17 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+
+#include "cli.h"
+#include "converter.h"
+#include "inf_parser.h"
+#include "manifest.h"
+#include "path_utils.h"
+#include "preview_generator.h"
+#include "size_tools.h"
+#include "source_writer.h"
+#include "theme_installer.h"
+#include "xcursor_writer.h"
 
 namespace {
 
@@ -30,55 +30,52 @@ void setup_logging(bool verbose) {
     spdlog::set_pattern("[%^%l%$] %v");
 }
 
-std::optional<ani2xcursor::MappingLoadResult> handle_manual_mapping_request(
-    const ani2xcursor::Args& args,
-    const fs::path& mapping_path,
-    const fs::path& mapping_dir,
-    bool mapping_present) {
-    if (!args.manual_mapping) {
+std::optional<ani2xcursor::ManifestLoadResult> handle_manifest_request(
+    const ani2xcursor::Args& args, const fs::path& manifest_path, const fs::path& manifest_dir,
+    bool manifest_present) {
+    if (!args.manifest) {
         return std::nullopt;
     }
 
-    if (mapping_present) {
+    if (manifest_present) {
+        std::string label = manifest_path.filename().string();
         try {
-            auto mapping = ani2xcursor::load_mapping_toml(mapping_path);
-            for (const auto& warning : mapping.warnings) {
-                spdlog::warn("mapping.toml: {}", warning);
+            auto manifest = ani2xcursor::load_manifest_toml(manifest_path);
+            for (const auto& warning : manifest.warnings) {
+                spdlog::warn("{}: {}", label, warning);
             }
-            spdlog::info("Manual mapping requested; using existing mapping.toml.");
-            return mapping;
+            spdlog::info("Manifest requested; using existing {}.", label);
+            return manifest;
         } catch (const std::exception& e) {
-            spdlog::warn("Manual mapping requested but mapping.toml failed to parse: {}",
-                         e.what());
+            spdlog::warn("Manifest requested but {} failed to parse: {}", label, e.what());
         }
     }
 
-    spdlog::info("Manual mapping requested; generating previews and mapping.toml.");
-    auto preview_dir = mapping_dir / "previews";
-    auto preview_result = ani2xcursor::generate_previews(
-        args.input_dir, preview_dir, args.size_filter, args.specific_sizes);
-    ani2xcursor::write_mapping_toml_template(
-        mapping_path, args.input_dir, preview_result.guesses);
+    spdlog::info("Manifest requested; generating previews and manifest.toml.");
+    auto preview_dir = manifest_dir / "previews";
+    auto preview_result = ani2xcursor::generate_previews(args.input_dir, preview_dir,
+                                                         args.size_filter, args.specific_sizes);
+    ani2xcursor::write_manifest_toml_template(manifest_path, args.input_dir,
+                                              preview_result.guesses);
     std::error_code abs_ec;
-    auto abs_mapping = fs::absolute(mapping_path, abs_ec);
+    auto abs_manifest = fs::absolute(manifest_path, abs_ec);
     auto abs_previews = fs::absolute(preview_dir, abs_ec);
     if (abs_ec) {
-        abs_mapping = mapping_path;
+        abs_manifest = manifest_path;
         abs_previews = preview_dir;
     }
-    spdlog::info("Generated: {} and {}", abs_mapping.string(),
-                 (abs_previews / "*.png").string());
-    spdlog::info("Edit mapping.toml and re-run the same command.");
+    spdlog::info("Generated: {} and {}", abs_manifest.string(), (abs_previews / "*.png").string());
+    spdlog::info("Edit manifest.toml and re-run the command.");
     return std::nullopt;
 }
 
 std::string resolve_theme_name(const ani2xcursor::Args& args,
-                               const ani2xcursor::MappingLoadResult& mapping) {
+                               const ani2xcursor::ManifestLoadResult& manifest) {
     std::error_code name_ec;
     auto abs_input = fs::weakly_canonical(args.input_dir, name_ec);
     fs::path name_source = name_ec ? args.input_dir : abs_input;
-    if (!mapping.theme_name.empty()) {
-        return mapping.theme_name;
+    if (!manifest.theme_name.empty()) {
+        return manifest.theme_name;
     }
     auto filename = name_source.filename().string();
     if (!filename.empty() && filename != "." && filename != "..") {
@@ -91,14 +88,14 @@ std::string resolve_theme_name(const ani2xcursor::Args& args,
     return "cursor_theme";
 }
 
-bool build_mappings_from_manual(const ani2xcursor::Args& args,
-                                const ani2xcursor::MappingLoadResult& mapping,
-                                std::vector<ani2xcursor::CursorMapping>& out) {
+bool build_mappings_from_manifest(const ani2xcursor::Args& args,
+                                  const ani2xcursor::ManifestLoadResult& manifest,
+                                  std::vector<ani2xcursor::CursorMapping>& out) {
     bool missing_required = false;
     for (const auto& role : ani2xcursor::known_roles()) {
-        auto it = mapping.role_to_path.find(role);
-        if (it == mapping.role_to_path.end() || it->second.empty()) {
-            spdlog::warn("mapping.toml: role '{}' is not mapped", role);
+        auto it = manifest.role_to_path.find(role);
+        if (it == manifest.role_to_path.end() || it->second.empty()) {
+            spdlog::warn("manifest.toml: role '{}' is not mapped", role);
             if (!ani2xcursor::is_optional_role(role) && !args.skip_broken) {
                 missing_required = true;
             }
@@ -107,7 +104,9 @@ bool build_mappings_from_manual(const ani2xcursor::Args& args,
         out.push_back({role, it->second});
     }
     if (missing_required) {
-        spdlog::error("Missing required roles in mapping.toml (use --skip-broken to continue)");
+        spdlog::error(
+            "Missing required roles in manifest.toml (use --skip-broken "
+            "to continue)");
     }
     return !missing_required;
 }
@@ -124,29 +123,27 @@ std::optional<fs::path> find_inf_path(const fs::path& input_dir) {
     return std::nullopt;
 }
 
-int generate_mapping_for_missing_inf(const ani2xcursor::Args& args,
-                                     const fs::path& mapping_path,
-                                     const fs::path& mapping_dir) {
-    spdlog::warn("Install.inf not found and mapping.toml not present.");
-    auto preview_dir = mapping_dir / "previews";
-    auto preview_result = ani2xcursor::generate_previews(
-        args.input_dir, preview_dir, args.size_filter, args.specific_sizes);
-    ani2xcursor::write_mapping_toml_template(
-        mapping_path, args.input_dir, preview_result.guesses);
+int generate_manifest_for_missing_inf(const ani2xcursor::Args& args, const fs::path& manifest_path,
+                                      const fs::path& manifest_dir) {
+    spdlog::warn("Install.inf not found and manifest.toml not present.");
+    auto preview_dir = manifest_dir / "previews";
+    auto preview_result = ani2xcursor::generate_previews(args.input_dir, preview_dir,
+                                                         args.size_filter, args.specific_sizes);
+    ani2xcursor::write_manifest_toml_template(manifest_path, args.input_dir,
+                                              preview_result.guesses);
     std::error_code abs_ec;
-    auto abs_mapping = fs::absolute(mapping_path, abs_ec);
+    auto abs_manifest = fs::absolute(manifest_path, abs_ec);
     auto abs_previews = fs::absolute(preview_dir, abs_ec);
     if (abs_ec) {
-        abs_mapping = mapping_path;
+        abs_manifest = manifest_path;
         abs_previews = preview_dir;
     }
-    spdlog::warn("Generated: {} and {}", abs_mapping.string(),
-                 (abs_previews / "*.png").string());
-    spdlog::warn("Edit mapping.toml and re-run the same command.");
+    spdlog::warn("Generated: {} and {}", abs_manifest.string(), (abs_previews / "*.png").string());
+    spdlog::warn("Edit manifest.toml and re-run the command.");
     return 2;
 }
 
-} // namespace
+}  // namespace
 
 int main(int argc, char* argv[]) {
     try {
@@ -175,28 +172,31 @@ int main(int argc, char* argv[]) {
             return 0;
         }
 
-        auto mapping_dir = args.input_dir / "ani2xcursor";
-        auto mapping_path = mapping_dir / "mapping.toml";
-        bool mapping_present = fs::exists(mapping_path);
+        auto manifest_dir = args.input_dir / "ani2xcursor";
+        auto manifest_path = manifest_dir / "manifest.toml";
+        bool manifest_present = fs::exists(manifest_path);
 
-        // Load manual mapping if requested or available
-        std::optional<ani2xcursor::MappingLoadResult> loaded_mapping;
-        if (args.manual_mapping) {
-            loaded_mapping = handle_manual_mapping_request(
-                args, mapping_path, mapping_dir, mapping_present);
-            if (!loaded_mapping) {
-                // generated manual mapping; exit now
+        // Load manifest if requested or available
+        std::optional<ani2xcursor::ManifestLoadResult> loaded_manifest;
+        std::optional<std::string> manifest_failed_label;
+        if (args.manifest) {
+            loaded_manifest =
+                handle_manifest_request(args, manifest_path, manifest_dir, manifest_present);
+            if (!loaded_manifest) {
+                // generated manifest; exit now
                 return 0;
             }
-        } else if (mapping_present) {
+        } else if (manifest_present) {
+            std::string label = manifest_path.filename().string();
             try {
-                loaded_mapping = ani2xcursor::load_mapping_toml(mapping_path);
-                for (const auto& warning : loaded_mapping->warnings) {
-                    spdlog::warn("mapping.toml: {}", warning);
+                loaded_manifest = ani2xcursor::load_manifest_toml(manifest_path);
+                for (const auto& warning : loaded_manifest->warnings) {
+                    spdlog::warn("{}: {}", label, warning);
                 }
             } catch (const std::exception& e) {
-                spdlog::error("Failed to parse mapping.toml: {}", e.what());
-                spdlog::warn("Falling back to Install.inf because mapping.toml could not be parsed");
+                spdlog::error("Failed to parse {}: {}", label, e.what());
+                spdlog::warn("Falling back to Install.inf because {} could not be parsed", label);
+                manifest_failed_label = label;
             }
         }
 
@@ -205,21 +205,22 @@ int main(int argc, char* argv[]) {
         std::vector<ani2xcursor::CursorMapping> mappings;
 
         // Determine mappings source
-        if (loaded_mapping) {
-            // Use manual mapping
-            theme_name = resolve_theme_name(args, *loaded_mapping);
-            if (!build_mappings_from_manual(args, *loaded_mapping, mappings)) {
+        if (loaded_manifest) {
+            // Use manifest
+            theme_name = resolve_theme_name(args, *loaded_manifest);
+            if (!build_mappings_from_manifest(args, *loaded_manifest, mappings)) {
                 return 1;
             }
         } else {
             // Fallback to Install.inf
             auto inf_path = find_inf_path(args.input_dir);
             if (!inf_path) {
-                if (mapping_present) {
-                    spdlog::error("Install.inf not found and mapping.toml failed to parse");
+                if (manifest_failed_label) {
+                    spdlog::error("Install.inf not found and {} failed to parse",
+                                  *manifest_failed_label);
                     return 1;
                 }
-                return generate_mapping_for_missing_inf(args, mapping_path, mapping_dir);
+                return generate_manifest_for_missing_inf(args, manifest_path, manifest_dir);
             }
 
             inf_data = ani2xcursor::InfParser::parse(*inf_path);
@@ -245,19 +246,31 @@ int main(int argc, char* argv[]) {
         int success_count = 0;
         int error_count = 0;
 
-        bool using_manual = loaded_mapping.has_value();
+        bool using_manifest = loaded_manifest.has_value();
         std::vector<ani2xcursor::CursorListEntry> cursor_list_entries;
         std::unordered_set<std::string> cursor_list_seen;
 
         for (const auto& mapping : mappings) {
             std::filesystem::path cursor_path;
             std::string display_name;
+            auto size_filter = args.size_filter;
+            std::vector<uint32_t> specific_sizes = args.specific_sizes;
 
             // Determine cursor file path
-            if (using_manual) {
+            if (using_manifest) {
                 std::string rel = ani2xcursor::normalize_relative_path(mapping.value);
                 cursor_path = args.input_dir / rel;
                 display_name = rel;
+
+                size_filter = SizeFilter::All;
+                specific_sizes.clear();
+                if (loaded_manifest) {
+                    auto it = loaded_manifest->role_to_sizes.find(mapping.role);
+                    if (it != loaded_manifest->role_to_sizes.end() && !it->second.empty()) {
+                        size_filter = SizeFilter::Specific;
+                        specific_sizes = it->second;
+                    }
+                }
 
                 if (!std::filesystem::exists(cursor_path)) {
                     spdlog::error("Cursor file not found: {}", display_name);
@@ -288,13 +301,14 @@ int main(int argc, char* argv[]) {
             }
 
             try {
-                std::pair<std::vector<ani2xcursor::CursorImage>, std::vector<uint32_t>> frames_delays;
+                std::pair<std::vector<ani2xcursor::CursorImage>, std::vector<uint32_t>>
+                    frames_delays;
                 if (ani2xcursor::is_cur_file(cursor_path)) {
-                    frames_delays = ani2xcursor::process_cur_file(
-                        cursor_path, args.size_filter, args.specific_sizes);
+                    frames_delays =
+                        ani2xcursor::process_cur_file(cursor_path, size_filter, specific_sizes);
                 } else if (ani2xcursor::is_ani_file(cursor_path)) {
-                    frames_delays = ani2xcursor::process_ani_file(
-                        cursor_path, args.size_filter, args.specific_sizes);
+                    frames_delays =
+                        ani2xcursor::process_ani_file(cursor_path, size_filter, specific_sizes);
                 } else {
                     throw std::runtime_error("Unsupported cursor file type");
                 }
@@ -349,8 +363,8 @@ int main(int argc, char* argv[]) {
             ani2xcursor::SourceWriter::write_cursor_list(src_dir, cursor_list_entries);
         }
 
-        spdlog::info("Conversion complete: {} cursors converted, {} errors",
-                     success_count, error_count);
+        spdlog::info("Conversion complete: {} cursors converted, {} errors", success_count,
+                     error_count);
 
         // Install if requested
         if (args.install) {

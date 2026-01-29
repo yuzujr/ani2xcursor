@@ -1,7 +1,8 @@
 #include "theme_installer.h"
-#include "utils/fs.h"
 
 #include <spdlog/spdlog.h>
+
+#include "utils/fs.h"
 
 namespace ani2xcursor {
 
@@ -14,8 +15,7 @@ void ThemeInstaller::install(const fs::path& theme_dir, bool overwrite) {
     install(theme_dir, theme_name, overwrite);
 }
 
-void ThemeInstaller::install(const fs::path& theme_dir,
-                             const std::string& theme_name,
+void ThemeInstaller::install(const fs::path& theme_dir, const std::string& theme_name,
                              bool overwrite) {
     if (!fs::exists(theme_dir)) {
         throw std::runtime_error("Theme directory does not exist: " + theme_dir.string());
@@ -26,9 +26,9 @@ void ThemeInstaller::install(const fs::path& theme_dir,
     if (install_path == icons_dir) {
         throw std::runtime_error("Invalid theme install path: " + install_path.string());
     }
-    
+
     spdlog::info("Installing theme '{}' to {}", theme_name, install_path.string());
-    
+
     // Check if already installed
     if (fs::exists(install_path)) {
         if (overwrite) {
@@ -42,19 +42,19 @@ void ThemeInstaller::install(const fs::path& theme_dir,
             throw std::runtime_error("Theme already installed. Use --force to overwrite.");
         }
     }
-    
+
     // Create parent directory
     fs::create_directories(install_path.parent_path());
-    
+
     // Copy theme directory recursively, preserving symlinks
     std::error_code ec;
-    fs::copy(theme_dir, install_path, 
-             fs::copy_options::recursive | fs::copy_options::copy_symlinks, ec);
-    
+    fs::copy(theme_dir, install_path, fs::copy_options::recursive | fs::copy_options::copy_symlinks,
+             ec);
+
     if (ec) {
         throw std::runtime_error("Failed to install theme: " + ec.message());
     }
-    
+
     spdlog::info("Theme installed successfully!");
 }
 
@@ -62,4 +62,4 @@ fs::path ThemeInstaller::get_install_path(const std::string& theme_name) {
     return utils::get_xdg_data_home() / "icons" / theme_name;
 }
 
-} // namespace ani2xcursor
+}  // namespace ani2xcursor

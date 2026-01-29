@@ -1,10 +1,10 @@
 #pragma once
 
-#include "ico_cur_decoder.h"
-
 #include <filesystem>
 #include <string>
 #include <vector>
+
+#include "ico_cur_decoder.h"
 
 namespace ani2xcursor {
 
@@ -17,8 +17,7 @@ struct CursorListEntry {
 
 class SourceWriter {
 public:
-    static void write_cursor(const fs::path& src_dir,
-                             const std::string& primary_name,
+    static void write_cursor(const fs::path& src_dir, const std::string& primary_name,
                              const std::vector<CursorImage>& frames,
                              const std::vector<uint32_t>& delays_ms);
 
@@ -26,4 +25,4 @@ public:
                                   const std::vector<CursorListEntry>& entries);
 };
 
-} // namespace ani2xcursor
+}  // namespace ani2xcursor

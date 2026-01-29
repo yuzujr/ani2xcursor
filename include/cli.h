@@ -1,10 +1,10 @@
 #pragma once
 
-#include "size_filter.h"
-
 #include <cstdint>
 #include <filesystem>
 #include <vector>
+
+#include "size_filter.h"
 
 namespace ani2xcursor {
 
@@ -19,7 +19,7 @@ struct Args {
     bool install = false;
     bool verbose = false;
     bool skip_broken = false;
-    bool manual_mapping = false;
+    bool manifest = false;
     bool list_sizes = false;
     bool help = false;
     SizeFilter size_filter = SizeFilter::All;
@@ -30,4 +30,4 @@ struct Args {
 void print_usage(const char* program);
 Args parse_args(int argc, char* argv[]);
 
-} // namespace ani2xcursor
+}  // namespace ani2xcursor

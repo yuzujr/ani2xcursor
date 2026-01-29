@@ -6,8 +6,7 @@
 
 namespace ani2xcursor {
 
-std::vector<size_t> select_size_indices(std::span<const CursorImage> images,
-                                        SizeFilter filter,
+std::vector<size_t> select_size_indices(std::span<const CursorImage> images, SizeFilter filter,
                                         const std::vector<uint32_t>& specific_sizes) {
     std::vector<size_t> size_indices;
     if (images.empty()) {
@@ -29,8 +28,8 @@ std::vector<size_t> select_size_indices(std::span<const CursorImage> images,
             for (size_t idx = 0; idx < images.size(); ++idx) {
                 const auto& img = images[idx];
                 uint32_t nominal_size = std::max(img.width, img.height);
-                uint32_t diff = (nominal_size > target_size) ?
-                               (nominal_size - target_size) : (target_size - nominal_size);
+                uint32_t diff = (nominal_size > target_size) ? (nominal_size - target_size)
+                                                             : (target_size - nominal_size);
 
                 if (diff < best_diff) {
                     best_diff = diff;
@@ -38,7 +37,8 @@ std::vector<size_t> select_size_indices(std::span<const CursorImage> images,
                 }
             }
 
-            if (std::find(size_indices.begin(), size_indices.end(), best_idx) == size_indices.end()) {
+            if (std::find(size_indices.begin(), size_indices.end(), best_idx) ==
+                size_indices.end()) {
                 size_indices.push_back(best_idx);
             }
         }
@@ -47,8 +47,7 @@ std::vector<size_t> select_size_indices(std::span<const CursorImage> images,
     return size_indices;
 }
 
-size_t choose_preview_index(std::span<const CursorImage> images,
-                            SizeFilter filter,
+size_t choose_preview_index(std::span<const CursorImage> images, SizeFilter filter,
                             const std::vector<uint32_t>& specific_sizes) {
     auto indices = select_size_indices(images, filter, specific_sizes);
     if (indices.empty()) {
@@ -69,4 +68,4 @@ size_t choose_preview_index(std::span<const CursorImage> images,
     return best_idx;
 }
 
-} // namespace ani2xcursor
+}  // namespace ani2xcursor

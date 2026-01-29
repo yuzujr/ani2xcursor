@@ -7,7 +7,7 @@ Convert Windows animated cursor themes (.ani/.cur) to Linux Xcursor format.
 - Full .ani/.cur format support
 - Multi-size export with auto-rescale for missing target sizes
 - Optional source output, enable further processing.
-- Manual mapping mode: generate cursor previews + mapping template, then customize roles (useful for overrides with or without Install.inf)
+- Manifest mode: generate cursor previews + manifest template, then customize roles and sizes (primary configuration)
   ### Screenshots
   cursor preview:
 
@@ -62,7 +62,7 @@ ani2xcursor /path/to/cursor/folder
 --install, -i         Install theme to $XDG_DATA_HOME/icons
 --verbose, -v         Enable verbose logging
 --skip-broken         Continue on conversion errors
---manual-mapping      Generate previews + mapping.toml then exit
+--manifest            Generate previews + manifest.toml then exit
 --list-sizes          Show available sizes in cursor files then exit
 --sizes <mode>        Size selection mode:
                           all    - Export all sizes (default)
@@ -71,19 +71,34 @@ ani2xcursor /path/to/cursor/folder
 --help, -h            Show this help message
 ```
 
-## Manual Mapping (fallback or forced)
+## Manifest (primary configuration)
 
-If `Install.inf` is missing, ani2xcursor generates previews and a mapping template.
-You can also force this mode with `--manual-mapping` or by removing `Install.inf`:
+Manifest controls both cursor role mapping and per-role size customization.
+
+If `Install.inf` is missing, ani2xcursor will use this mode automatically.
+You can also force this mode with `--manifest`:
 
 ```
 <input_dir>/ani2xcursor/
-├── mapping.toml
+├── manifest.toml
 └── previews/
     └── *.png
 ```
 
-Edit `mapping.toml` and re-run the same command. If `mapping.toml` exists, it takes priority over `Install.inf`.
+Edit `manifest.toml` and re-run the command. If `manifest.toml` exists, it takes priority over `Install.inf`,
+and its size settings override `--sizes`.
+
+### Manifest sizes
+
+Use a comma-separated list of sizes per role in the `[sizes]` section (auto-filled with all available sizes by default):
+
+```
+[sizes]
+pointer = "48"
+text    = "32, 48"
+```
+
+If a role is left empty, its current sizes are preserved.
 
 ## Enable Theme
 

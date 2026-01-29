@@ -1,10 +1,5 @@
 #include "preview_generator.h"
 
-#include "ani_parser.h"
-#include "ico_cur_decoder.h"
-#include "size_selection.h"
-#include "utils/fs.h"
-
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -13,13 +8,17 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
-#include <string>
 #include <span>
+#include <string>
+
+#include "ani_parser.h"
+#include "ico_cur_decoder.h"
+#include "size_selection.h"
+#include "utils/fs.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
-
 #include <stb_easy_font.h>
+#include <stb_image_write.h>
 
 namespace ani2xcursor {
 
@@ -33,8 +32,9 @@ struct RgbaImage {
 
 std::string to_lower(std::string_view s) {
     std::string out(s);
-    std::transform(out.begin(), out.end(), out.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
+    std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
     return out;
 }
 
@@ -69,12 +69,12 @@ std::string guess_role_from_name(std::string_view name) {
     if (has_sub("work") || has_sub("progress") || has_sub("starting")) return "working";
     if (has_sub("wait") || has_sub("busy") || has_sub("watch")) return "busy";
     if (has_sub("precision") || has_sub("cross")) return "precision";
-    if (has_sub("text")|| has_sub("font")) return "text";
+    if (has_sub("text") || has_sub("font")) return "text";
     if (has_sub("hand") || has_sub("pen")) return "hand";
     if (has_sub("unavail") || has_sub("not")) return "unavailable";
     if (has_sub("vert")) return "vert";
-    if (has_sub("hori")|| has_sub("horz")) return "horz";
-    if ((has_sub("dgn") && has_sub("1"))  || (has_sub("diag") && has_sub("1"))) return "dgn1";
+    if (has_sub("hori") || has_sub("horz")) return "horz";
+    if ((has_sub("dgn") && has_sub("1")) || (has_sub("diag") && has_sub("1"))) return "dgn1";
     if ((has_sub("dgn") && has_sub("2")) || (has_sub("diag") && has_sub("2"))) return "dgn2";
     if (has_sub("move")) return "move";
     if (has_sub("alt")) return "alternate";
@@ -195,14 +195,15 @@ float read_f32(const char* data) {
     return f;
 }
 
-void draw_text(RgbaImage& img, int x, int y, const std::string& text, const std::array<uint8_t, 4>& color) {
+void draw_text(RgbaImage& img, int x, int y, const std::string& text,
+               const std::array<uint8_t, 4>& color) {
     int vbuf_size = std::max(1024, static_cast<int>(text.size()) * 270);
     std::vector<char> buffer(static_cast<size_t>(vbuf_size));
 
     unsigned char col[4] = {color[0], color[1], color[2], color[3]};
-    int num_quads = stb_easy_font_print(static_cast<float>(x), static_cast<float>(y),
-                                        const_cast<char*>(text.c_str()), col,
-                                        buffer.data(), vbuf_size);
+    int num_quads =
+        stb_easy_font_print(static_cast<float>(x), static_cast<float>(y),
+                            const_cast<char*>(text.c_str()), col, buffer.data(), vbuf_size);
 
     const int stride = 16;
     for (int q = 0; q < num_quads; ++q) {
@@ -281,12 +282,8 @@ RgbaImage make_placeholder(const std::string& filename) {
 bool write_png(const fs::path& path, const RgbaImage& image) {
     fs::create_directories(path.parent_path());
     int stride = static_cast<int>(image.width) * 4;
-    return stbi_write_png(path.c_str(),
-                          static_cast<int>(image.width),
-                          static_cast<int>(image.height),
-                          4,
-                          image.pixels.data(),
-                          stride) != 0;
+    return stbi_write_png(path.c_str(), static_cast<int>(image.width),
+                          static_cast<int>(image.height), 4, image.pixels.data(), stride) != 0;
 }
 
 size_t choose_closest_index(std::span<const CursorImage> images, uint32_t target_size) {
@@ -305,9 +302,7 @@ size_t choose_closest_index(std::span<const CursorImage> images, uint32_t target
     return best_idx;
 }
 
-bool write_preview_for_ani(const fs::path& path,
-                           const fs::path& preview_path,
-                           SizeFilter filter,
+bool write_preview_for_ani(const fs::path& path, const fs::path& preview_path, SizeFilter filter,
                            const std::vector<uint32_t>& specific_sizes) {
     try {
         auto animation = AniParser::parse(path);
@@ -323,7 +318,8 @@ bool write_preview_for_ani(const fs::path& path,
         auto first_images = IcoCurDecoder::decode_all(first_frame.icon_data);
         std::span<const CursorImage> first_span(first_images.data(), first_images.size());
         size_t preview_idx = choose_preview_index(first_span, filter, specific_sizes);
-        uint32_t target_size = std::max(first_images[preview_idx].width, first_images[preview_idx].height);
+        uint32_t target_size =
+            std::max(first_images[preview_idx].width, first_images[preview_idx].height);
 
         std::vector<CursorImage> frames;
         frames.reserve(3);
@@ -351,9 +347,7 @@ bool write_preview_for_ani(const fs::path& path,
     }
 }
 
-bool write_preview_for_cur(const fs::path& path,
-                           const fs::path& preview_path,
-                           SizeFilter filter,
+bool write_preview_for_cur(const fs::path& path, const fs::path& preview_path, SizeFilter filter,
                            const std::vector<uint32_t>& specific_sizes) {
     try {
         auto data = utils::read_file(path);
@@ -386,10 +380,9 @@ bool is_ani_file(const fs::path& path) {
     return to_lower(path.extension().string()) == ".ani";
 }
 
-} // namespace
+}  // namespace
 
-PreviewGenerationResult generate_previews(const fs::path& input_dir,
-                                          const fs::path& preview_dir,
+PreviewGenerationResult generate_previews(const fs::path& input_dir, const fs::path& preview_dir,
                                           SizeFilter filter,
                                           const std::vector<uint32_t>& specific_sizes) {
     PreviewGenerationResult result;
@@ -453,4 +446,4 @@ PreviewGenerationResult generate_previews(const fs::path& input_dir,
     return result;
 }
 
-} // namespace ani2xcursor
+}  // namespace ani2xcursor

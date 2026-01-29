@@ -1,8 +1,5 @@
 #include "size_tools.h"
 
-#include "ani_parser.h"
-#include "utils/fs.h"
-
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -12,6 +9,9 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+
+#include "ani_parser.h"
+#include "utils/fs.h"
 
 namespace ani2xcursor {
 
@@ -29,8 +29,7 @@ std::optional<size_t> find_exact_size_index(std::span<const CursorImage> images,
     return std::nullopt;
 }
 
-size_t find_closest_size_index(std::span<const CursorImage> images,
-                               uint32_t target_size) {
+size_t find_closest_size_index(std::span<const CursorImage> images, uint32_t target_size) {
     size_t best_idx = 0;
     uint32_t best_diff = UINT32_MAX;
 
@@ -151,6 +150,29 @@ static std::set<uint32_t> collect_sizes_from_cur(const std::filesystem::path& cu
     return collect_sizes_from_images(images);
 }
 
+std::vector<uint32_t> collect_cursor_sizes(const std::filesystem::path& cursor_path) {
+    auto ext = cursor_path.extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
+
+    std::set<uint32_t> sizes;
+    if (ext == ".ani") {
+        sizes = collect_sizes_from_ani(cursor_path);
+    } else if (ext == ".cur") {
+        sizes = collect_sizes_from_cur(cursor_path);
+    } else {
+        return {};
+    }
+
+    std::vector<uint32_t> out;
+    out.reserve(sizes.size());
+    for (uint32_t size : sizes) {
+        out.push_back(size);
+    }
+    return out;
+}
+
 void list_available_sizes(const std::filesystem::path& input_dir) {
     std::map<std::string, std::set<uint32_t>> per_file_sizes;
     std::set<uint32_t> all_sizes;
@@ -160,15 +182,16 @@ void list_available_sizes(const std::filesystem::path& input_dir) {
         if (!entry.is_regular_file()) continue;
         auto path = entry.path();
         auto ext = path.extension().string();
-        std::transform(ext.begin(), ext.end(), ext.begin(),
-                       [](unsigned char c) { return std::tolower(c); });
+        std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
+            return std::tolower(c);
+        });
         if (ext != ".ani" && ext != ".cur") {
             continue;
         }
 
         try {
-            std::set<uint32_t> sizes = (ext == ".ani") ?
-                collect_sizes_from_ani(path) : collect_sizes_from_cur(path);
+            std::set<uint32_t> sizes =
+                (ext == ".ani") ? collect_sizes_from_ani(path) : collect_sizes_from_cur(path);
             per_file_sizes[path.filename().string()] = sizes;
             all_sizes.insert(sizes.begin(), sizes.end());
         } catch (const std::exception& e) {
@@ -205,4 +228,4 @@ void list_available_sizes(const std::filesystem::path& input_dir) {
     }
 }
 
-} // namespace ani2xcursor
+}  // namespace ani2xcursor

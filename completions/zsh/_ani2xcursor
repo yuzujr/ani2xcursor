@@ -8,7 +8,7 @@ _arguments -s \
   '--verbose[Enable verbose logging]' \
   '(-v --verbose)'{-v,--verbose}'[Enable verbose logging]' \
   '--skip-broken[Continue on conversion errors]' \
-  '--manual-mapping[Generate previews + mapping.toml then exit]' \
+  '--manifest[Generate previews + manifest.toml then exit]' \
   '--list-sizes[Show available sizes then exit]' \
   '--format[Output format]:mode:(xcursor source)' \
   '--sizes[Size selection mode]:mode:(all max)' \

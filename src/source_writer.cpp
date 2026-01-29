@@ -1,21 +1,20 @@
 #include "source_writer.h"
 
-#include "size_tools.h"
-#include "utils/fs.h"
-
 #include <spdlog/spdlog.h>
-
 #include <stb_image_write.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <iomanip>
-#include <sstream>
 #include <span>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <utility>
+
+#include "size_tools.h"
+#include "utils/fs.h"
 
 namespace ani2xcursor {
 
@@ -41,8 +40,7 @@ std::string format_frame_name(const std::string& base, size_t index, size_t tota
     }
     size_t width = std::max<size_t>(2, digit_count(total));
     std::ostringstream name;
-    name << base << "-" << std::setw(static_cast<int>(width)) << std::setfill('0')
-         << (index + 1);
+    name << base << "-" << std::setw(static_cast<int>(width)) << std::setfill('0') << (index + 1);
     return name.str();
 }
 
@@ -59,12 +57,8 @@ void write_png(const fs::path& path, const CursorImage& image) {
     }
 
     int stride = static_cast<int>(image.width) * 4;
-    int ok = stbi_write_png(path.c_str(),
-                            static_cast<int>(image.width),
-                            static_cast<int>(image.height),
-                            4,
-                            image.pixels.data(),
-                            stride);
+    int ok = stbi_write_png(path.c_str(), static_cast<int>(image.width),
+                            static_cast<int>(image.height), 4, image.pixels.data(), stride);
     if (ok == 0) {
         throw std::runtime_error("Failed to write PNG: " + path.string());
     }
@@ -101,8 +95,8 @@ std::string base64_encode(std::span<const uint8_t> data) {
         out.push_back('=');
         out.push_back('=');
     } else if (rem == 2) {
-        uint32_t v = (static_cast<uint32_t>(data[i]) << 16) |
-                     (static_cast<uint32_t>(data[i + 1]) << 8);
+        uint32_t v =
+            (static_cast<uint32_t>(data[i]) << 16) | (static_cast<uint32_t>(data[i + 1]) << 8);
         out.push_back(kTable[(v >> 18) & 0x3F]);
         out.push_back(kTable[(v >> 12) & 0x3F]);
         out.push_back(kTable[(v >> 6) & 0x3F]);
@@ -139,10 +133,9 @@ bool is_animated(const std::vector<SizeGroup>& groups) {
     return false;
 }
 
-} // namespace
+}  // namespace
 
-void SourceWriter::write_cursor(const fs::path& src_dir,
-                                const std::string& primary_name,
+void SourceWriter::write_cursor(const fs::path& src_dir, const std::string& primary_name,
                                 const std::vector<CursorImage>& frames,
                                 const std::vector<uint32_t>& delays_ms) {
     if (frames.empty()) {
@@ -179,8 +172,7 @@ void SourceWriter::write_cursor(const fs::path& src_dir,
 
             std::string rel_path = "png/" + std::to_string(group.size) + "/" + frame_name + ".png";
 
-            config << group.size << " " << img.hotspot_x << " " << img.hotspot_y << " "
-                   << rel_path;
+            config << group.size << " " << img.hotspot_x << " " << img.hotspot_y << " " << rel_path;
             if (animated) {
                 config << " " << delays_ms[img_index];
             }
@@ -211,9 +203,8 @@ void SourceWriter::write_cursor(const fs::path& src_dir,
         std::string encoded = base64_encode(png_data);
 
         std::ostringstream svg;
-        svg << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\""
-            << img.width << "\" height=\"" << img.height
-            << "\" viewBox=\"0 0 " << img.width << " " << img.height << "\">"
+        svg << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" << img.width << "\" height=\""
+            << img.height << "\" viewBox=\"0 0 " << img.width << " " << img.height << "\">"
             << "<image width=\"" << img.width << "\" height=\"" << img.height
             << "\" href=\"data:image/png;base64," << encoded << "\" />"
             << "</svg>\n";
@@ -236,4 +227,4 @@ void SourceWriter::write_cursor_list(const fs::path& src_dir,
     utils::write_file_string(list_path, out.str());
 }
 
-} // namespace ani2xcursor
+}  // namespace ani2xcursor

@@ -12,4 +12,4 @@ bool is_ani_file(const std::filesystem::path& path);
 bool is_cur_file(const std::filesystem::path& path);
 std::string normalize_relative_path(std::string path);
 
-} // namespace ani2xcursor
+}  // namespace ani2xcursor

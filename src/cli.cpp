@@ -11,29 +11,32 @@ void print_usage(const char* program) {
     std::cout << "Usage: " << program << " <input_dir> [options]\n\n"
               << "Convert Windows Animated Cursors (.ani) to Linux Xcursor theme.\n\n"
               << "Arguments:\n"
-              << "  <input_dir>       Directory containing Install.inf and .ani files\n\n"
+              << "  <input_dir>       Directory containing Install.inf and .ani "
+                 "files\n\n"
               << "Options:\n"
               << "  --out, -o <dir>       Output directory (default: ./out)\n"
               << "  --format <mode>       Output format: xcursor (default) or source\n"
               << "  --install, -i         Install theme to $XDG_DATA_HOME/icons\n"
               << "  --verbose, -v         Enable verbose logging\n"
               << "  --skip-broken         Continue on conversion errors\n"
-              << "  --manual-mapping      Generate previews + mapping.toml then exit\n"
-              << "  --list-sizes          Show available sizes in cursor files then exit\n"
+              << "  --manifest            Generate previews + manifest.toml then exit\n"
+              << "  --list-sizes          Show available sizes in cursor files then "
+                 "exit\n"
               << "  --sizes <mode>        Size selection mode:\n"
               << "                          all    - Export all sizes (default)\n"
               << "                          max    - Export only largest size\n"
-              << "                          24,32  - Ensure sizes (reuse if present, rescale if missing)\n"
+              << "                          24,32  - Ensure sizes (reuse if present, "
+                 "rescale if missing)\n"
               << "  --help, -h            Show this help message\n";
 }
 
 Args parse_args(int argc, char* argv[]) {
     Args args;
     args.output_dir = "out";
-    
+
     for (int i = 1; i < argc; ++i) {
         std::string_view arg = argv[i];
-        
+
         if (arg == "--help" || arg == "-h") {
             args.help = true;
             return args;
@@ -43,8 +46,8 @@ Args parse_args(int argc, char* argv[]) {
             args.install = true;
         } else if (arg == "--skip-broken") {
             args.skip_broken = true;
-        } else if (arg == "--manual-mapping") {
-            args.manual_mapping = true;
+        } else if (arg == "--manifest") {
+            args.manifest = true;
         } else if (arg == "--list-sizes") {
             args.list_sizes = true;
         } else if (arg == "--format" && i + 1 < argc) {
@@ -95,8 +98,8 @@ Args parse_args(int argc, char* argv[]) {
             throw std::runtime_error(std::string("Unknown argument: ") + std::string(arg));
         }
     }
-    
+
     return args;
 }
 
-} // namespace ani2xcursor
+}  // namespace ani2xcursor

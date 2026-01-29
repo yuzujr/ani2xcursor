@@ -27,7 +27,7 @@ _ani2xcursor() {
       --install -i
       --verbose -v
       --skip-broken
-      --manual-mapping
+      --manifest
       --list-sizes
       --sizes
       --help -h

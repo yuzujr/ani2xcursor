@@ -1,10 +1,13 @@
-#include "manual_mapping.h"
-#include "utils/fs.h"
+#include "manifest.h"
 
 #include <algorithm>
 #include <cctype>
 #include <sstream>
 #include <stdexcept>
+
+#include "path_utils.h"
+#include "size_tools.h"
+#include "utils/fs.h"
 
 namespace ani2xcursor {
 
@@ -22,8 +25,9 @@ std::string_view trim(std::string_view s) {
 
 std::string to_lower(std::string_view s) {
     std::string out(s);
-    std::transform(out.begin(), out.end(), out.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
+    std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
     return out;
 }
 
@@ -72,27 +76,79 @@ std::string escape_quotes(std::string_view s) {
     return out;
 }
 
-} // namespace
+std::vector<uint32_t> parse_sizes_list(std::string_view value) {
+    std::vector<uint32_t> sizes;
+    size_t pos = 0;
+    while (pos <= value.size()) {
+        size_t comma = value.find(',', pos);
+        size_t len = (comma == std::string_view::npos) ? value.size() - pos : comma - pos;
+        auto token = trim(value.substr(pos, len));
+        if (!token.empty()) {
+            try {
+                size_t idx = 0;
+                unsigned long parsed = std::stoul(std::string(token), &idx, 10);
+                if (idx != token.size() || parsed == 0 || parsed > 1024) {
+                    throw std::invalid_argument("out of range");
+                }
+                uint32_t size = static_cast<uint32_t>(parsed);
+                if (std::find(sizes.begin(), sizes.end(), size) == sizes.end()) {
+                    sizes.push_back(size);
+                }
+            } catch (const std::exception&) {
+                return {};
+            }
+        }
+        if (comma == std::string_view::npos) {
+            break;
+        }
+        pos = comma + 1;
+    }
+    return sizes;
+}
+
+std::string join_sizes(const std::vector<uint32_t>& sizes) {
+    std::string out;
+    for (uint32_t size : sizes) {
+        if (!out.empty()) {
+            out += ", ";
+        }
+        out += std::to_string(size);
+    }
+    return out;
+}
+
+std::vector<uint32_t> collect_sizes_for_guess(const fs::path& input_dir, const std::string& guess) {
+    if (guess.empty()) {
+        return {};
+    }
+    fs::path path = fs::path(guess);
+    if (!path.is_absolute()) {
+        path = input_dir / normalize_relative_path(guess);
+    }
+    if (!fs::exists(path)) {
+        if (path.parent_path().empty()) {
+            if (auto found = find_file_icase(input_dir, path.filename().string())) {
+                path = *found;
+            } else {
+                return {};
+            }
+        } else {
+            return {};
+        }
+    }
+    try {
+        return collect_cursor_sizes(path);
+    } catch (const std::exception&) {
+        return {};
+    }
+}
+
+}  // namespace
 
 const std::vector<std::string>& known_roles() {
     static const std::vector<std::string> roles = {
-        "pointer",
-        "help",
-        "working",
-        "busy",
-        "precision",
-        "text",
-        "hand",
-        "unavailable",
-        "vert",
-        "horz",
-        "dgn1",
-        "dgn2",
-        "move",
-        "alternate",
-        "link",
-        "person",
-        "pin",
+        "pointer", "help", "working", "busy", "precision", "text", "hand",   "unavailable", "vert",
+        "horz",    "dgn1", "dgn2",    "move", "alternate", "link", "person", "pin",
     };
     return roles;
 }
@@ -106,8 +162,9 @@ bool is_optional_role(std::string_view role) {
     return role == "person" || role == "pin";
 }
 
-MappingLoadResult load_mapping_toml(const fs::path& path) {
+ManifestLoadResult load_manifest_toml(const fs::path& path) {
     auto content = utils::read_file_string(path);
+    std::string label = path.filename().string();
     std::istringstream stream(content);
 
     std::string current_section;
@@ -118,8 +175,7 @@ MappingLoadResult load_mapping_toml(const fs::path& path) {
     while (std::getline(stream, line)) {
         if (first_line) {
             first_line = false;
-            if (line.size() >= 3 &&
-                static_cast<unsigned char>(line[0]) == 0xEF &&
+            if (line.size() >= 3 && static_cast<unsigned char>(line[0]) == 0xEF &&
                 static_cast<unsigned char>(line[1]) == 0xBB &&
                 static_cast<unsigned char>(line[2]) == 0xBF) {
                 line = line.substr(3);
@@ -139,20 +195,20 @@ MappingLoadResult load_mapping_toml(const fs::path& path) {
 
         auto eq = trimmed.find('=');
         if (eq == std::string_view::npos) {
-            throw std::runtime_error("Invalid line in mapping.toml: " + std::string(trimmed));
+            throw std::runtime_error("Invalid line in " + label + ": " + std::string(trimmed));
         }
 
         auto key = to_lower(trim(trimmed.substr(0, eq)));
         auto value = trim(trimmed.substr(eq + 1));
 
         if (key.empty()) {
-            throw std::runtime_error("Empty key in mapping.toml");
+            throw std::runtime_error("Empty key in " + label);
         }
 
         sections[current_section][key] = unquote(value);
     }
 
-    MappingLoadResult result;
+    ManifestLoadResult result;
 
     std::string theme_override;
     if (auto input_it = sections.find("input"); input_it != sections.end()) {
@@ -164,7 +220,7 @@ MappingLoadResult load_mapping_toml(const fs::path& path) {
 
     auto files_it = sections.find("files");
     if (files_it == sections.end()) {
-        throw std::runtime_error("mapping.toml missing [files] section");
+        throw std::runtime_error(label + " missing [files] section");
     }
 
     for (const auto& [key, value] : files_it->second) {
@@ -177,6 +233,26 @@ MappingLoadResult load_mapping_toml(const fs::path& path) {
         result.role_to_path[role] = value;
     }
 
+    if (auto sizes_it = sections.find("sizes"); sizes_it != sections.end()) {
+        for (const auto& [key, value] : sizes_it->second) {
+            std::string role = key;
+            if (!is_known_role(role)) {
+                result.warnings.push_back("Unknown role in [sizes]: '" + key + "'");
+                continue;
+            }
+            if (value.empty()) {
+                continue;
+            }
+            auto parsed_sizes = parse_sizes_list(value);
+            if (parsed_sizes.empty()) {
+                result.warnings.push_back("Invalid size list in [sizes] for '" + key + "': '" +
+                                          value + "'");
+                continue;
+            }
+            result.role_to_sizes[role] = std::move(parsed_sizes);
+        }
+    }
+
     if (!theme_override.empty()) {
         result.theme_name = theme_override;
     }
@@ -184,9 +260,8 @@ MappingLoadResult load_mapping_toml(const fs::path& path) {
     return result;
 }
 
-void write_mapping_toml_template(const fs::path& path,
-                                 const fs::path& input_dir,
-                                 const std::map<std::string, std::string>& guesses) {
+void write_manifest_toml_template(const fs::path& path, const fs::path& input_dir,
+                                  const std::map<std::string, std::string>& guesses) {
     std::error_code ec;
     auto abs_dir = fs::absolute(input_dir, ec);
     if (ec) {
@@ -194,8 +269,10 @@ void write_mapping_toml_template(const fs::path& path,
     }
 
     std::string content;
-    content += "# ani2xcursor manual mapping (no Install.inf detected)\n";
-    content += "# Fill in the relative paths (relative to input_dir) for each Windows role.\n";
+    content += "# ani2xcursor manifest (role mapping + per-role sizes)\n";
+    content +=
+        "# Fill in the relative paths (relative to input_dir) for each "
+        "Windows role.\n";
     content += "# Use the preview images in ani2xcursor/previews/ to decide.\n";
     content += "# Leave empty to skip a role.\n";
     content += "#\n";
@@ -252,7 +329,28 @@ void write_mapping_toml_template(const fs::path& path,
     }
 
     content += "\n";
+    content += "[sizes]\n";
+    content += "# Optional per-role target size override (comma-separated list).\n";
+    content += "# Example: pointer = \"48\" or pointer = \"32, 48\"\n";
+    content += "# Defaults are filled from the current cursor files when available.\n";
+    content += "# Leave empty to keep all sizes from the file.\n";
+    content += "\n";
+
+    for (const auto& role : known_roles()) {
+        std::string padded = role;
+        padded.append(max_role_len + 1 - role.size(), ' ');
+        content += padded;
+        std::string sizes_value;
+        auto it = guesses.find(role);
+        if (it != guesses.end()) {
+            auto sizes = collect_sizes_for_guess(input_dir, it->second);
+            sizes_value = join_sizes(sizes);
+        }
+        content += "= \"";
+        content += sizes_value;
+        content += "\"\n";
+    }
     utils::write_file_string(path, content);
 }
 
-} // namespace ani2xcursor
+}  // namespace ani2xcursor

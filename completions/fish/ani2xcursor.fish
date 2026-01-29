@@ -22,9 +22,9 @@ complete -c ani2xcursor -l verbose -s v \
 complete -c ani2xcursor -l skip-broken \
     -d "Continue on conversion errors"
 
-# --manual-mapping
-complete -c ani2xcursor -l manual-mapping \
-    -d "Generate previews + mapping.toml then exit"
+# --manifest
+complete -c ani2xcursor -l manifest \
+    -d "Generate previews + manifest.toml then exit"
 
 # --list-sizes
 complete -c ani2xcursor -l list-sizes \
