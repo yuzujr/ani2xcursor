@@ -11,23 +11,23 @@ void print_usage(const char* program) {
     std::cout << "Usage: " << program << " <input_dir> [options]\n\n"
               << "Convert Windows Animated Cursors (.ani) to Linux Xcursor theme.\n\n"
               << "Arguments:\n"
-              << "  <input_dir>       Directory containing Install.inf and .ani "
+              << "  <input_dir>               Directory containing Install.inf and .ani "
                  "files\n\n"
               << "Options:\n"
-              << "  --out, -o <dir>       Output directory (default: ./out)\n"
-              << "  --format <mode>       Output format: xcursor (default) or source\n"
-              << "  --install, -i         Install theme to $XDG_DATA_HOME/icons\n"
-              << "  --verbose, -v         Enable verbose logging\n"
-              << "  --skip-broken         Continue on conversion errors\n"
-              << "  --manifest            Generate previews + manifest.toml then exit\n"
-              << "  --list-sizes          Show available sizes in cursor files then "
+              << "  --out, -o <dir>           Output directory (default: ./out)\n"
+              << "  --format, -f <mode>       Output format: xcursor (default) or source\n"
+              << "  --size, -s <mode>         Size selection mode:\n"
+              << "                                all    - Export all sizes (default)\n"
+              << "                                max    - Export only largest size\n"
+              << "                                24,32  - Ensure sizes (reuse if present, rescale "
+                 "if missing)\n"
+              << "  --manifest, -m            Generate previews + manifest.toml then exit\n"
+              << "  --list, -l                Show available sizes in cursor files then "
                  "exit\n"
-              << "  --sizes <mode>        Size selection mode:\n"
-              << "                          all    - Export all sizes (default)\n"
-              << "                          max    - Export only largest size\n"
-              << "                          24,32  - Ensure sizes (reuse if present, "
-                 "rescale if missing)\n"
-              << "  --help, -h            Show this help message\n";
+              << "  --install, -i             Install theme to $XDG_DATA_HOME/icons\n"
+              << "  --verbose, -v             Enable verbose logging\n"
+              << "  --skip-broken             Continue on conversion errors\n"
+              << "  --help, -h                Show this help message\n";
 }
 
 Args parse_args(int argc, char* argv[]) {
@@ -46,11 +46,11 @@ Args parse_args(int argc, char* argv[]) {
             args.install = true;
         } else if (arg == "--skip-broken") {
             args.skip_broken = true;
-        } else if (arg == "--manifest") {
+        } else if (arg == "--manifest" || arg == "-m") {
             args.manifest = true;
-        } else if (arg == "--list-sizes") {
+        } else if (arg == "--list" || arg == "-l") {
             args.list_sizes = true;
-        } else if (arg == "--format" && i + 1 < argc) {
+        } else if ((arg == "--format" || arg == "-f") && i + 1 < argc) {
             std::string fmt = argv[++i];
             if (fmt == "xcursor") {
                 args.format = OutputFormat::Xcursor;
@@ -61,7 +61,7 @@ Args parse_args(int argc, char* argv[]) {
             }
         } else if ((arg == "--out" || arg == "-o") && i + 1 < argc) {
             args.output_dir = argv[++i];
-        } else if (arg == "--sizes" && i + 1 < argc) {
+        } else if ((arg == "--size" || arg == "-s") && i + 1 < argc) {
             std::string sizes_arg = argv[++i];
             if (sizes_arg == "all") {
                 args.size_filter = SizeFilter::All;

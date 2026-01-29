@@ -3,13 +3,11 @@
 _arguments -s \
   '1:cursor theme folder:_files -/' \
   '(-o --out)'{-o,--out}'[Output directory]:dir:_files -/' \
-  '--install[Install theme to $XDG_DATA_HOME/icons]' \
-  '(-i --install)'{-i,--install}'[Install theme]' \
-  '--verbose[Enable verbose logging]' \
+  '(-f --format)'{-f,--format}'[Output format]:mode:(xcursor source)' \
+  '(-s --size)'{-s,--size}'[Size selection mode]:mode:(all max)' \
+  '(-m --manifest)'{-m,--manifest}'[Generate previews + manifest.toml then exit]' \
+  '(-l --list)'{-l,--list}'[Show available sizes then exit]' \
+  '(-i --install)'{-i,--install}'[Install theme to $XDG_DATA_HOME/icons]' \
   '(-v --verbose)'{-v,--verbose}'[Enable verbose logging]' \
   '--skip-broken[Continue on conversion errors]' \
-  '--manifest[Generate previews + manifest.toml then exit]' \
-  '--list-sizes[Show available sizes then exit]' \
-  '--format[Output format]:mode:(xcursor source)' \
-  '--sizes[Size selection mode]:mode:(all max)' \
   '(-h --help)'{-h,--help}'[Show help message]'

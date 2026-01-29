@@ -57,18 +57,18 @@ Requirements: Linux, xmake
 ani2xcursor /path/to/cursor/folder
 
 # Options
---out, -o <dir>       Output directory (default: ./out)
---format <mode>       Output format: xcursor (default) or source
---install, -i         Install theme to $XDG_DATA_HOME/icons
---verbose, -v         Enable verbose logging
---skip-broken         Continue on conversion errors
---manifest            Generate previews + manifest.toml then exit
---list-sizes          Show available sizes in cursor files then exit
---sizes <mode>        Size selection mode:
-                          all    - Export all sizes (default)
-                          max    - Export only largest size
-                          24,32  - Ensure sizes (reuse if present, rescale if missing)
---help, -h            Show this help message
+  --out, -o <dir>           Output directory (default: ./out)
+  --format, -f <mode>       Output format: xcursor (default) or source
+  --size, -s <mode>         Size selection mode:
+                                all    - Export all sizes (default)
+                                max    - Export only largest size
+                                24,32  - Ensure sizes (reuse if present, rescale if missing)
+  --manifest, -m            Generate previews + manifest.toml then exit
+  --list, -l                Show available sizes in cursor files then exit
+  --install, -i             Install theme to $XDG_DATA_HOME/icons
+  --verbose, -v             Enable verbose logging
+  --skip-broken             Continue on conversion errors
+  --help, -h                Show this help message
 ```
 
 ## Manifest (primary configuration)
@@ -86,7 +86,7 @@ You can also force this mode with `--manifest`:
 ```
 
 Edit `manifest.toml` and re-run the command. If `manifest.toml` exists, it takes priority over `Install.inf`,
-and its size settings override `--sizes`.
+and its size settings override `--size`.
 
 ### Manifest sizes
 

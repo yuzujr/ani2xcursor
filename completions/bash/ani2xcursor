@@ -10,11 +10,11 @@ _ani2xcursor() {
       COMPREPLY=( $(compgen -d -- "$cur") )
       return 0
       ;;
-    --sizes)
+    --size|-s)
       COMPREPLY=( $(compgen -W "all max" -- "$cur") )
       return 0
       ;;
-    --format)
+    --format|-f)
       COMPREPLY=( $(compgen -W "xcursor source" -- "$cur") )
       return 0
       ;;
@@ -23,13 +23,13 @@ _ani2xcursor() {
   if [[ "$cur" == -* ]]; then
     COMPREPLY=( $(compgen -W "
       --out -o
-      --format
+      --format -f
+      --size -s
+      --manifest -m
+      --list -l
       --install -i
       --verbose -v
       --skip-broken
-      --manifest
-      --list-sizes
-      --sizes
       --help -h
     " -- "$cur") )
     return 0
