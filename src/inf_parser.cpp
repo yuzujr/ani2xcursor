@@ -4,7 +4,9 @@
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <cctype>
+#include <iconv.h>
 #include <sstream>
 
 namespace ani2xcursor {
@@ -53,6 +55,88 @@ std::string unquote(std::string_view s) {
         s = s.substr(1);
     }
     return std::string(s);
+}
+
+bool is_valid_utf8(std::string_view s) {
+    const auto* bytes = reinterpret_cast<const unsigned char*>(s.data());
+    size_t i = 0;
+    while (i < s.size()) {
+        unsigned char c = bytes[i];
+        if (c <= 0x7F) {
+            ++i;
+            continue;
+        }
+        size_t remaining = 0;
+        if ((c & 0xE0) == 0xC0) {
+            remaining = 1;
+            if (c < 0xC2) return false; // overlong
+        } else if ((c & 0xF0) == 0xE0) {
+            remaining = 2;
+        } else if ((c & 0xF8) == 0xF0) {
+            remaining = 3;
+            if (c > 0xF4) return false;
+        } else {
+            return false;
+        }
+        if (i + remaining >= s.size()) return false;
+        for (size_t j = 1; j <= remaining; ++j) {
+            if ((bytes[i + j] & 0xC0) != 0x80) return false;
+        }
+        i += remaining + 1;
+    }
+    return true;
+}
+
+std::optional<std::string> iconv_to_utf8(std::string_view input, const char* from_encoding) {
+    iconv_t cd = iconv_open("UTF-8", from_encoding);
+    if (cd == reinterpret_cast<iconv_t>(-1)) {
+        return std::nullopt;
+    }
+
+    size_t in_left = input.size();
+    size_t out_cap = in_left * 4 + 8;
+    std::string output;
+    output.resize(out_cap);
+
+    char* in_buf = const_cast<char*>(input.data());
+    char* out_buf = output.data();
+    size_t out_left = out_cap;
+
+    while (in_left > 0) {
+        size_t res = iconv(cd, &in_buf, &in_left, &out_buf, &out_left);
+        if (res != static_cast<size_t>(-1)) {
+            continue;
+        }
+        if (errno == E2BIG) {
+            size_t used = static_cast<size_t>(out_buf - output.data());
+            out_cap *= 2;
+            output.resize(out_cap);
+            out_buf = output.data() + used;
+            out_left = out_cap - used;
+            continue;
+        }
+        iconv_close(cd);
+        return std::nullopt;
+    }
+
+    iconv_close(cd);
+    output.resize(out_cap - out_left);
+    return output;
+}
+
+std::string normalize_inf_text(std::string_view content) {
+    if (is_valid_utf8(content)) {
+        return std::string(content);
+    }
+
+    if (auto converted = iconv_to_utf8(content, "GBK")) {
+        return *converted;
+    }
+    if (auto converted = iconv_to_utf8(content, "CP936")) {
+        return *converted;
+    }
+
+    return std::string(content);
 }
 
 } // anonymous namespace
@@ -183,7 +267,7 @@ RegEntry RegLineParser::parse(std::string_view line) {
 
 InfResult InfParser::parse(const fs::path& path) {
     spdlog::debug("Parsing INF file: {}", path.string());
-    auto content = utils::read_file_string(path);
+    auto content = normalize_inf_text(utils::read_file_string(path));
     return parse_string(content);
 }
 
