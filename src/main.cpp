@@ -158,9 +158,19 @@ int generate_manifest_for_missing_inf(const ani2xcursor::Args& args, const fs::p
 
 int main(int argc, char* argv[]) {
     // Initialize localization
-    constexpr auto LocaleDir = "/usr/share/locale";
+    std::string locale_dir;
+    if (std::filesystem::exists("build/locale")) {
+        locale_dir = "build/locale";
+    } else {
+#ifdef ANI2XCURSOR_LOCALEDIR
+        locale_dir = ANI2XCURSOR_LOCALEDIR;
+#else
+        locale_dir = "/usr/share/locale";
+#endif
+    }
+
     std::setlocale(LC_ALL, "");
-    bindtextdomain("ani2xcursor", LocaleDir);
+    bindtextdomain("ani2xcursor", locale_dir.c_str());
     textdomain("ani2xcursor");
 
     try {
