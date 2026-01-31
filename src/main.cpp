@@ -1,6 +1,8 @@
+#include <libintl.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include <clocale>
 #include <filesystem>
 #include <iostream>
 #include <optional>
@@ -155,6 +157,12 @@ int generate_manifest_for_missing_inf(const ani2xcursor::Args& args, const fs::p
 }  // namespace
 
 int main(int argc, char* argv[]) {
+    // Initialize localization
+    constexpr auto LocaleDir = "/usr/share/locale";
+    std::setlocale(LC_ALL, "");
+    bindtextdomain("ani2xcursor", LocaleDir);
+    textdomain("ani2xcursor");
+
     try {
         auto args = ani2xcursor::parse_args(argc, argv);
 

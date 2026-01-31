@@ -2,7 +2,6 @@
 
 #include <libintl.h>
 
-#include <clocale>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -11,11 +10,6 @@
 namespace ani2xcursor {
 
 void print_usage(const char* program) {
-    constexpr auto LocaleDir = "/usr/share/locale";
-    std::setlocale(LC_ALL, "");
-    bindtextdomain("ani2xcursor", LocaleDir);
-    textdomain("ani2xcursor");
-
     std::cout
         << _("Usage: ") << program << _(" <input_dir> [options]\n\n")
         << _("Convert Windows Animated Cursors (.ani) to Linux Xcursor theme.\n\n")
