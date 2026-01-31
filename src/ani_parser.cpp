@@ -1,5 +1,6 @@
 #include "ani_parser.h"
 
+#include <libintl.h>
 #include <spdlog/spdlog.h>
 
 #include <stdexcept>
@@ -11,7 +12,7 @@ namespace ani2xcursor {
 
 const AniFrame& Animation::get_step_frame(size_t step) const {
     if (step >= num_steps) {
-        throw std::out_of_range("Animation step index out of range");
+        throw std::out_of_range(_("Animation step index out of range"));
     }
 
     size_t frame_idx = step;
@@ -20,7 +21,7 @@ const AniFrame& Animation::get_step_frame(size_t step) const {
     }
 
     if (frame_idx >= frames.size()) {
-        throw std::out_of_range("Animation frame index out of range");
+        throw std::out_of_range(_("Animation frame index out of range"));
     }
 
     return frames[frame_idx];
@@ -58,11 +59,11 @@ Animation AniParser::parse_impl(std::span<const uint8_t> data) {
     RiffReader reader(data);
 
     if (!reader.is_valid()) {
-        throw std::runtime_error("Invalid RIFF file");
+        throw std::runtime_error(_("Invalid RIFF file"));
     }
 
     if (reader.form_type() != "ACON") {
-        throw std::runtime_error("Not an ANI file: expected RIFF ACON, got RIFF " +
+        throw std::runtime_error(_("Not an ANI file: expected RIFF ACON, got RIFF ") +
                                  std::string(reader.form_type()));
     }
 
@@ -94,12 +95,13 @@ Animation AniParser::parse_impl(std::span<const uint8_t> data) {
 
     // anih is required
     if (!anih_chunk) {
-        throw std::runtime_error("ANI file missing required 'anih' chunk");
+        throw std::runtime_error(_("ANI file missing required 'anih' chunk"));
     }
     parse_anih(*anih_chunk, anim);
 
-    spdlog::info("ANI: {} frames, {} steps, default rate {} jiffies ({}ms)", anim.num_frames,
-                 anim.num_steps, anim.display_rate, jiffies_to_ms(anim.display_rate));
+    spdlog::info(
+        spdlog::fmt_lib::runtime(_("ANI: {} frames, {} steps, default rate {} jiffies ({}ms)")),
+        anim.num_frames, anim.num_steps, anim.display_rate, jiffies_to_ms(anim.display_rate));
 
     // Parse optional rate chunk
     std::vector<uint32_t> rates;
@@ -116,13 +118,13 @@ Animation AniParser::parse_impl(std::span<const uint8_t> data) {
 
     // Find and parse frames
     if (!fram_list) {
-        throw std::runtime_error("ANI file missing required LIST 'fram' chunk");
+        throw std::runtime_error(_("ANI file missing required LIST 'fram' chunk"));
     }
 
     anim.frames = parse_frames(reader, *fram_list, anim.num_frames);
 
     if (anim.frames.empty()) {
-        throw std::runtime_error("ANI file contains no frames");
+        throw std::runtime_error(_("ANI file contains no frames"));
     }
 
     // Apply delays to frames
@@ -149,7 +151,8 @@ Animation AniParser::parse_impl(std::span<const uint8_t> data) {
         }
     }
 
-    spdlog::info("ANI: Parsed {} frames successfully", anim.frames.size());
+    spdlog::info(spdlog::fmt_lib::runtime(_("ANI: Parsed {} frames successfully")),
+                 anim.frames.size());
 
     return anim;
 }
@@ -167,7 +170,7 @@ void AniParser::parse_anih(const RiffChunk& chunk, Animation& anim) {
     // DWORD bfAttributes - flags (bit 0=seq present, bit 1=icon data is raw)
 
     if (chunk.data.size() < 36) {
-        throw std::runtime_error("ANI 'anih' chunk too small");
+        throw std::runtime_error(_("ANI 'anih' chunk too small"));
     }
 
     utils::ByteReader reader(chunk.data);
@@ -183,7 +186,7 @@ void AniParser::parse_anih(const RiffChunk& chunk, Animation& anim) {
 
     // Validate
     if (anim.num_frames == 0) {
-        throw std::runtime_error("ANI 'anih' reports 0 frames");
+        throw std::runtime_error(_("ANI 'anih' reports 0 frames"));
     }
     if (anim.num_steps == 0) {
         anim.num_steps = anim.num_frames;
@@ -202,7 +205,8 @@ std::vector<uint32_t> AniParser::parse_rate(const RiffChunk& chunk, uint32_t num
 
     size_t num_entries = chunk.data.size() / 4;
     if (num_entries < num_steps) {
-        spdlog::warn("ANI 'rate' chunk has {} entries, expected {}", num_entries, num_steps);
+        spdlog::warn(spdlog::fmt_lib::runtime(_("ANI 'rate' chunk has {} entries, expected {}")),
+                     num_entries, num_steps);
     }
 
     utils::ByteReader reader(chunk.data);
@@ -218,7 +222,8 @@ std::vector<uint32_t> AniParser::parse_seq(const RiffChunk& chunk, uint32_t num_
 
     size_t num_entries = chunk.data.size() / 4;
     if (num_entries < num_steps) {
-        spdlog::warn("ANI 'seq ' chunk has {} entries, expected {}", num_entries, num_steps);
+        spdlog::warn(spdlog::fmt_lib::runtime(_("ANI 'seq ' chunk has {} entries, expected {}")),
+                     num_entries, num_steps);
     }
 
     utils::ByteReader reader(chunk.data);
@@ -251,7 +256,8 @@ std::vector<AniFrame> AniParser::parse_frames(const RiffReader& reader, const Ri
     });
 
     if (frames.size() != num_frames) {
-        spdlog::warn("ANI: Expected {} frames, found {}", num_frames, frames.size());
+        spdlog::warn(spdlog::fmt_lib::runtime(_("ANI: Expected {} frames, found {}")), num_frames,
+                     frames.size());
     }
 
     return frames;

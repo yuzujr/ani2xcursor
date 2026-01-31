@@ -1,5 +1,6 @@
 #include "ico_cur_decoder.h"
 
+#include <libintl.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -20,7 +21,7 @@ namespace ani2xcursor {
 CursorImage IcoCurDecoder::decode(std::span<const uint8_t> data) {
     auto images = decode_all(data);
     if (images.empty()) {
-        throw std::runtime_error("ICO/CUR: No images found");
+        throw std::runtime_error(_("ICO/CUR: No images found"));
     }
 
     // Return the first (best) image
@@ -29,24 +30,24 @@ CursorImage IcoCurDecoder::decode(std::span<const uint8_t> data) {
 
 std::vector<CursorImage> IcoCurDecoder::decode_all(std::span<const uint8_t> data) {
     if (data.size() < 6) {
-        throw std::runtime_error("ICO/CUR: File too small");
+        throw std::runtime_error(_("ICO/CUR: File too small"));
     }
 
     auto header = parse_header(data);
 
     if (header.reserved != 0) {
-        throw std::runtime_error("ICO/CUR: Invalid header (reserved != 0)");
+        throw std::runtime_error(_("ICO/CUR: Invalid header (reserved != 0)"));
     }
 
     if (header.type != 1 && header.type != 2) {
-        throw std::runtime_error("ICO/CUR: Invalid type (expected 1=ICO or 2=CUR)");
+        throw std::runtime_error(_("ICO/CUR: Invalid type (expected 1=ICO or 2=CUR)"));
     }
 
     bool is_cursor = (header.type == 2);
     spdlog::debug("ICO/CUR: Type={}, {} images", is_cursor ? "CUR" : "ICO", header.count);
 
     if (header.count == 0) {
-        throw std::runtime_error("ICO/CUR: No images in file");
+        throw std::runtime_error(_("ICO/CUR: No images in file"));
     }
 
     // Parse directory entries
@@ -55,7 +56,7 @@ std::vector<CursorImage> IcoCurDecoder::decode_all(std::span<const uint8_t> data
 
     size_t min_file_size = 6 + header.count * 16;
     if (data.size() < min_file_size) {
-        throw std::runtime_error("ICO/CUR: File too small for directory");
+        throw std::runtime_error(_("ICO/CUR: File too small for directory"));
     }
 
     for (uint16_t i = 0; i < header.count; ++i) {
@@ -92,7 +93,9 @@ std::vector<CursorImage> IcoCurDecoder::decode_all(std::span<const uint8_t> data
                       entry.size);
 
         if (entry.offset + entry.size > data.size()) {
-            spdlog::warn("ICO/CUR: Image #{} data extends beyond file, skipping", idx);
+            spdlog::warn(spdlog::fmt_lib::runtime(
+                             _("ICO/CUR: Image #{} data extends beyond file, skipping")),
+                         idx);
             continue;
         }
 
@@ -109,13 +112,14 @@ std::vector<CursorImage> IcoCurDecoder::decode_all(std::span<const uint8_t> data
                 results.push_back(decode_bmp(img_data, entry, is_cursor));
             }
         } catch (const std::exception& e) {
-            spdlog::warn("ICO/CUR: Failed to decode image #{}: {}", idx, e.what());
+            spdlog::warn(spdlog::fmt_lib::runtime(_("ICO/CUR: Failed to decode image #{}: {}")),
+                         idx, e.what());
             // Continue with other sizes
         }
     }
 
     if (results.empty()) {
-        throw std::runtime_error("ICO/CUR: Failed to decode any images");
+        throw std::runtime_error(_("ICO/CUR: Failed to decode any images"));
     }
 
     spdlog::debug("ICO/CUR: Successfully decoded {} images", results.size());
@@ -163,7 +167,7 @@ CursorImage IcoCurDecoder::decode_png(std::span<const uint8_t> data, uint16_t ho
         stbi_load_from_memory(data.data(), static_cast<int>(data.size()), &w, &h, &channels, 4);
 
     if (!pixels) {
-        throw std::runtime_error(std::string("ICO/CUR: Failed to decode PNG: ") +
+        throw std::runtime_error(std::string(_("ICO/CUR: Failed to decode PNG: ")) +
                                  stbi_failure_reason());
     }
 
@@ -190,7 +194,7 @@ CursorImage IcoCurDecoder::decode_bmp(std::span<const uint8_t> data, const DirEn
     // without the standard BMP file header
 
     if (data.size() < 40) {
-        throw std::runtime_error("ICO/CUR: BMP data too small");
+        throw std::runtime_error(_("ICO/CUR: BMP data too small"));
     }
 
     utils::ByteReader reader(data);
@@ -228,7 +232,7 @@ CursorImage IcoCurDecoder::decode_bmp(std::span<const uint8_t> data, const DirEn
     img.pixels.resize(static_cast<size_t>(img.width) * img.height * 4);
 
     if (compression != 0) {
-        throw std::runtime_error("ICO/CUR: Compressed BMP not supported");
+        throw std::runtime_error(_("ICO/CUR: Compressed BMP not supported"));
     }
 
     // Calculate row stride (BMP rows are 4-byte aligned)
@@ -261,8 +265,9 @@ CursorImage IcoCurDecoder::decode_bmp(std::span<const uint8_t> data, const DirEn
     // Check if we have enough data
     size_t required = mask_offset + static_cast<size_t>(mask_stride) * actual_height;
     if (data.size() < required) {
-        spdlog::warn("ICO/CUR: BMP data truncated ({} < {}), may have artifacts", data.size(),
-                     required);
+        spdlog::warn(spdlog::fmt_lib::runtime(
+                         _("ICO/CUR: BMP data truncated ({} < {}), may have artifacts")),
+                     data.size(), required);
     }
 
     // Decode pixels based on bit depth
@@ -320,7 +325,8 @@ CursorImage IcoCurDecoder::decode_bmp(std::span<const uint8_t> data, const DirEn
                     break;
                 }
                 default:
-                    spdlog::warn("ICO/CUR: Unsupported BMP bit depth {}", bpp);
+                    spdlog::warn(
+                        spdlog::fmt_lib::runtime(_("ICO/CUR: Unsupported BMP bit depth {}")), bpp);
                     break;
             }
 

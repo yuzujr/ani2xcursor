@@ -2,13 +2,14 @@
 
 #include <spdlog/spdlog.h>
 
+#include "spdlog/fmt/bundled/base.h"
 #include "utils/bytes.h"
 
 namespace ani2xcursor {
 
 RiffReader::RiffReader(std::span<const uint8_t> data) : data_(data), valid_(false) {
     if (data_.size() < 12) {
-        spdlog::error("RIFF: File too small ({} bytes)", data_.size());
+        spdlog::error(spdlog::fmt_lib::runtime(_("RIFF: File too small ({} bytes)")), data_.size());
         return;
     }
 
@@ -17,7 +18,8 @@ RiffReader::RiffReader(std::span<const uint8_t> data) : data_(data), valid_(fals
     // Read RIFF header
     auto fourcc = reader.read_fourcc();
     if (fourcc != "RIFF") {
-        spdlog::error("RIFF: Invalid signature '{}' (expected 'RIFF')", fourcc);
+        spdlog::error(spdlog::fmt_lib::runtime(_("RIFF: Invalid signature '{}' (expected 'RIFF')")),
+                      fourcc);
         return;
     }
 
@@ -29,8 +31,10 @@ RiffReader::RiffReader(std::span<const uint8_t> data) : data_(data), valid_(fals
     // Validate size
     if (size + 8 > data_.size()) {
         if (size != data_.size()) {
-            spdlog::warn("RIFF: Declared size {} exceeds file size {} (non-fatal; continuing)",
-                         size + 8, data_.size());
+            spdlog::warn(
+                spdlog::fmt_lib::runtime(
+                    _("RIFF: Declared size {} exceeds file size {} (non-fatal; continuing)")),
+                size + 8, data_.size());
         }
         // Continue anyway, some files have incorrect sizes
     }
@@ -59,12 +63,13 @@ std::optional<RiffChunk> RiffReader::parse_chunk(std::span<const uint8_t> data,
     chunk.size = utils::read_u32_le(data.data() + offset + 4);
     chunk.data_offset = offset + 8;
 
-    spdlog::trace("RIFF: Chunk '{}' at offset {}, size {}", chunk.fourcc, offset, chunk.size);
+    spdlog::trace(spdlog::fmt_lib::runtime(_("RIFF: Chunk '{}' at offset {}, size {}")),
+                  chunk.fourcc, offset, chunk.size);
 
     // For LIST chunks, read form type
     if (chunk.fourcc == "LIST") {
         if (chunk.size < 4 || offset + 12 > data.size()) {
-            spdlog::error("RIFF: LIST chunk too small");
+            spdlog::error(spdlog::fmt_lib::runtime(_("RIFF: LIST chunk too small")));
             return std::nullopt;
         }
         chunk.form_type = std::string(reinterpret_cast<const char*>(data.data() + offset + 8), 4);
