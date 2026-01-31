@@ -1,6 +1,8 @@
+#include <libintl.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include <clocale>
 #include <filesystem>
 #include <iostream>
 #include <optional>
@@ -16,8 +18,13 @@
 #include "preview_generator.h"
 #include "size_tools.h"
 #include "source_writer.h"
+#include "spdlog/fmt/bundled/base.h"
 #include "theme_installer.h"
 #include "xcursor_writer.h"
+
+#ifndef _
+#define _(String) String
+#endif
 
 namespace {
 
@@ -42,16 +49,19 @@ std::optional<ani2xcursor::ManifestLoadResult> handle_manifest_request(
         try {
             auto manifest = ani2xcursor::load_manifest_toml(manifest_path);
             for (const auto& warning : manifest.warnings) {
-                spdlog::warn("{}: {}", label, warning);
+                spdlog::warn(spdlog::fmt_lib::runtime(_("{}: {}")), label, warning);
             }
-            spdlog::info("Manifest requested; using existing {}.", label);
+            spdlog::info(spdlog::fmt_lib::runtime(_("Manifest requested; using existing {}.")),
+                         label);
             return manifest;
         } catch (const std::exception& e) {
-            spdlog::warn("Manifest requested but {} failed to parse: {}", label, e.what());
+            spdlog::warn(
+                spdlog::fmt_lib::runtime(_("Manifest requested but {} failed to parse: {}")), label,
+                e.what());
         }
     }
 
-    spdlog::info("Manifest requested; generating previews and manifest.toml.");
+    spdlog::info(_("Manifest requested; generating previews and manifest.toml."));
     auto preview_dir = manifest_dir / "previews";
     auto preview_result = ani2xcursor::generate_previews(args.input_dir, preview_dir,
                                                          args.size_filter, args.specific_sizes);
@@ -64,8 +74,9 @@ std::optional<ani2xcursor::ManifestLoadResult> handle_manifest_request(
         abs_manifest = manifest_path;
         abs_previews = preview_dir;
     }
-    spdlog::info("Generated: {} and {}", abs_manifest.string(), (abs_previews / "*.png").string());
-    spdlog::info("Edit manifest.toml and re-run the command.");
+    spdlog::info(spdlog::fmt_lib::runtime(_("Generated: {} and {}")), abs_manifest.string(),
+                 (abs_previews / "*.png").string());
+    spdlog::info(_("Edit manifest.toml and re-run the command."));
     return std::nullopt;
 }
 
@@ -95,7 +106,8 @@ bool build_mappings_from_manifest(const ani2xcursor::Args& args,
     for (const auto& role : ani2xcursor::known_roles()) {
         auto it = manifest.role_to_path.find(role);
         if (it == manifest.role_to_path.end() || it->second.empty()) {
-            spdlog::warn("manifest.toml: role '{}' is not mapped", role);
+            spdlog::warn(spdlog::fmt_lib::runtime(_("manifest.toml: role '{}' is not mapped")),
+                         role);
             if (!ani2xcursor::is_optional_role(role) && !args.skip_broken) {
                 missing_required = true;
             }
@@ -104,9 +116,7 @@ bool build_mappings_from_manifest(const ani2xcursor::Args& args,
         out.push_back({role, it->second});
     }
     if (missing_required) {
-        spdlog::error(
-            "Missing required roles in manifest.toml (use --skip-broken "
-            "to continue)");
+        spdlog::error(_("Missing required roles in manifest.toml (use --skip-broken to continue)"));
     }
     return !missing_required;
 }
@@ -125,7 +135,7 @@ std::optional<fs::path> find_inf_path(const fs::path& input_dir) {
 
 int generate_manifest_for_missing_inf(const ani2xcursor::Args& args, const fs::path& manifest_path,
                                       const fs::path& manifest_dir) {
-    spdlog::warn("Install.inf not found and manifest.toml not present.");
+    spdlog::warn(_("Install.inf not found and manifest.toml not present."));
     auto preview_dir = manifest_dir / "previews";
     auto preview_result = ani2xcursor::generate_previews(args.input_dir, preview_dir,
                                                          args.size_filter, args.specific_sizes);
@@ -138,14 +148,31 @@ int generate_manifest_for_missing_inf(const ani2xcursor::Args& args, const fs::p
         abs_manifest = manifest_path;
         abs_previews = preview_dir;
     }
-    spdlog::warn("Generated: {} and {}", abs_manifest.string(), (abs_previews / "*.png").string());
-    spdlog::warn("Edit manifest.toml and re-run the command.");
+    spdlog::warn(spdlog::fmt_lib::runtime(_("Generated: {} and {}")), abs_manifest.string(),
+                 (abs_previews / "*.png").string());
+    spdlog::warn(spdlog::fmt_lib::runtime(_("Edit manifest.toml and re-run the command.")));
     return 2;
 }
 
 }  // namespace
 
 int main(int argc, char* argv[]) {
+    // Initialize localization
+    std::string locale_dir;
+    if (std::filesystem::exists("build/locale")) {
+        locale_dir = "build/locale";
+    } else {
+#ifdef ANI2XCURSOR_LOCALEDIR
+        locale_dir = ANI2XCURSOR_LOCALEDIR;
+#else
+        locale_dir = "/usr/share/locale";
+#endif
+    }
+
+    std::setlocale(LC_ALL, "");
+    bindtextdomain("ani2xcursor", locale_dir.c_str());
+    textdomain("ani2xcursor");
+
     try {
         auto args = ani2xcursor::parse_args(argc, argv);
 
@@ -155,7 +182,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (args.input_dir.empty()) {
-            std::cerr << "Error: input directory required\n\n";
+            std::cerr << _("Error: input directory required\n\n");
             ani2xcursor::print_usage(argv[0]);
             return 1;
         }
@@ -163,7 +190,8 @@ int main(int argc, char* argv[]) {
         setup_logging(args.verbose);
 
         if (!fs::exists(args.input_dir)) {
-            spdlog::error("Input directory does not exist: {}", args.input_dir.string());
+            spdlog::error(spdlog::fmt_lib::runtime(_("Input directory does not exist: {}")),
+                          args.input_dir.string());
             return 1;
         }
 
@@ -191,11 +219,14 @@ int main(int argc, char* argv[]) {
             try {
                 loaded_manifest = ani2xcursor::load_manifest_toml(manifest_path);
                 for (const auto& warning : loaded_manifest->warnings) {
-                    spdlog::warn("{}: {}", label, warning);
+                    spdlog::warn(spdlog::fmt_lib::runtime(_("{}: {}")), label, warning);
                 }
             } catch (const std::exception& e) {
-                spdlog::error("Failed to parse {}: {}", label, e.what());
-                spdlog::warn("Falling back to Install.inf because {} could not be parsed", label);
+                spdlog::error(spdlog::fmt_lib::runtime(_("Failed to parse {}: {}")), label,
+                              e.what());
+                spdlog::warn(spdlog::fmt_lib::runtime(
+                                 _("Falling back to Install.inf because {} could not be parsed")),
+                             label);
                 manifest_failed_label = label;
             }
         }
@@ -216,8 +247,9 @@ int main(int argc, char* argv[]) {
             auto inf_path = find_inf_path(args.input_dir);
             if (!inf_path) {
                 if (manifest_failed_label) {
-                    spdlog::error("Install.inf not found and {} failed to parse",
-                                  *manifest_failed_label);
+                    spdlog::error(
+                        spdlog::fmt_lib::runtime(_("Install.inf not found and {} failed to parse")),
+                        *manifest_failed_label);
                     return 1;
                 }
                 return generate_manifest_for_missing_inf(args, manifest_path, manifest_dir);
@@ -228,7 +260,8 @@ int main(int argc, char* argv[]) {
             mappings = inf_data->mappings;
         }
 
-        spdlog::info("Theme: {} ({} cursors)", theme_name, mappings.size());
+        spdlog::info(spdlog::fmt_lib::runtime(_("Theme: {} ({} cursors)")), theme_name,
+                     mappings.size());
 
         // Create output directory structure
         auto theme_dir = args.output_dir / theme_name;
@@ -273,7 +306,8 @@ int main(int argc, char* argv[]) {
                 }
 
                 if (!std::filesystem::exists(cursor_path)) {
-                    spdlog::error("Cursor file not found: {}", display_name);
+                    spdlog::error(spdlog::fmt_lib::runtime(_("Cursor file not found: {}")),
+                                  display_name);
                     if (!args.skip_broken) {
                         return 1;
                     }
@@ -289,7 +323,8 @@ int main(int argc, char* argv[]) {
                 auto ani_path_opt = ani2xcursor::find_file_icase(args.input_dir, filename);
 
                 if (!ani_path_opt) {
-                    spdlog::error("Cursor file not found: {}", filename);
+                    spdlog::error(spdlog::fmt_lib::runtime(_("Cursor file not found: {}")),
+                                  filename);
                     if (!args.skip_broken) {
                         return 1;
                     }
@@ -310,7 +345,7 @@ int main(int argc, char* argv[]) {
                     frames_delays =
                         ani2xcursor::process_ani_file(cursor_path, size_filter, specific_sizes);
                 } else {
-                    throw std::runtime_error("Unsupported cursor file type");
+                    throw std::runtime_error(_("Unsupported cursor file type"));
                 }
                 auto& frames = frames_delays.first;
                 auto& delays = frames_delays.second;
@@ -343,7 +378,8 @@ int main(int argc, char* argv[]) {
                 ++success_count;
 
             } catch (const std::exception& e) {
-                spdlog::error("Failed to convert {}: {}", display_name, e.what());
+                spdlog::error(spdlog::fmt_lib::runtime(_("Failed to convert {}: {}")), display_name,
+                              e.what());
                 if (!args.skip_broken) {
                     return 1;
                 }
@@ -352,7 +388,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (success_count == 0) {
-            spdlog::error("No cursors were converted successfully");
+            spdlog::error(_("No cursors were converted successfully"));
             return 1;
         }
 
@@ -363,27 +399,30 @@ int main(int argc, char* argv[]) {
             ani2xcursor::SourceWriter::write_cursor_list(src_dir, cursor_list_entries);
         }
 
-        spdlog::info("Conversion complete: {} cursors converted, {} errors", success_count,
-                     error_count);
+        spdlog::info(
+            spdlog::fmt_lib::runtime(_("Conversion complete: {} cursors converted, {} errors")),
+            success_count, error_count);
 
         // Install if requested
         if (args.install) {
             if (args.format == ani2xcursor::OutputFormat::Xcursor) {
                 ani2xcursor::ThemeInstaller::install(xcursor_dir, theme_name);
             } else {
-                spdlog::warn("--install ignored for source output format");
+                spdlog::warn(_("--install ignored for source output format"));
             }
         } else {
             if (args.format == ani2xcursor::OutputFormat::Xcursor) {
-                spdlog::info("Theme created at: {}", xcursor_dir.string());
+                spdlog::info(spdlog::fmt_lib::runtime(_("Theme created at: {}")),
+                             xcursor_dir.string());
             } else {
-                spdlog::info("Source files created at: {}", src_dir.string());
+                spdlog::info(spdlog::fmt_lib::runtime(_("Source files created at: {}")),
+                             src_dir.string());
             }
         }
 
         return 0;
     } catch (const std::exception& e) {
-        spdlog::error("Error: {}", e.what());
+        spdlog::error(spdlog::fmt_lib::runtime(_("Error: {}")), e.what());
         return 1;
     }
 }

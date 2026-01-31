@@ -10,6 +10,7 @@
 #include "ani_parser.h"
 #include "size_selection.h"
 #include "size_tools.h"
+#include "spdlog/fmt/bundled/base.h"
 #include "utils/fs.h"
 
 namespace ani2xcursor {
@@ -17,7 +18,7 @@ namespace ani2xcursor {
 std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_ani_file(
     const std::filesystem::path& ani_path, SizeFilter filter,
     const std::vector<uint32_t>& specific_sizes) {
-    spdlog::info("Processing: {}", ani_path.filename().string());
+    spdlog::info(spdlog::fmt_lib::runtime(_("Processing: {}")), ani_path.filename().string());
 
     auto animation = AniParser::parse(ani_path);
 
@@ -31,7 +32,7 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_ani_file(
         auto images = IcoCurDecoder::decode_all(frame.icon_data);
 
         if (images.empty()) {
-            throw std::runtime_error("No images decoded from frame " + std::to_string(step));
+            throw std::runtime_error(_("No images decoded from frame ") + std::to_string(step));
         }
 
         spdlog::debug("Frame {}: {} sizes", step, images.size());
@@ -43,7 +44,7 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_ani_file(
     size_t num_sizes = frames_by_step[0].size();
     for (size_t i = 1; i < frames_by_step.size(); ++i) {
         if (frames_by_step[i].size() != num_sizes) {
-            spdlog::warn("Inconsistent sizes, using first size only");
+            spdlog::warn(_("Inconsistent sizes, using first size only"));
             num_sizes = 1;
             break;
         }
@@ -71,8 +72,8 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_ani_file(
             uint32_t source_size = nominal_size(frames_by_step[0][source_idx]);
 
             if (needs_rescale) {
-                spdlog::info("Rescaling {}x{} -> {}x{}", source_size, source_size, target_size,
-                             target_size);
+                spdlog::info(spdlog::fmt_lib::runtime(_("Rescaling {}x{} -> {}x{}")), source_size,
+                             source_size, target_size, target_size);
             }
 
             for (size_t step = 0; step < frames_by_step.size(); ++step) {
@@ -91,7 +92,7 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_ani_file(
         auto size_indices_to_export = select_size_indices(size_span, filter, specific_sizes);
 
         if (size_indices_to_export.empty()) {
-            throw std::runtime_error("No sizes selected for export");
+            throw std::runtime_error(_("No sizes selected for export"));
         }
 
         for (size_t size_idx : size_indices_to_export) {
@@ -110,14 +111,14 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_ani_file(
     }
 
     if (spdlog::get_level() <= spdlog::level::info) {
-        spdlog::info("Exported {} sizes:", size_frame_counts.size());
+        spdlog::info(spdlog::fmt_lib::runtime(_("Exported {} sizes:")), size_frame_counts.size());
         for (const auto& [size, count] : size_frame_counts) {
-            spdlog::info("  {}x{}: {} frames", size, size, count);
+            spdlog::info(spdlog::fmt_lib::runtime(_("  {}x{}: {} frames")), size, size, count);
         }
     }
 
     if (decoded_frames.empty()) {
-        throw std::runtime_error("No frames decoded from " + ani_path.string());
+        throw std::runtime_error(_("No frames decoded from ") + ani_path.string());
     }
 
     return {std::move(decoded_frames), std::move(delays)};
@@ -126,8 +127,7 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_ani_file(
 std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_cur_file(
     const std::filesystem::path& cur_path, SizeFilter filter,
     const std::vector<uint32_t>& specific_sizes) {
-    spdlog::info("Processing: {}", cur_path.filename().string());
-
+    spdlog::info(spdlog::fmt_lib::runtime(_("Processing: {}")), cur_path.filename().string());
     auto data = utils::read_file(cur_path);
     auto images = IcoCurDecoder::decode_all(data);
 
@@ -153,8 +153,8 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_cur_file(
             uint32_t source_size = nominal_size(images[source_idx]);
 
             if (needs_rescale) {
-                spdlog::info("Rescaling {}x{} -> {}x{}", source_size, source_size, target_size,
-                             target_size);
+                spdlog::info(spdlog::fmt_lib::runtime(_("Rescaling {}x{} -> {}x{}")), source_size,
+                             source_size, target_size, target_size);
                 decoded_images.push_back(rescale_cursor(images[source_idx], target_size));
             } else {
                 decoded_images.push_back(images[source_idx]);
@@ -165,7 +165,7 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_cur_file(
     } else {
         auto size_indices = select_size_indices(image_span, filter, specific_sizes);
         if (size_indices.empty()) {
-            throw std::runtime_error("No sizes selected for export");
+            throw std::runtime_error(_("No sizes selected for export"));
         }
 
         decoded_images.reserve(size_indices.size());
@@ -180,9 +180,9 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_cur_file(
     }
 
     if (spdlog::get_level() <= spdlog::level::info) {
-        spdlog::info("Exported {} sizes:", size_counts.size());
+        spdlog::info(spdlog::fmt_lib::runtime(_("Exported {} sizes:")), size_counts.size());
         for (const auto& [size, count] : size_counts) {
-            spdlog::info("  {}x{}: {} frames", size, size, count);
+            spdlog::info(spdlog::fmt_lib::runtime(_("  {}x{}: {} frames")), size, size, count);
         }
     }
 

@@ -1,5 +1,7 @@
 #include "manifest.h"
 
+#include <libintl.h>
+
 #include <algorithm>
 #include <cctype>
 #include <sstream>
@@ -88,7 +90,7 @@ std::vector<uint32_t> parse_sizes_list(std::string_view value) {
                 size_t idx = 0;
                 unsigned long parsed = std::stoul(std::string(token), &idx, 10);
                 if (idx != token.size() || parsed == 0 || parsed > 1024) {
-                    throw std::invalid_argument("out of range");
+                    throw std::invalid_argument(_("out of range"));
                 }
                 uint32_t size = static_cast<uint32_t>(parsed);
                 if (std::find(sizes.begin(), sizes.end(), size) == sizes.end()) {
@@ -195,14 +197,14 @@ ManifestLoadResult load_manifest_toml(const fs::path& path) {
 
         auto eq = trimmed.find('=');
         if (eq == std::string_view::npos) {
-            throw std::runtime_error("Invalid line in " + label + ": " + std::string(trimmed));
+            throw std::runtime_error(_("Invalid line in ") + label + ": " + std::string(trimmed));
         }
 
         auto key = to_lower(trim(trimmed.substr(0, eq)));
         auto value = trim(trimmed.substr(eq + 1));
 
         if (key.empty()) {
-            throw std::runtime_error("Empty key in " + label);
+            throw std::runtime_error(_("Empty key in ") + label);
         }
 
         sections[current_section][key] = unquote(value);
@@ -220,13 +222,13 @@ ManifestLoadResult load_manifest_toml(const fs::path& path) {
 
     auto files_it = sections.find("files");
     if (files_it == sections.end()) {
-        throw std::runtime_error(label + " missing [files] section");
+        throw std::runtime_error(label + _(" missing [files] section"));
     }
 
     for (const auto& [key, value] : files_it->second) {
         std::string role = key;
         if (!is_known_role(role)) {
-            result.warnings.push_back("Unknown role in [files]: '" + key + "'");
+            result.warnings.push_back(_("Unknown role in [files]: '") + key + "'");
             continue;
         }
 
@@ -237,7 +239,7 @@ ManifestLoadResult load_manifest_toml(const fs::path& path) {
         for (const auto& [key, value] : sizes_it->second) {
             std::string role = key;
             if (!is_known_role(role)) {
-                result.warnings.push_back("Unknown role in [sizes]: '" + key + "'");
+                result.warnings.push_back(_("Unknown role in [sizes]: '") + key + "'");
                 continue;
             }
             if (value.empty()) {
@@ -245,7 +247,7 @@ ManifestLoadResult load_manifest_toml(const fs::path& path) {
             }
             auto parsed_sizes = parse_sizes_list(value);
             if (parsed_sizes.empty()) {
-                result.warnings.push_back("Invalid size list in [sizes] for '" + key + "': '" +
+                result.warnings.push_back(_("Invalid size list in [sizes] for '") + key + "': '" +
                                           value + "'");
                 continue;
             }
@@ -269,42 +271,42 @@ void write_manifest_toml_template(const fs::path& path, const fs::path& input_di
     }
 
     std::string content;
-    content += "# ani2xcursor manifest (role mapping + per-role sizes)\n";
+    content += _("# ani2xcursor manifest (role mapping + per-role sizes)\n");
     content +=
-        "# Fill in the relative paths (relative to input_dir) for each "
-        "Windows role.\n";
-    content += "# Use the preview images in ani2xcursor/previews/ to decide.\n";
-    content += "# Leave empty to skip a role.\n";
+        _("# Fill in the relative paths (relative to input_dir) for each "
+          "Windows role.\n");
+    content += _("# Use the preview images in ani2xcursor/previews/ to decide.\n");
+    content += _("# Leave empty to skip a role.\n");
     content += "#\n";
-    content += "# Roles (Windows role -> common meaning):\n";
-    content += "# pointer      = Normal Select (Arrow)\n";
-    content += "# help         = Help Select (Question mark)\n";
-    content += "# working      = Working in Background (Arrow + Busy)\n";
-    content += "# busy         = Busy / Wait (Spinner)\n";
-    content += "# precision    = Precision Select (Crosshair)\n";
-    content += "# text         = Text Select (I-beam)\n";
-    content += "# hand         = Handwriting / Pen (NWPen)\n";
-    content += "# unavailable  = Not Allowed / Unavailable (No)\n";
-    content += "# vert         = Vertical Resize (SizeNS)\n";
-    content += "# horz         = Horizontal Resize (SizeWE)\n";
-    content += "# dgn1         = Diagonal Resize 1 (NW-SE, SizeNWSE)\n";
-    content += "# dgn2         = Diagonal Resize 2 (NE-SW, SizeNESW)\n";
-    content += "# move         = Move / Size All (Fleur)\n";
-    content += "# alternate    = Alternate Select (Up Arrow)\n";
-    content += "# link         = Link Select (Hand)\n";
-    content += "# person       = Person Select (optional)\n";
-    content += "# pin          = Pin Select (optional)\n";
+    content += _("# Roles (Windows role -> common meaning):\n");
+    content += _("# pointer      = Normal Select (Arrow)\n");
+    content += _("# help         = Help Select (Question mark)\n");
+    content += _("# working      = Working in Background (Arrow + Busy)\n");
+    content += _("# busy         = Busy / Wait (Spinner)\n");
+    content += _("# precision    = Precision Select (Crosshair)\n");
+    content += _("# text         = Text Select (I-beam)\n");
+    content += _("# hand         = Handwriting / Pen (NWPen)\n");
+    content += _("# unavailable  = Not Allowed / Unavailable (No)\n");
+    content += _("# vert         = Vertical Resize (SizeNS)\n");
+    content += _("# horz         = Horizontal Resize (SizeWE)\n");
+    content += _("# dgn1         = Diagonal Resize 1 (NW-SE, SizeNWSE)\n");
+    content += _("# dgn2         = Diagonal Resize 2 (NE-SW, SizeNESW)\n");
+    content += _("# move         = Move / Size All (Fleur)\n");
+    content += _("# alternate    = Alternate Select (Up Arrow)\n");
+    content += _("# link         = Link Select (Hand)\n");
+    content += _("# person       = Person Select (optional)\n");
+    content += _("# pin          = Pin Select (optional)\n");
     content += "\n";
     content += "[input]\n";
-    content += "# Theme name override (optional)\n";
+    content += _("# Theme name override (optional)\n");
     content += "theme = \"\"\n";
-    content += "# for reference only (do not edit)\n";
+    content += _("# for reference only (do not edit)\n");
     content += "dir = \"" + escape_quotes(abs_dir.string()) + "\"\n";
     content += "\n";
     content += "[files]\n";
-    content += "# Put relative paths here. Examples:\n";
-    content += "# pointer = \"Normal.ani\"\n";
-    content += "# text    = \"Text.ani\"\n";
+    content += _("# Put relative paths here. Examples:\n");
+    content += _("# pointer = \"Normal.ani\"\n");
+    content += _("# text    = \"Text.ani\"\n");
     content += "\n";
 
     size_t max_role_len = 0;
@@ -323,17 +325,17 @@ void write_manifest_toml_template(const fs::path& path, const fs::path& input_di
         }
         content += "\"";
         if (it != guesses.end()) {
-            content += " # guessed";
+            content += _(" # guessed");
         }
         content += "\n";
     }
 
     content += "\n";
     content += "[sizes]\n";
-    content += "# Optional per-role target size override (comma-separated list).\n";
-    content += "# Example: pointer = \"48\" or pointer = \"32, 48\"\n";
-    content += "# Defaults are filled from the current cursor files when available.\n";
-    content += "# Leave empty to keep all sizes from the file.\n";
+    content += _("# Optional per-role target size override (comma-separated list).\n");
+    content += _("# Example: pointer = \"48\" or pointer = \"32, 48\"\n");
+    content += _("# Defaults are filled from the current cursor files when available.\n");
+    content += _("# Leave empty to keep all sizes from the file.\n");
     content += "\n";
 
     for (const auto& role : known_roles()) {
