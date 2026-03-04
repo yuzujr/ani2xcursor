@@ -165,7 +165,12 @@ int main(int argc, char* argv[]) {
 #ifdef ANI2XCURSOR_LOCALEDIR
         locale_dir = ANI2XCURSOR_LOCALEDIR;
 #else
-        locale_dir = "/usr/share/locale";
+        // Prefer the common ${prefix}/share/locale (typically /usr/local/share/locale)
+        if (std::filesystem::exists("/usr/local/share/locale")) {
+            locale_dir = "/usr/local/share/locale";
+        } else {
+            locale_dir = "/usr/share/locale";
+        }
 #endif
     }
 
