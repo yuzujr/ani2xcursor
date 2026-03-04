@@ -18,7 +18,7 @@
 #include "preview_generator.h"
 #include "size_tools.h"
 #include "source_writer.h"
-#include "spdlog/fmt/bundled/base.h"
+#include <spdlog/fmt/fmt.h>
 #include "theme_installer.h"
 #include "xcursor_writer.h"
 

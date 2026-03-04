@@ -10,7 +10,7 @@
 #include "ani_parser.h"
 #include "size_selection.h"
 #include "size_tools.h"
-#include "spdlog/fmt/bundled/base.h"
+#include <spdlog/fmt/fmt.h>
 #include "utils/fs.h"
 
 namespace ani2xcursor {

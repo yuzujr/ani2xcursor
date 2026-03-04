@@ -14,7 +14,7 @@
 #include "ani_parser.h"
 #include "ico_cur_decoder.h"
 #include "size_selection.h"
-#include "spdlog/fmt/bundled/base.h"
+#include <spdlog/fmt/fmt.h>
 #include "utils/fs.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION

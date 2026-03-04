@@ -2,7 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "spdlog/fmt/bundled/base.h"
+#include <spdlog/fmt/fmt.h>
 #include "utils/bytes.h"
 
 namespace ani2xcursor {

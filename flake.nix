@@ -27,8 +27,8 @@
         ];
 
         buildPhase = ''
-          # stb is header-only with no .pc file expose via CPATH.
-          export CPATH="${pkgs.stb}/include''${CPATH:+:$CPATH}"
+          # stb headers live under include/stb/ in nixpkgs (no .pc file).
+          export CPATH="${pkgs.stb}/include/stb''${CPATH:+:$CPATH}"
           make -j$NIX_BUILD_CORES
         '';
 
