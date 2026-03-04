@@ -160,17 +160,26 @@ int main(int argc, char* argv[]) {
     // Initialize localization
     std::string locale_dir;
     if (std::filesystem::exists("build/locale")) {
+        // Dev build: translations compiled into build/locale by xmake after_build
         locale_dir = "build/locale";
     } else {
 #ifdef ANI2XCURSOR_LOCALEDIR
         locale_dir = ANI2XCURSOR_LOCALEDIR;
 #else
-        // Prefer the common ${prefix}/share/locale (typically /usr/local/share/locale)
-        if (std::filesystem::exists("/usr/local/share/locale")) {
-            locale_dir = "/usr/local/share/locale";
-        } else {
-            locale_dir = "/usr/share/locale";
-        }
+        // Derive prefix from the binary's own location via /proc/self/exe.
+        // Works for any install layout:
+        //   /usr/bin/ani2xcursor          → /usr/share/locale        (AUR, distro)
+        //   /usr/local/bin/ani2xcursor    → /usr/local/share/locale  (manual install)
+        //   /nix/store/.../bin/…          → /nix/store/.../share/locale (Nix)
+        try {
+            auto exe    = std::filesystem::read_symlink("/proc/self/exe");
+            auto candidate = exe.parent_path().parent_path() / "share" / "locale";
+            if (std::filesystem::exists(candidate))
+                locale_dir = candidate.string();
+        } catch (...) {}
+
+        if (locale_dir.empty())
+            locale_dir = "/usr/share/locale";  // last-resort fallback
 #endif
     }
 
