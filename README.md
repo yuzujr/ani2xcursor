@@ -42,6 +42,28 @@ yay -S ani2xcursor
 yay -S ani2xcursor-bin
 ```
 
+### NixOS
+
+Add to your `flake.nix`:
+
+```nix
+inputs.ani2xcursor.url = "github:yuzujr/ani2xcursor";
+```
+
+Then in your NixOS configuration:
+
+```nix
+environment.systemPackages = [
+  inputs.ani2xcursor.packages.${pkgs.system}.default
+];
+```
+
+Or try it without installing:
+
+```bash
+nix run github:yuzujr/ani2xcursor -- /path/to/cursor/folder
+```
+
 ## Build
 
 ```bash
