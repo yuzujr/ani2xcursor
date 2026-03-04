@@ -118,6 +118,7 @@ jobs:
           ```bash
           tar -xzf ani2xcursor-v${{ steps.get_version.outputs.VERSION }}-linux-x86_64.tar.gz
           sudo install -Dm755 ani2xcursor /usr/local/bin/ani2xcursor
+          sudo mkdir -p /usr/local/share/locale
           sudo cp -r share/locale/* /usr/local/share/locale/
           ```
           
