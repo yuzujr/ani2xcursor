@@ -1,0 +1,731 @@
+# Chinese translations for ani package
+# ani 软件包的简体中文翻译.
+# Copyright (C) 2026 THE ani'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the ani package.
+#  <j3207068746@163.com>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ani 2xcursor\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-01 06:49+0800\n"
+"PO-Revision-Date: 2026-02-01 06:52+0800\n"
+"Last-Translator:  <j3207068746@163.com>\n"
+"Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/cli.cpp:24
+msgid ""
+"                                24,32  - Ensure sizes (reuse if present, "
+"rescale if missing)\n"
+msgstr ""
+"                                24,32  - 确保尺寸（如果存在则复用，如果缺失则缩放）\n"
+
+#: src/cli.cpp:22
+msgid "                                all    - Export all sizes (default)\n"
+msgstr "                                all    - 导出所有尺寸（默认）\n"
+
+#: src/cli.cpp:23
+msgid "                                max    - Export only largest size\n"
+msgstr "                                max    - 仅导出最大尺寸\n"
+
+#: src/cli.cpp:20
+msgid ""
+"  --format, -f <mode>       Output format: xcursor (default) or source\n"
+msgstr "  --format, -f <模式>       输出格式：xcursor（默认）或 source（源码）\n"
+
+#: src/cli.cpp:32
+msgid "  --help, -h                Show this help message\n"
+msgstr "  --help, -h                显示此帮助信息\n"
+
+#: src/cli.cpp:29
+msgid "  --install, -i             Install theme to $XDG_DATA_HOME/icons\n"
+msgstr "  --install, -i             安装主题到 $XDG_DATA_HOME/icons\n"
+
+#: src/cli.cpp:27
+msgid ""
+"  --list, -l                Show available sizes in cursor files then exit\n"
+msgstr "  --list, -l                显示光标文件中的可用尺寸并退出\n"
+
+#: src/cli.cpp:26
+msgid ""
+"  --manifest, -m            Generate previews + manifest.toml then exit\n"
+msgstr "  --manifest, -m            生成预览 + manifest.toml 并退出\n"
+
+#: src/cli.cpp:19
+msgid "  --out, -o <dir>           Output directory (default: ./out)\n"
+msgstr "  --out, -o <目录>          输出目录（默认：./out）\n"
+
+#: src/cli.cpp:21
+msgid "  --size, -s <mode>         Size selection mode:\n"
+msgstr "  --size, -s <模式>         尺寸选择模式：\n"
+
+#: src/cli.cpp:31
+msgid "  --skip-broken             Continue on conversion errors\n"
+msgstr "  --skip-broken             遇到转换错误时继续\n"
+
+#: src/cli.cpp:30
+msgid "  --verbose, -v             Enable verbose logging\n"
+msgstr "  --verbose, -v             启用详细日志\n"
+
+#: src/cli.cpp:17
+msgid ""
+"  <input_dir>               Directory containing Install.inf and .ani files\n"
+"\n"
+msgstr ""
+"  <输入目录>                包含 Install.inf 和 .ani 文件的目录\n"
+"\n"
+
+#: src/size_tools.cpp:212
+#, c++-format
+msgid "  {}: (none)"
+msgstr "  {}: (无)"
+
+#: src/size_tools.cpp:220
+#, c++-format
+msgid "  {}: {}"
+msgstr "  {}: {}"
+
+#: src/converter.cpp:116 src/converter.cpp:185
+#, c++-format
+msgid "  {}x{}: {} frames"
+msgstr "  {}x{}: {} 帧"
+
+#: src/manifest.cpp:328
+msgid " # guessed"
+msgstr " # 猜测值"
+
+#: src/cli.cpp:14
+msgid ""
+" <input_dir> [options]\n"
+"\n"
+msgstr ""
+" <输入目录> [选项]\n"
+"\n"
+
+#: src/manifest.cpp:225
+msgid " missing [files] section"
+msgstr " 缺少 [files] 部分"
+
+#: src/manifest.cpp:337
+msgid "# Defaults are filled from the current cursor files when available.\n"
+msgstr "# 默认值在可用时从当前光标文件填充。\n"
+
+#: src/manifest.cpp:336
+msgid "# Example: pointer = \"48\" or pointer = \"32, 48\"\n"
+msgstr "# 示例：pointer = \"48\" 或 pointer = \"32, 48\"\n"
+
+#: src/manifest.cpp:276
+msgid ""
+"# Fill in the relative paths (relative to input_dir) for each Windows role.\n"
+msgstr "# 填写每个 Windows 角色的相对路径（相对于输入目录）。\n"
+
+#: src/manifest.cpp:338
+msgid "# Leave empty to keep all sizes from the file.\n"
+msgstr "# 留空以保留文件中的所有尺寸。\n"
+
+#: src/manifest.cpp:279
+msgid "# Leave empty to skip a role.\n"
+msgstr "# 留空以跳过某个角色。\n"
+
+#: src/manifest.cpp:335
+msgid "# Optional per-role target size override (comma-separated list).\n"
+msgstr "# 可选的每角色目标尺寸覆盖（逗号分隔列表）。\n"
+
+#: src/manifest.cpp:307
+msgid "# Put relative paths here. Examples:\n"
+msgstr "# 把相对路径放在这里。示例：\n"
+
+#: src/manifest.cpp:281
+msgid "# Roles (Windows role -> common meaning):\n"
+msgstr "# 角色（Windows 角色 -> 通用含义）：\n"
+
+#: src/manifest.cpp:301
+msgid "# Theme name override (optional)\n"
+msgstr "# 主题名称覆盖（可选）\n"
+
+#: src/manifest.cpp:278
+msgid "# Use the preview images in ani2xcursor/previews/ to decide.\n"
+msgstr "# 使用 ani2xcursor/previews/ 中的预览图像来决定。\n"
+
+#: src/manifest.cpp:295
+msgid "# alternate    = Alternate Select (Up Arrow)\n"
+msgstr "# alternate    = 可选选择（上箭头）\n"
+
+#: src/manifest.cpp:274
+msgid "# ani2xcursor manifest (role mapping + per-role sizes)\n"
+msgstr "# ani2xcursor 清单（角色映射 + 每角色尺寸）\n"
+
+#: src/manifest.cpp:285
+msgid "# busy         = Busy / Wait (Spinner)\n"
+msgstr "# busy         = 忙碌/等待（旋转器）\n"
+
+#: src/manifest.cpp:292
+msgid "# dgn1         = Diagonal Resize 1 (NW-SE, SizeNWSE)\n"
+msgstr "# dgn1         = 对角调整大小 1（西北-东南，SizeNWSE）\n"
+
+#: src/manifest.cpp:293
+msgid "# dgn2         = Diagonal Resize 2 (NE-SW, SizeNESW)\n"
+msgstr "# dgn2         = 对角调整大小 2（东北-西南，SizeNESW）\n"
+
+#: src/manifest.cpp:303
+msgid "# for reference only (do not edit)\n"
+msgstr "# 仅供参考（请勿编辑）\n"
+
+#: src/manifest.cpp:288
+msgid "# hand         = Handwriting / Pen (NWPen)\n"
+msgstr "# hand         = 手写/笔（NWPen）\n"
+
+#: src/manifest.cpp:283
+msgid "# help         = Help Select (Question mark)\n"
+msgstr "# help         = 帮助选择（问号）\n"
+
+#: src/manifest.cpp:291
+msgid "# horz         = Horizontal Resize (SizeWE)\n"
+msgstr "# horz         = 水平调整大小（SizeWE）\n"
+
+#: src/manifest.cpp:296
+msgid "# link         = Link Select (Hand)\n"
+msgstr "# link         = 链接选择（手型）\n"
+
+#: src/manifest.cpp:294
+msgid "# move         = Move / Size All (Fleur)\n"
+msgstr "# move         = 移动/调整全部大小（Fleur/十字）\n"
+
+#: src/manifest.cpp:297
+msgid "# person       = Person Select (optional)\n"
+msgstr "# person       = 人员选择（可选）\n"
+
+#: src/manifest.cpp:298
+msgid "# pin          = Pin Select (optional)\n"
+msgstr "# pin          = 定位选择（可选）\n"
+
+#: src/manifest.cpp:282
+msgid "# pointer      = Normal Select (Arrow)\n"
+msgstr "# pointer      = 正常选择（箭头）\n"
+
+#: src/manifest.cpp:308
+msgid "# pointer = \"Normal.ani\"\n"
+msgstr "# pointer = \"Normal.ani\"\n"
+
+#: src/manifest.cpp:286
+msgid "# precision    = Precision Select (Crosshair)\n"
+msgstr "# precision    = 精确选择（十字线）\n"
+
+#: src/manifest.cpp:287
+msgid "# text         = Text Select (I-beam)\n"
+msgstr "# text         = 文本选择（工字型）\n"
+
+#: src/manifest.cpp:309
+msgid "# text    = \"Text.ani\"\n"
+msgstr "# text    = \"Text.ani\"\n"
+
+#: src/manifest.cpp:289
+msgid "# unavailable  = Not Allowed / Unavailable (No)\n"
+msgstr "# unavailable  = 不允许/不可用（禁止符号）\n"
+
+#: src/manifest.cpp:290
+msgid "# vert         = Vertical Resize (SizeNS)\n"
+msgstr "# vert         = 垂直调整大小（SizeNS）\n"
+
+#: src/manifest.cpp:284
+msgid "# working      = Working in Background (Arrow + Busy)\n"
+msgstr "# working      = 后台工作（箭头 + 忙碌）\n"
+
+#: src/main.cpp:401
+msgid "--install ignored for source output format"
+msgstr "源输出格式忽略 --install"
+
+#: src/ani_parser.cpp:173
+msgid "ANI 'anih' chunk too small"
+msgstr "ANI 'anih' 块太小"
+
+#: src/ani_parser.cpp:189
+msgid "ANI 'anih' reports 0 frames"
+msgstr "ANI 'anih' 报告 0 帧"
+
+#: src/ani_parser.cpp:208
+#, c++-format
+msgid "ANI 'rate' chunk has {} entries, expected {}"
+msgstr "ANI 'rate' 块有 {} 个条目，应为 {}"
+
+#: src/ani_parser.cpp:225
+#, c++-format
+msgid "ANI 'seq ' chunk has {} entries, expected {}"
+msgstr "ANI 'seq ' 块有 {} 个条目，应为 {}"
+
+#: src/ani_parser.cpp:127
+msgid "ANI file contains no frames"
+msgstr "ANI 文件不包含任何帧"
+
+#: src/ani_parser.cpp:98
+msgid "ANI file missing required 'anih' chunk"
+msgstr "ANI 文件缺少必需的 'anih' 块"
+
+#: src/ani_parser.cpp:121
+msgid "ANI file missing required LIST 'fram' chunk"
+msgstr "ANI 文件缺少必需的 LIST 'fram' 块"
+
+#: src/ani_parser.cpp:259
+#, c++-format
+msgid "ANI: Expected {} frames, found {}"
+msgstr "ANI: 预期 {} 帧，找到 {}"
+
+#: src/preview_generator.cpp:311
+msgid "ANI: No frames"
+msgstr "ANI: 无帧"
+
+#: src/ani_parser.cpp:154
+#, c++-format
+msgid "ANI: Parsed {} frames successfully"
+msgstr "ANI: 成功解析 {} 帧"
+
+#: src/ani_parser.cpp:103
+#, c++-format
+msgid "ANI: {} frames, {} steps, default rate {} jiffies ({}ms)"
+msgstr "ANI: {} 帧, {} 步, 默认速率 {} jiffies ({}ms)"
+
+#: src/size_tools.cpp:229
+#, c++-format
+msgid "All sizes in directory: {}"
+msgstr "目录中的所有尺寸: {}"
+
+#: src/ani_parser.cpp:24
+msgid "Animation frame index out of range"
+msgstr "动画帧索引超出范围"
+
+#: src/ani_parser.cpp:15
+msgid "Animation step index out of range"
+msgstr "动画步长索引超出范围"
+
+#: src/cli.cpp:16
+msgid "Arguments:\n"
+msgstr "参数：\n"
+
+#: src/size_tools.cpp:209
+msgid "Available sizes by file:"
+msgstr "按文件列出的可用尺寸："
+
+#: src/xcursor_writer.cpp:251
+#, c++-format
+msgid "Cannot create aliases: primary cursor '{}' does not exist"
+msgstr "无法创建别名：主光标 '{}' 不存在"
+
+#: src/main.cpp:393
+#, c++-format
+msgid "Conversion complete: {} cursors converted, {} errors"
+msgstr "转换完成：{} 个光标已转换，{} 个错误"
+
+#: src/cli.cpp:15
+msgid ""
+"Convert Windows Animated Cursors (.ani) to Linux Xcursor theme.\n"
+"\n"
+msgstr ""
+"将 Windows 动画光标 (.ani) 转换为 Linux Xcursor 主题。\n"
+"\n"
+
+#: src/main.cpp:299 src/main.cpp:316
+#, c++-format
+msgid "Cursor file not found: {}"
+msgstr "未找到光标文件：{}"
+
+#: src/main.cpp:79 src/main.cpp:153
+msgid "Edit manifest.toml and re-run the command."
+msgstr "编辑 manifest.toml 并重新运行命令。"
+
+#: src/manifest.cpp:207
+msgid "Empty key in "
+msgstr "空键位于 "
+
+#: src/main.cpp:175
+msgid ""
+"Error: input directory required\n"
+"\n"
+msgstr ""
+"错误：需要输入目录\n"
+"\n"
+
+#: src/main.cpp:415
+#, c++-format
+msgid "Error: {}"
+msgstr "错误：{}"
+
+#: src/converter.cpp:114 src/converter.cpp:183
+#, c++-format
+msgid "Exported {} sizes:"
+msgstr "已导出 {} 种尺寸："
+
+#: src/main.cpp:371
+#, c++-format
+msgid "Failed to convert {}: {}"
+msgstr "转换 {} 失败：{}"
+
+#: src/xcursor_writer.cpp:170
+msgid "Failed to create XcursorImage"
+msgstr "无法创建 XcursorImage"
+
+#: src/xcursor_writer.cpp:154
+msgid "Failed to create XcursorImages"
+msgstr "无法创建 XcursorImages"
+
+#: src/xcursor_writer.cpp:269
+#, c++-format
+msgid "Failed to create symlink {} -> {}: {}"
+msgstr "无法创建符号链接 {} -> {}: {}"
+
+#: src/theme_installer.cpp:56
+msgid "Failed to install theme: "
+msgstr "安装主题失败： "
+
+#: src/main.cpp:215
+#, c++-format
+msgid "Failed to parse {}: {}"
+msgstr "解析 {} 失败：{}"
+
+#: src/size_tools.cpp:198
+#, c++-format
+msgid "Failed to read sizes from {}: {}"
+msgstr "从 {} 读取尺寸失败：{}"
+
+#: src/theme_installer.cpp:40
+msgid "Failed to remove existing theme: "
+msgstr "移除现有主题失败： "
+
+#: src/source_writer.cpp:63
+msgid "Failed to write PNG: "
+msgstr "写入 PNG 失败： "
+
+#: src/xcursor_writer.cpp:204
+msgid "Failed to write Xcursor file: "
+msgstr "写入 Xcursor 文件失败： "
+
+#: src/preview_generator.cpp:346 src/preview_generator.cpp:371
+msgid "Failed to write placeholder PNG"
+msgstr "写入占位符 PNG 失败"
+
+#: src/preview_generator.cpp:338 src/preview_generator.cpp:363
+msgid "Failed to write preview PNG"
+msgstr "写入预览 PNG 失败"
+
+#: src/main.cpp:218
+#, c++-format
+msgid "Falling back to Install.inf because {} could not be parsed"
+msgstr "因为 {} 无法解析，回退到 Install.inf"
+
+#: src/source_writer.cpp:145
+msgid "Frame/delay count mismatch for cursor: "
+msgstr "光标帧数/延迟计数不匹配： "
+
+#: src/main.cpp:77 src/main.cpp:151
+#, c++-format
+msgid "Generated: {} and {}"
+msgstr "已生成：{} 和 {}"
+
+#: src/ico_cur_decoder.cpp:197
+msgid "ICO/CUR: BMP data too small"
+msgstr "ICO/CUR: BMP 数据太小"
+
+#: src/ico_cur_decoder.cpp:269
+#, c++-format
+msgid "ICO/CUR: BMP data truncated ({} < {}), may have artifacts"
+msgstr "ICO/CUR: BMP 数据被截断 ({} < {})，可能存在伪影"
+
+#: src/ico_cur_decoder.cpp:235
+msgid "ICO/CUR: Compressed BMP not supported"
+msgstr "ICO/CUR: 不支持压缩的 BMP"
+
+#: src/ico_cur_decoder.cpp:170
+msgid "ICO/CUR: Failed to decode PNG: "
+msgstr "ICO/CUR: 解码 PNG 失败： "
+
+#: src/ico_cur_decoder.cpp:122
+msgid "ICO/CUR: Failed to decode any images"
+msgstr "ICO/CUR: 未能解码任何图像"
+
+#: src/ico_cur_decoder.cpp:115
+#, c++-format
+msgid "ICO/CUR: Failed to decode image #{}: {}"
+msgstr "ICO/CUR: 解码图像 #{} 失败：{}"
+
+#: src/ico_cur_decoder.cpp:33
+msgid "ICO/CUR: File too small"
+msgstr "ICO/CUR: 文件太小"
+
+#: src/ico_cur_decoder.cpp:59
+msgid "ICO/CUR: File too small for directory"
+msgstr "ICO/CUR: 目录对于文件来说太小"
+
+#: src/ico_cur_decoder.cpp:97
+#, c++-format
+msgid "ICO/CUR: Image #{} data extends beyond file, skipping"
+msgstr "ICO/CUR: 图像 #{} 数据超出文件范围，跳过"
+
+#: src/ico_cur_decoder.cpp:39
+msgid "ICO/CUR: Invalid header (reserved != 0)"
+msgstr "ICO/CUR: 无效的标头 (reserved != 0)"
+
+#: src/ico_cur_decoder.cpp:43
+msgid "ICO/CUR: Invalid type (expected 1=ICO or 2=CUR)"
+msgstr "ICO/CUR: 无效的类型 (预期 1=ICO 或 2=CUR)"
+
+#: src/ico_cur_decoder.cpp:24
+msgid "ICO/CUR: No images found"
+msgstr "ICO/CUR: 未找到图像"
+
+#: src/ico_cur_decoder.cpp:50
+msgid "ICO/CUR: No images in file"
+msgstr "ICO/CUR: 文件中没有图像"
+
+#: src/ico_cur_decoder.cpp:329
+#, c++-format
+msgid "ICO/CUR: Unsupported BMP bit depth {}"
+msgstr "ICO/CUR: 不支持的 BMP 位深 {}"
+
+#: src/converter.cpp:47
+msgid "Inconsistent sizes, using first size only"
+msgstr "尺寸不一致，仅使用第一个尺寸"
+
+#: src/main.cpp:183
+#, c++-format
+msgid "Input directory does not exist: {}"
+msgstr "输入目录不存在：{}"
+
+#: src/main.cpp:138
+msgid "Install.inf not found and manifest.toml not present."
+msgstr "未找到 Install.inf 且 manifest.toml 不存在。"
+
+#: src/main.cpp:241
+#, c++-format
+msgid "Install.inf not found and {} failed to parse"
+msgstr "未找到 Install.inf 且 {} 解析失败"
+
+#: src/theme_installer.cpp:32
+#, c++-format
+msgid "Installing theme '{}' to {}"
+msgstr "正在安装主题 '{}' 到 {}"
+
+#: src/ani_parser.cpp:62
+msgid "Invalid RIFF file"
+msgstr "无效的 RIFF 文件"
+
+#: src/cli.cpp:62
+msgid "Invalid format: "
+msgstr "无效格式： "
+
+#: src/source_writer.cpp:49
+msgid "Invalid image size for PNG output"
+msgstr "PNG 输出的图像尺寸无效"
+
+#: src/manifest.cpp:200
+msgid "Invalid line in "
+msgstr "无效行位于 "
+
+#: src/source_writer.cpp:52
+msgid "Invalid pixel buffer size for PNG output"
+msgstr "PNG 输出的像素缓冲区大小无效"
+
+#: src/manifest.cpp:250
+msgid "Invalid size list in [sizes] for '"
+msgstr "[sizes] 中无效的尺寸列表，用于 '"
+
+#: src/cli.cpp:88
+msgid "Invalid size value: "
+msgstr "无效的尺寸值： "
+
+#: src/size_tools.cpp:50
+msgid "Invalid target size"
+msgstr "无效的目标尺寸"
+
+#: src/theme_installer.cpp:15
+msgid "Invalid theme directory name: "
+msgstr "无效的主题目录名称： "
+
+#: src/theme_installer.cpp:29
+msgid "Invalid theme install path: "
+msgstr "无效的主题安装路径： "
+
+#: src/main.cpp:59
+#, c++-format
+msgid "Manifest requested but {} failed to parse: {}"
+msgstr "已请求清单但 {} 解析失败：{}"
+
+#: src/main.cpp:64
+msgid "Manifest requested; generating previews and manifest.toml."
+msgstr "已请求清单；正在生成预览和 manifest.toml。"
+
+#: src/main.cpp:54
+#, c++-format
+msgid "Manifest requested; using existing {}."
+msgstr "已请求清单；使用现有的 {}。"
+
+#: src/main.cpp:119
+msgid "Missing required roles in manifest.toml (use --skip-broken to continue)"
+msgstr "manifest.toml 中缺少必需的角色（使用 --skip-broken 继续）"
+
+#: src/size_tools.cpp:204
+#, c++-format
+msgid "No .ani or .cur files found in {}"
+msgstr "在 {} 中未找到 .ani 或 .cur 文件"
+
+#: src/main.cpp:381
+msgid "No cursors were converted successfully"
+msgstr "没有光标被成功转换"
+
+#: src/preview_generator.cpp:163
+msgid "No frames available for preview"
+msgstr "无可用的预览帧"
+
+#: src/converter.cpp:121
+msgid "No frames decoded from "
+msgstr "未从以下位置解码帧： "
+
+#: src/source_writer.cpp:142
+msgid "No frames to write for cursor: "
+msgstr "无可写帧的光标： "
+
+#: src/converter.cpp:35
+msgid "No images decoded from frame "
+msgstr "未从该帧解码图像： "
+
+#: src/xcursor_writer.cpp:129
+msgid "No images to write"
+msgstr "无可写入的图像"
+
+#: src/source_writer.cpp:150
+msgid "No size groups found for cursor: "
+msgstr "未找到光标的尺寸组： "
+
+#: src/converter.cpp:95 src/converter.cpp:168
+msgid "No sizes selected for export"
+msgstr "未选择要导出的尺寸"
+
+#: src/size_selection.cpp:55
+msgid "No sizes selected for preview"
+msgstr "未选择预览尺寸"
+
+#: src/cli.cpp:94
+msgid "No valid sizes specified"
+msgstr "未指定有效尺寸"
+
+#: src/ani_parser.cpp:66
+msgid "Not an ANI file: expected RIFF ACON, got RIFF "
+msgstr "不是 ANI 文件：预期 RIFF ACON，得到 RIFF "
+
+#: src/cli.cpp:19
+msgid "Options:\n"
+msgstr "选项：\n"
+
+#: src/preview_generator.cpp:342 src/preview_generator.cpp:367
+#, c++-format
+msgid "Preview decode failed for {}: {}"
+msgstr "{} 的预览解码失败：{}"
+
+#: src/converter.cpp:21 src/converter.cpp:130
+#, c++-format
+msgid "Processing: {}"
+msgstr "处理中：{}"
+
+#: src/riff_reader.cpp:66
+#, c++-format
+msgid "RIFF: Chunk '{}' at offset {}, size {}"
+msgstr "RIFF: 块 '{}' 位于偏移量 {}, 包含 {} 字节"
+
+#: src/riff_reader.cpp:36
+#, c++-format
+msgid "RIFF: Declared size {} exceeds file size {} (non-fatal; continuing)"
+msgstr "RIFF: 声明的尺寸 {} 超过文件尺寸 {} (非致命；继续)"
+
+#: src/riff_reader.cpp:12
+#, c++-format
+msgid "RIFF: File too small ({} bytes)"
+msgstr "RIFF: 文件太小 ({} 字节)"
+
+#: src/riff_reader.cpp:21
+#, c++-format
+msgid "RIFF: Invalid signature '{}' (expected 'RIFF')"
+msgstr "RIFF: 无效签名 '{}' (预期 'RIFF')"
+
+#: src/riff_reader.cpp:72
+msgid "RIFF: LIST chunk too small"
+msgstr "RIFF: LIST 块太小"
+
+#: src/theme_installer.cpp:36
+msgid "Removing existing installation..."
+msgstr "正在移除现有安装..."
+
+#: src/converter.cpp:75 src/converter.cpp:156
+#, c++-format
+msgid "Rescaling {}x{} -> {}x{}"
+msgstr "重新缩放 {}x{} -> {}x{}"
+
+#: src/cli.cpp:85
+msgid "Size must be between 1 and 256"
+msgstr "尺寸必须在 1 到 256 之间"
+
+#: src/main.cpp:408
+#, c++-format
+msgid "Source files created at: {}"
+msgstr "源文件创建于：{}"
+
+#: src/theme_installer.cpp:43
+msgid "Theme already installed. Use --force to overwrite."
+msgstr "主题已安装。使用 --force 覆盖。"
+
+#: src/main.cpp:405
+#, c++-format
+msgid "Theme created at: {}"
+msgstr "主题创建于：{}"
+
+#: src/theme_installer.cpp:23
+msgid "Theme directory does not exist: "
+msgstr "主题目录不存在： "
+
+#: src/theme_installer.cpp:59
+msgid "Theme installed successfully!"
+msgstr "主题安装成功！"
+
+#: src/main.cpp:253
+#, c++-format
+msgid "Theme: {} ({} cursors)"
+msgstr "主题：{} ({} 个光标)"
+
+#: src/cli.cpp:100
+msgid "Unknown argument: "
+msgstr "未知参数： "
+
+#: src/manifest.cpp:231
+msgid "Unknown role in [files]: '"
+msgstr "未知角色位于 [files]：'"
+
+#: src/manifest.cpp:242
+msgid "Unknown role in [sizes]: '"
+msgstr "未知角色位于 [sizes]：'"
+
+#: src/main.cpp:338
+msgid "Unsupported cursor file type"
+msgstr "不支持的光标文件类型"
+
+#: src/cli.cpp:14
+msgid "Usage: "
+msgstr "用法： "
+
+#: src/preview_generator.cpp:253
+msgid "decode failed"
+msgstr "解码失败"
+
+#: src/main.cpp:109
+#, c++-format
+msgid "manifest.toml: role '{}' is not mapped"
+msgstr "manifest.toml：角色 '{}' 未映射"
+
+#: src/manifest.cpp:93
+msgid "out of range"
+msgstr "超出范围"
+
+#: src/main.cpp:52 src/main.cpp:212
+#, c++-format
+msgid "{}: {}"
+msgstr "{}: {}"

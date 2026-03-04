@@ -1,4 +1,5 @@
 #include "size_selection.h"
+#include <libintl.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -51,7 +52,7 @@ size_t choose_preview_index(std::span<const CursorImage> images, SizeFilter filt
                             const std::vector<uint32_t>& specific_sizes) {
     auto indices = select_size_indices(images, filter, specific_sizes);
     if (indices.empty()) {
-        throw std::runtime_error("No sizes selected for preview");
+        throw std::runtime_error(_("No sizes selected for preview"));
     }
 
     size_t best_idx = indices[0];

@@ -4,6 +4,8 @@
 #include <span>
 #include <vector>
 
+#define _(String) gettext(String)
+
 namespace ani2xcursor {
 
 // Decoded cursor image

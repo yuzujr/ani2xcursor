@@ -49,22 +49,46 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libxcursor-dev
+        sudo apt-get install -y libxcursor-dev gettext locales
+        sudo locale-gen en_US.UTF-8 zh_CN.UTF-8
     
     - name: Setup xmake
       uses: xmake-io/github-action-setup-xmake@v1
       with:
         xmake-version: latest
     
+    - name: Validate translation files
+      run: |
+        msgfmt --check --check-format -o /tmp/ani2xcursor-zh_CN.mo locale/zh_CN.po
+
     - name: Build
       run: |
         xmake config -m release -y
         xmake build
+
+    - name: Verify locale artifacts
+      run: |
+        test -f build/locale/zh_CN/LC_MESSAGES/ani2xcursor.mo
     
     - name: Run tests
       run: |
         xmake build ani2xcursor_test
         ./build/linux/x86_64/release/ani2xcursor_test
+
+    - name: Locale smoke test
+      run: |
+        set -euo pipefail
+        BIN=./build/linux/x86_64/release/ani2xcursor
+        locale -a
+
+        HELP_EN="$(LC_ALL=en_US.UTF-8 LANGUAGE=en_US:en "$BIN" --help | head -n 1)"
+        HELP_ZH="$(LC_ALL=zh_CN.UTF-8 LANGUAGE=zh_CN:en "$BIN" --help | head -n 1)"
+
+        echo "HELP_EN=$HELP_EN"
+        echo "HELP_ZH=$HELP_ZH"
+
+        echo "$HELP_EN" | grep -q "^Usage:"
+        echo "$HELP_ZH" | grep -q "用法"
     
     - name: Package binary
       run: |
@@ -72,6 +96,8 @@ jobs:
         cp build/linux/x86_64/release/ani2xcursor release/
         cp README.md LICENSE release/
         cp -r completions release/
+        mkdir -p release/share
+        cp -r build/locale release/share/
         cd release
         tar -czf ani2xcursor-v${{ steps.get_version.outputs.VERSION }}-linux-x86_64.tar.gz *
         cd ..
@@ -91,7 +117,9 @@ jobs:
           
           ```bash
           tar -xzf ani2xcursor-v${{ steps.get_version.outputs.VERSION }}-linux-x86_64.tar.gz
-          sudo mv ani2xcursor /usr/local/bin/
+          sudo install -Dm755 ani2xcursor /usr/local/bin/ani2xcursor
+          sudo mkdir -p /usr/local/share/locale
+          sudo cp -r share/locale/* /usr/local/share/locale/
           ```
           
           ### Usage

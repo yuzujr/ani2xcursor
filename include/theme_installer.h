@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <string>
 
+#define _(String) gettext(String)
+
 namespace ani2xcursor {
 
 namespace fs = std::filesystem;

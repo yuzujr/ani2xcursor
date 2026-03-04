@@ -14,6 +14,7 @@
 #include "ani_parser.h"
 #include "ico_cur_decoder.h"
 #include "size_selection.h"
+#include "spdlog/fmt/bundled/base.h"
 #include "utils/fs.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -159,7 +160,7 @@ void alpha_blit(const CursorImage& src, RgbaImage& dst, uint32_t dst_x, uint32_t
 
 RgbaImage compose_preview(const std::vector<CursorImage>& frames) {
     if (frames.empty()) {
-        throw std::runtime_error("No frames available for preview");
+        throw std::runtime_error(_("No frames available for preview"));
     }
 
     uint32_t cell = 0;
@@ -249,7 +250,7 @@ void draw_text(RgbaImage& img, int x, int y, const std::string& text,
 
 RgbaImage make_placeholder(const std::string& filename) {
     std::string line1 = filename;
-    std::string line2 = "decode failed";
+    std::string line2 = _("decode failed");
 
     int width1 = stb_easy_font_width(const_cast<char*>(line1.c_str()));
     int width2 = stb_easy_font_width(const_cast<char*>(line2.c_str()));
@@ -307,7 +308,7 @@ bool write_preview_for_ani(const fs::path& path, const fs::path& preview_path, S
     try {
         auto animation = AniParser::parse(path);
         if (animation.num_steps == 0) {
-            throw std::runtime_error("ANI: No frames");
+            throw std::runtime_error(_("ANI: No frames"));
         }
 
         size_t first_step = 0;
@@ -334,14 +335,15 @@ bool write_preview_for_ani(const fs::path& path, const fs::path& preview_path, S
 
         auto preview = compose_preview(frames);
         if (!write_png(preview_path, preview)) {
-            throw std::runtime_error("Failed to write preview PNG");
+            throw std::runtime_error(_("Failed to write preview PNG"));
         }
         return true;
     } catch (const std::exception& e) {
-        spdlog::warn("Preview decode failed for {}: {}", path.filename().string(), e.what());
+        spdlog::warn(spdlog::fmt_lib::runtime(_("Preview decode failed for {}: {}")),
+                     path.filename().string(), e.what());
         auto placeholder = make_placeholder(path.filename().string());
         if (!write_png(preview_path, placeholder)) {
-            throw std::runtime_error("Failed to write placeholder PNG");
+            throw std::runtime_error(_("Failed to write placeholder PNG"));
         }
         return false;
     }
@@ -358,14 +360,15 @@ bool write_preview_for_cur(const fs::path& path, const fs::path& preview_path, S
         frames.push_back(std::move(images[preview_idx]));
         auto preview = compose_preview(frames);
         if (!write_png(preview_path, preview)) {
-            throw std::runtime_error("Failed to write preview PNG");
+            throw std::runtime_error(_("Failed to write preview PNG"));
         }
         return true;
     } catch (const std::exception& e) {
-        spdlog::warn("Preview decode failed for {}: {}", path.filename().string(), e.what());
+        spdlog::warn(spdlog::fmt_lib::runtime(_("Preview decode failed for {}: {}")),
+                     path.filename().string(), e.what());
         auto placeholder = make_placeholder(path.filename().string());
         if (!write_png(preview_path, placeholder)) {
-            throw std::runtime_error("Failed to write placeholder PNG");
+            throw std::runtime_error(_("Failed to write placeholder PNG"));
         }
         return false;
     }

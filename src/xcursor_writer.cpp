@@ -126,7 +126,7 @@ void XcursorWriter::write_cursor(const std::vector<CursorImage>& images,
                                  const std::vector<uint32_t>& delays_ms,
                                  const fs::path& output_path) {
     if (images.empty()) {
-        throw std::runtime_error("No images to write");
+        throw std::runtime_error(_("No images to write"));
     }
 
     // Multi-size support: images should be grouped by nominal size
@@ -151,7 +151,7 @@ void XcursorWriter::write_cursor(const std::vector<CursorImage>& images,
     // Create XcursorImages structure
     XcursorImages* xcur_images = XcursorImagesCreate(static_cast<int>(images.size()));
     if (!xcur_images) {
-        throw std::runtime_error("Failed to create XcursorImages");
+        throw std::runtime_error(_("Failed to create XcursorImages"));
     }
 
     // Clean up on exit
@@ -167,7 +167,7 @@ void XcursorWriter::write_cursor(const std::vector<CursorImage>& images,
                 XcursorImageCreate(static_cast<int>(img.width), static_cast<int>(img.height));
 
             if (!xcur_img) {
-                throw std::runtime_error("Failed to create XcursorImage");
+                throw std::runtime_error(_("Failed to create XcursorImage"));
             }
 
             // XcursorImageCreate sets xcur_img->size = max(width, height)
@@ -201,7 +201,7 @@ void XcursorWriter::write_cursor(const std::vector<CursorImage>& images,
 
         // Write to file using filename-based API
         if (!XcursorFilenameSaveImages(output_path.c_str(), xcur_images)) {
-            throw std::runtime_error("Failed to write Xcursor file: " + output_path.string());
+            throw std::runtime_error(_("Failed to write Xcursor file: ") + output_path.string());
         }
 
         spdlog::debug("Wrote {}", output_path.filename().string());
@@ -247,7 +247,9 @@ void XcursorWriter::create_aliases(const fs::path& cursors_dir, const std::strin
     auto primary_path = cursors_dir / primary_name;
 
     if (!fs::exists(primary_path)) {
-        spdlog::warn("Cannot create aliases: primary cursor '{}' does not exist", primary_name);
+        spdlog::warn(spdlog::fmt_lib::runtime(
+                         _("Cannot create aliases: primary cursor '{}' does not exist")),
+                     primary_name);
         return;
     }
 
@@ -264,8 +266,8 @@ void XcursorWriter::create_aliases(const fs::path& cursors_dir, const std::strin
         fs::create_symlink(primary_name, alias_path, ec);
 
         if (ec) {
-            spdlog::warn("Failed to create symlink {} -> {}: {}", alias, primary_name,
-                         ec.message());
+            spdlog::warn(spdlog::fmt_lib::runtime(_("Failed to create symlink {} -> {}: {}")),
+                         alias, primary_name, ec.message());
         }
     }
 }

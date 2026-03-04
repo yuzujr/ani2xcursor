@@ -1,5 +1,7 @@
 #include "cli.h"
 
+#include <libintl.h>
+
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -8,26 +10,26 @@
 namespace ani2xcursor {
 
 void print_usage(const char* program) {
-    std::cout << "Usage: " << program << " <input_dir> [options]\n\n"
-              << "Convert Windows Animated Cursors (.ani) to Linux Xcursor theme.\n\n"
-              << "Arguments:\n"
-              << "  <input_dir>               Directory containing Install.inf and .ani "
-                 "files\n\n"
-              << "Options:\n"
-              << "  --out, -o <dir>           Output directory (default: ./out)\n"
-              << "  --format, -f <mode>       Output format: xcursor (default) or source\n"
-              << "  --size, -s <mode>         Size selection mode:\n"
-              << "                                all    - Export all sizes (default)\n"
-              << "                                max    - Export only largest size\n"
-              << "                                24,32  - Ensure sizes (reuse if present, rescale "
-                 "if missing)\n"
-              << "  --manifest, -m            Generate previews + manifest.toml then exit\n"
-              << "  --list, -l                Show available sizes in cursor files then "
-                 "exit\n"
-              << "  --install, -i             Install theme to $XDG_DATA_HOME/icons\n"
-              << "  --verbose, -v             Enable verbose logging\n"
-              << "  --skip-broken             Continue on conversion errors\n"
-              << "  --help, -h                Show this help message\n";
+    std::cout
+        << _("Usage: ") << program << _(" <input_dir> [options]\n\n")
+        << _("Convert Windows Animated Cursors (.ani) to Linux Xcursor theme.\n\n")
+        << _("Arguments:\n")
+        << _("  <input_dir>               Directory containing Install.inf and .ani "
+             "files\n\n")
+        << _("Options:\n") << _("  --out, -o <dir>           Output directory (default: ./out)\n")
+        << _("  --format, -f <mode>       Output format: xcursor (default) or source\n")
+        << _("  --size, -s <mode>         Size selection mode:\n")
+        << _("                                all    - Export all sizes (default)\n")
+        << _("                                max    - Export only largest size\n")
+        << _("                                24,32  - Ensure sizes (reuse if present, rescale "
+             "if missing)\n")
+        << _("  --manifest, -m            Generate previews + manifest.toml then exit\n")
+        << _("  --list, -l                Show available sizes in cursor files then "
+             "exit\n")
+        << _("  --install, -i             Install theme to $XDG_DATA_HOME/icons\n")
+        << _("  --verbose, -v             Enable verbose logging\n")
+        << _("  --skip-broken             Continue on conversion errors\n")
+        << _("  --help, -h                Show this help message\n");
 }
 
 Args parse_args(int argc, char* argv[]) {
@@ -57,7 +59,7 @@ Args parse_args(int argc, char* argv[]) {
             } else if (fmt == "source") {
                 args.format = OutputFormat::Source;
             } else {
-                throw std::runtime_error("Invalid format: " + fmt);
+                throw std::runtime_error(gettext("Invalid format: ") + fmt);
             }
         } else if ((arg == "--out" || arg == "-o") && i + 1 < argc) {
             args.output_dir = argv[++i];
@@ -80,22 +82,22 @@ Args parse_args(int argc, char* argv[]) {
                         if (size > 0 && size <= 256) {
                             args.specific_sizes.push_back(size);
                         } else {
-                            throw std::runtime_error("Size must be between 1 and 256");
+                            throw std::runtime_error(_("Size must be between 1 and 256"));
                         }
                     } catch (const std::exception&) {
-                        throw std::runtime_error("Invalid size value: " + size_str);
+                        throw std::runtime_error(_("Invalid size value: ") + size_str);
                     }
                     if (comma == std::string::npos) break;
                     pos = comma + 1;
                 }
                 if (args.specific_sizes.empty()) {
-                    throw std::runtime_error("No valid sizes specified");
+                    throw std::runtime_error(_("No valid sizes specified"));
                 }
             }
         } else if (!arg.starts_with("-") && args.input_dir.empty()) {
             args.input_dir = arg;
         } else {
-            throw std::runtime_error(std::string("Unknown argument: ") + std::string(arg));
+            throw std::runtime_error(_("Unknown argument: ") + std::string(arg));
         }
     }
 

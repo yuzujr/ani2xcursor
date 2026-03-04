@@ -7,6 +7,8 @@
 #include <string>
 #include <string_view>
 
+#define _(String) gettext(String)
+
 namespace ani2xcursor {
 
 // RIFF chunk header

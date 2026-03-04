@@ -6,6 +6,8 @@
 
 #include "size_filter.h"
 
+#define _(String) gettext(String)
+
 namespace ani2xcursor {
 
 namespace fs = std::filesystem;

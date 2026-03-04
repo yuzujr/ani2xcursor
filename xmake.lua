@@ -21,12 +21,47 @@ add_requires("libxcursor 1.2.3")
 -- Main target
 target("ani2xcursor")
     set_kind("binary")
+    set_rundir("$(projectdir)")
     add_files("src/*.cpp")
     add_includedirs("include")
     add_packages("spdlog", "stb", "libxcursor")
     
     if is_plat("linux") then
         add_syslinks("pthread")
+
+        -- Compile translation files for local development
+        after_build(function (target)
+            import("lib.detect.find_tool")
+            local msgfmt = find_tool("msgfmt")
+            if msgfmt then
+                for _, po in ipairs(os.files("locale/*.po")) do
+                    local lang = path.basename(po)
+                    local mo_dst = path.join(os.projectdir(), "build", "locale", lang, "LC_MESSAGES", "ani2xcursor.mo")
+                    os.mkdir(path.directory(mo_dst))
+                    os.vrunv(msgfmt.program, {"-o", mo_dst, po})
+                end
+                print("Compiled translations to build/locale")
+            else
+                print("Warning: msgfmt not found! Translations not compiled.")
+            end
+        end)
+
+        -- Compile and install translation files
+        after_install(function (target)
+            import("lib.detect.find_tool")
+            local msgfmt = find_tool("msgfmt")
+            if msgfmt then
+                for _, po in ipairs(os.files("locale/*.po")) do
+                    local lang = path.basename(po)
+                    local mo_dst = path.join(target:installdir(), "share", "locale", lang, "LC_MESSAGES", "ani2xcursor.mo")
+                    os.mkdir(path.directory(mo_dst))
+                    os.vrunv(msgfmt.program, {"-o", mo_dst, po})
+                    print("Installed translation: " .. mo_dst)
+                end
+            else
+                print("Warning: msgfmt not found! Translations were not installed.")
+            end
+        end)
     end
 
 -- Test target

@@ -6,6 +6,8 @@
 
 #include "ico_cur_decoder.h"
 
+#define _(String) gettext(String)
+
 namespace ani2xcursor {
 
 namespace fs = std::filesystem;

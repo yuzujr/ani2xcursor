@@ -7,6 +7,8 @@
 #include "ico_cur_decoder.h"
 #include "size_filter.h"
 
+#define _(String) gettext(String)
+
 namespace ani2xcursor {
 
 std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_ani_file(

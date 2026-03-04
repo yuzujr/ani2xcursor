@@ -46,10 +46,10 @@ std::string format_frame_name(const std::string& base, size_t index, size_t tota
 
 void write_png(const fs::path& path, const CursorImage& image) {
     if (image.width == 0 || image.height == 0) {
-        throw std::runtime_error("Invalid image size for PNG output");
+        throw std::runtime_error(_("Invalid image size for PNG output"));
     }
     if (image.pixels.size() != static_cast<size_t>(image.width) * image.height * 4) {
-        throw std::runtime_error("Invalid pixel buffer size for PNG output");
+        throw std::runtime_error(_("Invalid pixel buffer size for PNG output"));
     }
 
     if (auto parent = path.parent_path(); !parent.empty()) {
@@ -60,7 +60,7 @@ void write_png(const fs::path& path, const CursorImage& image) {
     int ok = stbi_write_png(path.c_str(), static_cast<int>(image.width),
                             static_cast<int>(image.height), 4, image.pixels.data(), stride);
     if (ok == 0) {
-        throw std::runtime_error("Failed to write PNG: " + path.string());
+        throw std::runtime_error(_("Failed to write PNG: ") + path.string());
     }
 }
 
@@ -139,15 +139,15 @@ void SourceWriter::write_cursor(const fs::path& src_dir, const std::string& prim
                                 const std::vector<CursorImage>& frames,
                                 const std::vector<uint32_t>& delays_ms) {
     if (frames.empty()) {
-        throw std::runtime_error("No frames to write for cursor: " + primary_name);
+        throw std::runtime_error(_("No frames to write for cursor: ") + primary_name);
     }
     if (frames.size() != delays_ms.size()) {
-        throw std::runtime_error("Frame/delay count mismatch for cursor: " + primary_name);
+        throw std::runtime_error(_("Frame/delay count mismatch for cursor: ") + primary_name);
     }
 
     auto groups = group_by_size(frames);
     if (groups.empty()) {
-        throw std::runtime_error("No size groups found for cursor: " + primary_name);
+        throw std::runtime_error(_("No size groups found for cursor: ") + primary_name);
     }
 
     bool animated = is_animated(groups);

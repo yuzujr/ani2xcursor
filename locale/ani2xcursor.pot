@@ -1,0 +1,716 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-01 06:49+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/cli.cpp:24
+msgid "                                24,32  - Ensure sizes (reuse if present, rescale if missing)\n"
+msgstr ""
+
+#: src/cli.cpp:22
+msgid "                                all    - Export all sizes (default)\n"
+msgstr ""
+
+#: src/cli.cpp:23
+msgid "                                max    - Export only largest size\n"
+msgstr ""
+
+#: src/cli.cpp:20
+msgid "  --format, -f <mode>       Output format: xcursor (default) or source\n"
+msgstr ""
+
+#: src/cli.cpp:32
+msgid "  --help, -h                Show this help message\n"
+msgstr ""
+
+#: src/cli.cpp:29
+msgid "  --install, -i             Install theme to $XDG_DATA_HOME/icons\n"
+msgstr ""
+
+#: src/cli.cpp:27
+msgid "  --list, -l                Show available sizes in cursor files then exit\n"
+msgstr ""
+
+#: src/cli.cpp:26
+msgid "  --manifest, -m            Generate previews + manifest.toml then exit\n"
+msgstr ""
+
+#: src/cli.cpp:19
+msgid "  --out, -o <dir>           Output directory (default: ./out)\n"
+msgstr ""
+
+#: src/cli.cpp:21
+msgid "  --size, -s <mode>         Size selection mode:\n"
+msgstr ""
+
+#: src/cli.cpp:31
+msgid "  --skip-broken             Continue on conversion errors\n"
+msgstr ""
+
+#: src/cli.cpp:30
+msgid "  --verbose, -v             Enable verbose logging\n"
+msgstr ""
+
+#: src/cli.cpp:17
+msgid ""
+"  <input_dir>               Directory containing Install.inf and .ani files\n"
+"\n"
+msgstr ""
+
+#: src/size_tools.cpp:212
+#, c++-format
+msgid "  {}: (none)"
+msgstr ""
+
+#: src/size_tools.cpp:220
+#, c++-format
+msgid "  {}: {}"
+msgstr ""
+
+#: src/converter.cpp:116 src/converter.cpp:185
+#, c++-format
+msgid "  {}x{}: {} frames"
+msgstr ""
+
+#: src/manifest.cpp:328
+msgid " # guessed"
+msgstr ""
+
+#: src/cli.cpp:14
+msgid ""
+" <input_dir> [options]\n"
+"\n"
+msgstr ""
+
+#: src/manifest.cpp:225
+msgid " missing [files] section"
+msgstr ""
+
+#: src/manifest.cpp:337
+msgid "# Defaults are filled from the current cursor files when available.\n"
+msgstr ""
+
+#: src/manifest.cpp:336
+msgid "# Example: pointer = \"48\" or pointer = \"32, 48\"\n"
+msgstr ""
+
+#: src/manifest.cpp:276
+msgid "# Fill in the relative paths (relative to input_dir) for each Windows role.\n"
+msgstr ""
+
+#: src/manifest.cpp:338
+msgid "# Leave empty to keep all sizes from the file.\n"
+msgstr ""
+
+#: src/manifest.cpp:279
+msgid "# Leave empty to skip a role.\n"
+msgstr ""
+
+#: src/manifest.cpp:335
+msgid "# Optional per-role target size override (comma-separated list).\n"
+msgstr ""
+
+#: src/manifest.cpp:307
+msgid "# Put relative paths here. Examples:\n"
+msgstr ""
+
+#: src/manifest.cpp:281
+msgid "# Roles (Windows role -> common meaning):\n"
+msgstr ""
+
+#: src/manifest.cpp:301
+msgid "# Theme name override (optional)\n"
+msgstr ""
+
+#: src/manifest.cpp:278
+msgid "# Use the preview images in ani2xcursor/previews/ to decide.\n"
+msgstr ""
+
+#: src/manifest.cpp:295
+msgid "# alternate    = Alternate Select (Up Arrow)\n"
+msgstr ""
+
+#: src/manifest.cpp:274
+msgid "# ani2xcursor manifest (role mapping + per-role sizes)\n"
+msgstr ""
+
+#: src/manifest.cpp:285
+msgid "# busy         = Busy / Wait (Spinner)\n"
+msgstr ""
+
+#: src/manifest.cpp:292
+msgid "# dgn1         = Diagonal Resize 1 (NW-SE, SizeNWSE)\n"
+msgstr ""
+
+#: src/manifest.cpp:293
+msgid "# dgn2         = Diagonal Resize 2 (NE-SW, SizeNESW)\n"
+msgstr ""
+
+#: src/manifest.cpp:303
+msgid "# for reference only (do not edit)\n"
+msgstr ""
+
+#: src/manifest.cpp:288
+msgid "# hand         = Handwriting / Pen (NWPen)\n"
+msgstr ""
+
+#: src/manifest.cpp:283
+msgid "# help         = Help Select (Question mark)\n"
+msgstr ""
+
+#: src/manifest.cpp:291
+msgid "# horz         = Horizontal Resize (SizeWE)\n"
+msgstr ""
+
+#: src/manifest.cpp:296
+msgid "# link         = Link Select (Hand)\n"
+msgstr ""
+
+#: src/manifest.cpp:294
+msgid "# move         = Move / Size All (Fleur)\n"
+msgstr ""
+
+#: src/manifest.cpp:297
+msgid "# person       = Person Select (optional)\n"
+msgstr ""
+
+#: src/manifest.cpp:298
+msgid "# pin          = Pin Select (optional)\n"
+msgstr ""
+
+#: src/manifest.cpp:282
+msgid "# pointer      = Normal Select (Arrow)\n"
+msgstr ""
+
+#: src/manifest.cpp:308
+msgid "# pointer = \"Normal.ani\"\n"
+msgstr ""
+
+#: src/manifest.cpp:286
+msgid "# precision    = Precision Select (Crosshair)\n"
+msgstr ""
+
+#: src/manifest.cpp:287
+msgid "# text         = Text Select (I-beam)\n"
+msgstr ""
+
+#: src/manifest.cpp:309
+msgid "# text    = \"Text.ani\"\n"
+msgstr ""
+
+#: src/manifest.cpp:289
+msgid "# unavailable  = Not Allowed / Unavailable (No)\n"
+msgstr ""
+
+#: src/manifest.cpp:290
+msgid "# vert         = Vertical Resize (SizeNS)\n"
+msgstr ""
+
+#: src/manifest.cpp:284
+msgid "# working      = Working in Background (Arrow + Busy)\n"
+msgstr ""
+
+#: src/main.cpp:401
+msgid "--install ignored for source output format"
+msgstr ""
+
+#: src/ani_parser.cpp:173
+msgid "ANI 'anih' chunk too small"
+msgstr ""
+
+#: src/ani_parser.cpp:189
+msgid "ANI 'anih' reports 0 frames"
+msgstr ""
+
+#: src/ani_parser.cpp:208
+#, c++-format
+msgid "ANI 'rate' chunk has {} entries, expected {}"
+msgstr ""
+
+#: src/ani_parser.cpp:225
+#, c++-format
+msgid "ANI 'seq ' chunk has {} entries, expected {}"
+msgstr ""
+
+#: src/ani_parser.cpp:127
+msgid "ANI file contains no frames"
+msgstr ""
+
+#: src/ani_parser.cpp:98
+msgid "ANI file missing required 'anih' chunk"
+msgstr ""
+
+#: src/ani_parser.cpp:121
+msgid "ANI file missing required LIST 'fram' chunk"
+msgstr ""
+
+#: src/ani_parser.cpp:259
+#, c++-format
+msgid "ANI: Expected {} frames, found {}"
+msgstr ""
+
+#: src/preview_generator.cpp:311
+msgid "ANI: No frames"
+msgstr ""
+
+#: src/ani_parser.cpp:154
+#, c++-format
+msgid "ANI: Parsed {} frames successfully"
+msgstr ""
+
+#: src/ani_parser.cpp:103
+#, c++-format
+msgid "ANI: {} frames, {} steps, default rate {} jiffies ({}ms)"
+msgstr ""
+
+#: src/size_tools.cpp:229
+#, c++-format
+msgid "All sizes in directory: {}"
+msgstr ""
+
+#: src/ani_parser.cpp:24
+msgid "Animation frame index out of range"
+msgstr ""
+
+#: src/ani_parser.cpp:15
+msgid "Animation step index out of range"
+msgstr ""
+
+#: src/cli.cpp:16
+msgid "Arguments:\n"
+msgstr ""
+
+#: src/size_tools.cpp:209
+msgid "Available sizes by file:"
+msgstr ""
+
+#: src/xcursor_writer.cpp:251
+#, c++-format
+msgid "Cannot create aliases: primary cursor '{}' does not exist"
+msgstr ""
+
+#: src/main.cpp:393
+#, c++-format
+msgid "Conversion complete: {} cursors converted, {} errors"
+msgstr ""
+
+#: src/cli.cpp:15
+msgid ""
+"Convert Windows Animated Cursors (.ani) to Linux Xcursor theme.\n"
+"\n"
+msgstr ""
+
+#: src/main.cpp:299 src/main.cpp:316
+#, c++-format
+msgid "Cursor file not found: {}"
+msgstr ""
+
+#: src/main.cpp:79 src/main.cpp:153
+msgid "Edit manifest.toml and re-run the command."
+msgstr ""
+
+#: src/manifest.cpp:207
+msgid "Empty key in "
+msgstr ""
+
+#: src/main.cpp:175
+msgid ""
+"Error: input directory required\n"
+"\n"
+msgstr ""
+
+#: src/main.cpp:415
+#, c++-format
+msgid "Error: {}"
+msgstr ""
+
+#: src/converter.cpp:114 src/converter.cpp:183
+#, c++-format
+msgid "Exported {} sizes:"
+msgstr ""
+
+#: src/main.cpp:371
+#, c++-format
+msgid "Failed to convert {}: {}"
+msgstr ""
+
+#: src/xcursor_writer.cpp:170
+msgid "Failed to create XcursorImage"
+msgstr ""
+
+#: src/xcursor_writer.cpp:154
+msgid "Failed to create XcursorImages"
+msgstr ""
+
+#: src/xcursor_writer.cpp:269
+#, c++-format
+msgid "Failed to create symlink {} -> {}: {}"
+msgstr ""
+
+#: src/theme_installer.cpp:56
+msgid "Failed to install theme: "
+msgstr ""
+
+#: src/main.cpp:215
+#, c++-format
+msgid "Failed to parse {}: {}"
+msgstr ""
+
+#: src/size_tools.cpp:198
+#, c++-format
+msgid "Failed to read sizes from {}: {}"
+msgstr ""
+
+#: src/theme_installer.cpp:40
+msgid "Failed to remove existing theme: "
+msgstr ""
+
+#: src/source_writer.cpp:63
+msgid "Failed to write PNG: "
+msgstr ""
+
+#: src/xcursor_writer.cpp:204
+msgid "Failed to write Xcursor file: "
+msgstr ""
+
+#: src/preview_generator.cpp:346 src/preview_generator.cpp:371
+msgid "Failed to write placeholder PNG"
+msgstr ""
+
+#: src/preview_generator.cpp:338 src/preview_generator.cpp:363
+msgid "Failed to write preview PNG"
+msgstr ""
+
+#: src/main.cpp:218
+#, c++-format
+msgid "Falling back to Install.inf because {} could not be parsed"
+msgstr ""
+
+#: src/source_writer.cpp:145
+msgid "Frame/delay count mismatch for cursor: "
+msgstr ""
+
+#: src/main.cpp:77 src/main.cpp:151
+#, c++-format
+msgid "Generated: {} and {}"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:197
+msgid "ICO/CUR: BMP data too small"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:269
+#, c++-format
+msgid "ICO/CUR: BMP data truncated ({} < {}), may have artifacts"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:235
+msgid "ICO/CUR: Compressed BMP not supported"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:170
+msgid "ICO/CUR: Failed to decode PNG: "
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:122
+msgid "ICO/CUR: Failed to decode any images"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:115
+#, c++-format
+msgid "ICO/CUR: Failed to decode image #{}: {}"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:33
+msgid "ICO/CUR: File too small"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:59
+msgid "ICO/CUR: File too small for directory"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:97
+#, c++-format
+msgid "ICO/CUR: Image #{} data extends beyond file, skipping"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:39
+msgid "ICO/CUR: Invalid header (reserved != 0)"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:43
+msgid "ICO/CUR: Invalid type (expected 1=ICO or 2=CUR)"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:24
+msgid "ICO/CUR: No images found"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:50
+msgid "ICO/CUR: No images in file"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp:329
+#, c++-format
+msgid "ICO/CUR: Unsupported BMP bit depth {}"
+msgstr ""
+
+#: src/converter.cpp:47
+msgid "Inconsistent sizes, using first size only"
+msgstr ""
+
+#: src/main.cpp:183
+#, c++-format
+msgid "Input directory does not exist: {}"
+msgstr ""
+
+#: src/main.cpp:138
+msgid "Install.inf not found and manifest.toml not present."
+msgstr ""
+
+#: src/main.cpp:241
+#, c++-format
+msgid "Install.inf not found and {} failed to parse"
+msgstr ""
+
+#: src/theme_installer.cpp:32
+#, c++-format
+msgid "Installing theme '{}' to {}"
+msgstr ""
+
+#: src/ani_parser.cpp:62
+msgid "Invalid RIFF file"
+msgstr ""
+
+#: src/cli.cpp:62
+msgid "Invalid format: "
+msgstr ""
+
+#: src/source_writer.cpp:49
+msgid "Invalid image size for PNG output"
+msgstr ""
+
+#: src/manifest.cpp:200
+msgid "Invalid line in "
+msgstr ""
+
+#: src/source_writer.cpp:52
+msgid "Invalid pixel buffer size for PNG output"
+msgstr ""
+
+#: src/manifest.cpp:250
+msgid "Invalid size list in [sizes] for '"
+msgstr ""
+
+#: src/cli.cpp:88
+msgid "Invalid size value: "
+msgstr ""
+
+#: src/size_tools.cpp:50
+msgid "Invalid target size"
+msgstr ""
+
+#: src/theme_installer.cpp:15
+msgid "Invalid theme directory name: "
+msgstr ""
+
+#: src/theme_installer.cpp:29
+msgid "Invalid theme install path: "
+msgstr ""
+
+#: src/main.cpp:59
+#, c++-format
+msgid "Manifest requested but {} failed to parse: {}"
+msgstr ""
+
+#: src/main.cpp:64
+msgid "Manifest requested; generating previews and manifest.toml."
+msgstr ""
+
+#: src/main.cpp:54
+#, c++-format
+msgid "Manifest requested; using existing {}."
+msgstr ""
+
+#: src/main.cpp:119
+msgid "Missing required roles in manifest.toml (use --skip-broken to continue)"
+msgstr ""
+
+#: src/size_tools.cpp:204
+#, c++-format
+msgid "No .ani or .cur files found in {}"
+msgstr ""
+
+#: src/main.cpp:381
+msgid "No cursors were converted successfully"
+msgstr ""
+
+#: src/preview_generator.cpp:163
+msgid "No frames available for preview"
+msgstr ""
+
+#: src/converter.cpp:121
+msgid "No frames decoded from "
+msgstr ""
+
+#: src/source_writer.cpp:142
+msgid "No frames to write for cursor: "
+msgstr ""
+
+#: src/converter.cpp:35
+msgid "No images decoded from frame "
+msgstr ""
+
+#: src/xcursor_writer.cpp:129
+msgid "No images to write"
+msgstr ""
+
+#: src/source_writer.cpp:150
+msgid "No size groups found for cursor: "
+msgstr ""
+
+#: src/converter.cpp:95 src/converter.cpp:168
+msgid "No sizes selected for export"
+msgstr ""
+
+#: src/size_selection.cpp:55
+msgid "No sizes selected for preview"
+msgstr ""
+
+#: src/cli.cpp:94
+msgid "No valid sizes specified"
+msgstr ""
+
+#: src/ani_parser.cpp:66
+msgid "Not an ANI file: expected RIFF ACON, got RIFF "
+msgstr ""
+
+#: src/cli.cpp:19
+msgid "Options:\n"
+msgstr ""
+
+#: src/preview_generator.cpp:342 src/preview_generator.cpp:367
+#, c++-format
+msgid "Preview decode failed for {}: {}"
+msgstr ""
+
+#: src/converter.cpp:21 src/converter.cpp:130
+#, c++-format
+msgid "Processing: {}"
+msgstr ""
+
+#: src/riff_reader.cpp:66
+#, c++-format
+msgid "RIFF: Chunk '{}' at offset {}, size {}"
+msgstr ""
+
+#: src/riff_reader.cpp:36
+#, c++-format
+msgid "RIFF: Declared size {} exceeds file size {} (non-fatal; continuing)"
+msgstr ""
+
+#: src/riff_reader.cpp:12
+#, c++-format
+msgid "RIFF: File too small ({} bytes)"
+msgstr ""
+
+#: src/riff_reader.cpp:21
+#, c++-format
+msgid "RIFF: Invalid signature '{}' (expected 'RIFF')"
+msgstr ""
+
+#: src/riff_reader.cpp:72
+msgid "RIFF: LIST chunk too small"
+msgstr ""
+
+#: src/theme_installer.cpp:36
+msgid "Removing existing installation..."
+msgstr ""
+
+#: src/converter.cpp:75 src/converter.cpp:156
+#, c++-format
+msgid "Rescaling {}x{} -> {}x{}"
+msgstr ""
+
+#: src/cli.cpp:85
+msgid "Size must be between 1 and 256"
+msgstr ""
+
+#: src/main.cpp:408
+#, c++-format
+msgid "Source files created at: {}"
+msgstr ""
+
+#: src/theme_installer.cpp:43
+msgid "Theme already installed. Use --force to overwrite."
+msgstr ""
+
+#: src/main.cpp:405
+#, c++-format
+msgid "Theme created at: {}"
+msgstr ""
+
+#: src/theme_installer.cpp:23
+msgid "Theme directory does not exist: "
+msgstr ""
+
+#: src/theme_installer.cpp:59
+msgid "Theme installed successfully!"
+msgstr ""
+
+#: src/main.cpp:253
+#, c++-format
+msgid "Theme: {} ({} cursors)"
+msgstr ""
+
+#: src/cli.cpp:100
+msgid "Unknown argument: "
+msgstr ""
+
+#: src/manifest.cpp:231
+msgid "Unknown role in [files]: '"
+msgstr ""
+
+#: src/manifest.cpp:242
+msgid "Unknown role in [sizes]: '"
+msgstr ""
+
+#: src/main.cpp:338
+msgid "Unsupported cursor file type"
+msgstr ""
+
+#: src/cli.cpp:14
+msgid "Usage: "
+msgstr ""
+
+#: src/preview_generator.cpp:253
+msgid "decode failed"
+msgstr ""
+
+#: src/main.cpp:109
+#, c++-format
+msgid "manifest.toml: role '{}' is not mapped"
+msgstr ""
+
+#: src/manifest.cpp:93
+msgid "out of range"
+msgstr ""
+
+#: src/main.cpp:52 src/main.cpp:212
+#, c++-format
+msgid "{}: {}"
+msgstr ""

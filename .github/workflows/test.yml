@@ -9,27 +9,54 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libxcursor-dev
-    
+        sudo apt-get install -y libxcursor-dev gettext locales
+        sudo locale-gen en_US.UTF-8 zh_CN.UTF-8
+
     - name: Setup xmake
       uses: xmake-io/github-action-setup-xmake@v1
       with:
         xmake-version: latest
-    
+
+    - name: Validate translation files
+      run: |
+        msgfmt --check --check-format -o /tmp/ani2xcursor-zh_CN.mo locale/zh_CN.po
+
     - name: Build
       run: |
         xmake config -y
         xmake build
-    
+
+    - name: Verify locale artifacts
+      run: |
+        test -f build/locale/zh_CN/LC_MESSAGES/ani2xcursor.mo
+
     - name: Build test binary
       run: xmake build ani2xcursor_test
-    
+
     - name: Run tests
       run: ./build/linux/x86_64/release/ani2xcursor_test
+
+    - name: Locale smoke test
+      run: |
+        set -euo pipefail
+        BIN=./build/linux/x86_64/release/ani2xcursor
+        locale -a
+
+        HELP_EN="$(LC_ALL=en_US.UTF-8 LANGUAGE=en_US:en "$BIN" --help | head -n 1)"
+        HELP_ZH="$(LC_ALL=zh_CN.UTF-8 LANGUAGE=zh_CN:en "$BIN" --help | head -n 1)"
+        ERR_ZH="$(LC_ALL=zh_CN.UTF-8 LANGUAGE=zh_CN:en "$BIN" /no/such/path 2>&1 || true)"
+
+        echo "HELP_EN=$HELP_EN"
+        echo "HELP_ZH=$HELP_ZH"
+        echo "ERR_ZH=$ERR_ZH"
+
+        echo "$HELP_EN" | grep -q "^Usage:"
+        echo "$HELP_ZH" | grep -q "用法"
+        echo "$ERR_ZH" | grep -q "输入目录不存在"

@@ -47,7 +47,7 @@ size_t find_closest_size_index(std::span<const CursorImage> images, uint32_t tar
 
 CursorImage rescale_cursor(const CursorImage& src, uint32_t target_size) {
     if (target_size == 0) {
-        throw std::runtime_error("Invalid target size");
+        throw std::runtime_error(_("Invalid target size"));
     }
     uint32_t src_nominal = nominal_size(src);
     if (src_nominal == target_size) {
@@ -195,19 +195,21 @@ void list_available_sizes(const std::filesystem::path& input_dir) {
             per_file_sizes[path.filename().string()] = sizes;
             all_sizes.insert(sizes.begin(), sizes.end());
         } catch (const std::exception& e) {
-            spdlog::warn("Failed to read sizes from {}: {}", path.filename().string(), e.what());
+            spdlog::warn(spdlog::fmt_lib::runtime(_("Failed to read sizes from {}: {}")),
+                         path.filename().string(), e.what());
         }
     }
 
     if (per_file_sizes.empty()) {
-        spdlog::warn("No .ani or .cur files found in {}", input_dir.string());
+        spdlog::warn(spdlog::fmt_lib::runtime(_("No .ani or .cur files found in {}")),
+                     input_dir.string());
         return;
     }
 
-    spdlog::info("Available sizes by file:");
+    spdlog::info(_("Available sizes by file:"));
     for (const auto& [name, sizes] : per_file_sizes) {
         if (sizes.empty()) {
-            spdlog::info("  {}: (none)", name);
+            spdlog::info(spdlog::fmt_lib::runtime(_("  {}: (none)")), name);
             continue;
         }
         std::string line;
@@ -215,7 +217,7 @@ void list_available_sizes(const std::filesystem::path& input_dir) {
             if (!line.empty()) line += ", ";
             line += std::to_string(size);
         }
-        spdlog::info("  {}: {}", name, line);
+        spdlog::info(spdlog::fmt_lib::runtime(_("  {}: {}")), name, line);
     }
 
     if (!all_sizes.empty()) {
@@ -224,7 +226,7 @@ void list_available_sizes(const std::filesystem::path& input_dir) {
             if (!summary.empty()) summary += ", ";
             summary += std::to_string(size);
         }
-        spdlog::info("All sizes in directory: {}", summary);
+        spdlog::info(spdlog::fmt_lib::runtime(_("All sizes in directory: {}")), summary);
     }
 }
 

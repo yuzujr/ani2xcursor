@@ -6,6 +6,8 @@
 #include "ico_cur_decoder.h"
 #include "size_filter.h"
 
+#define _(String) gettext(String)
+
 namespace ani2xcursor {
 
 std::vector<size_t> select_size_indices(std::span<const CursorImage> images, SizeFilter filter,

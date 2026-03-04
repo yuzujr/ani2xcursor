@@ -7,6 +7,8 @@
 #include <string_view>
 #include <vector>
 
+#define _(String) gettext(String)
+
 namespace ani2xcursor {
 
 namespace fs = std::filesystem;

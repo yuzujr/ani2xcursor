@@ -8,6 +8,8 @@
 
 #include "ico_cur_decoder.h"
 
+#define _(String) gettext(String)
+
 namespace ani2xcursor {
 
 uint32_t nominal_size(const CursorImage& img);
