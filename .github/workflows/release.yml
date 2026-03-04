@@ -79,8 +79,16 @@ jobs:
       run: |
         set -euo pipefail
         BIN=./build/linux/x86_64/release/ani2xcursor
-        LC_ALL=en_US.UTF-8 "$BIN" --help | grep -q "^Usage: "
-        LC_ALL=zh_CN.UTF-8 "$BIN" --help | grep -q "^用法： "
+        locale -a
+
+        HELP_EN="$(LC_ALL=en_US.UTF-8 LANGUAGE=en_US:en "$BIN" --help | head -n 1)"
+        HELP_ZH="$(LC_ALL=zh_CN.UTF-8 LANGUAGE=zh_CN:en "$BIN" --help | head -n 1)"
+
+        echo "HELP_EN=$HELP_EN"
+        echo "HELP_ZH=$HELP_ZH"
+
+        echo "$HELP_EN" | grep -q "^Usage:"
+        echo "$HELP_ZH" | grep -q "用法"
     
     - name: Package binary
       run: |
