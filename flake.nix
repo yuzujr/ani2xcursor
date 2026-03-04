@@ -8,8 +8,6 @@
       pkgs   = nixpkgs.legacyPackages.${system};
     in {
 
-      # Build uses Makefile (not xmake) so no package manager runs in the sandbox.
-      # All deps come from buildInputs via pkg-config / CPATH.
       packages.${system}.default = pkgs.stdenv.mkDerivation {
         pname   = "ani2xcursor";
         version = "1.0.0";
@@ -47,8 +45,6 @@
         };
       };
 
-      # Use xmake for development (network available, downloads pinned deps).
-      # Pass --nix=y to use nix:: packages instead of downloading.
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
           xmake
