@@ -20,13 +20,12 @@
         ];
         buildInputs = with pkgs; [
           spdlog
+          stb
           libxcursor
           libX11
         ];
 
         buildPhase = ''
-          # stb headers live under include/stb/ in nixpkgs (no .pc file).
-          export CPATH="${pkgs.stb}/include/stb''${CPATH:+:$CPATH}"
           make -j$NIX_BUILD_CORES
         '';
 
@@ -54,6 +53,7 @@
           gettext
           gdb
           spdlog
+          stb
           libxcursor
           libX11
         ];

@@ -9,7 +9,7 @@ SRCS   := $(wildcard src/*.cpp)
 OBJS   := $(patsubst src/%.cpp, _build/%.o, $(SRCS))
 TARGET := _build/ani2xcursor
 
-PKG_CFLAGS := $(shell pkg-config --cflags spdlog xcursor)
+PKG_CFLAGS := $(shell pkg-config --cflags spdlog xcursor stb)
 PKG_LIBS   := $(shell pkg-config --libs   spdlog xcursor) -lpthread
 
 ALL_CXXFLAGS := $(CXXFLAGS) -Iinclude $(PKG_CFLAGS)

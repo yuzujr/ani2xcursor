@@ -26,9 +26,10 @@ end
 
 -- Dependencies
 if has_config("nix") then
-    add_requires("nix::spdlog",     {alias = "spdlog"})
-    add_requires("nix::stb",        {alias = "stb"})
-    add_requires("nix::libxcursor", {alias = "libxcursor"})
+    add_requires("nix::spdlog",        {alias = "spdlog"})
+    add_requires("pkgconfig::fmt",     {alias = "fmt"})
+    add_requires("pkgconfig::stb",     {alias = "stb"})
+    add_requires("nix::libxcursor",   {alias = "libxcursor"})
 else
     add_requires("spdlog v1.16.0", {configs = {fmt_external = false}})
     add_requires("stb 2025.03.14")
@@ -42,7 +43,10 @@ target("ani2xcursor")
     add_files("src/*.cpp")
     add_includedirs("include")
     add_packages("spdlog", "stb", "libxcursor")
-    
+    if has_config("nix") then
+        add_packages("fmt")
+    end
+
     if is_plat("linux") then
         add_syslinks("pthread")
 
@@ -94,3 +98,6 @@ target("ani2xcursor_test")
     
     add_includedirs("include")
     add_packages("spdlog", "stb")
+    if has_config("nix") then
+        add_packages("fmt")
+    end
