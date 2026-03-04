@@ -93,8 +93,4 @@ target("ani2xcursor_test")
     add_files("src/ico_cur_decoder.cpp")
     
     add_includedirs("include")
-    if has_config("nix") then
-        add_packages("spdlog")
-    else
-        add_packages("spdlog", "stb")
-    end
+    add_packages("spdlog", "stb")
