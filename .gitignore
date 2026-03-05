@@ -1,7 +1,6 @@
 # Build output
 .cache/
 build/
-out/
 
 # xmake
 .xmake/
@@ -9,3 +8,7 @@ xmake-requires.lock
 
 # test
 example/
+
+# Local environment
+.direnv/
+.envrc
