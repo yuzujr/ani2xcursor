@@ -160,6 +160,17 @@ Xcursor.theme: ThemeName
 Xcursor.size: 24
 ```
 
+**libXcursor fallback (`~/.icons/default/index.theme`):**
+Many X11 and XWayland applications load cursors through libXcursor. If `XCURSOR_THEME` / `Xcursor.theme` is unset for that client, or the selected theme does not provide a requested cursor, libXcursor falls back to a theme named `default`. You can define that fallback alias by creating `~/.icons/default/index.theme` and pointing it at your installed cursor theme:
+
+```ini
+[Icon Theme]
+Inherits=ThemeName
+```
+
+Use `/usr/share/icons/default/index.theme` for a system-wide default.
+Only the first theme listed in `Inherits` is used by libXcursor; `Name` and `Comment` are optional and are ignored for cursor lookup.
+
 ## Cursor Mappings
 
 | Windows    | Linux           | Aliases                      |
