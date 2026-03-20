@@ -29,6 +29,12 @@ _build:
 
 install: all
 	install -Dm755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/ani2xcursor
+	install -Dm644 completions/bash/ani2xcursor \
+	  $(DESTDIR)$(PREFIX)/share/bash-completion/completions/ani2xcursor
+	install -Dm644 completions/zsh/_ani2xcursor \
+	  $(DESTDIR)$(PREFIX)/share/zsh/site-functions/_ani2xcursor
+	install -Dm644 completions/fish/ani2xcursor.fish \
+	  $(DESTDIR)$(PREFIX)/share/fish/vendor_completions.d/ani2xcursor.fish
 	@for po in locale/*.po; do \
 	  lang=$$(basename $$po .po); \
 	  install -dm755 $(DESTDIR)$(PREFIX)/share/locale/$$lang/LC_MESSAGES; \
