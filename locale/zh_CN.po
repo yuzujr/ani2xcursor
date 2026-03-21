@@ -37,13 +37,17 @@ msgid ""
 "  --format, -f <mode>       Output format: xcursor (default) or source\n"
 msgstr "  --format, -f <模式>       输出格式：xcursor（默认）或 source（源码）\n"
 
-#: src/cli.cpp:32
+#: src/cli.cpp:33
 msgid "  --help, -h                Show this help message\n"
 msgstr "  --help, -h                显示此帮助信息\n"
 
 #: src/cli.cpp:29
 msgid "  --install, -i             Install theme to $XDG_DATA_HOME/icons\n"
 msgstr "  --install, -i             安装主题到 $XDG_DATA_HOME/icons\n"
+
+#: src/cli.cpp:32
+msgid "  --version, -V             Show version information\n"
+msgstr "  --version, -V             显示版本信息\n"
 
 #: src/cli.cpp:27
 msgid ""

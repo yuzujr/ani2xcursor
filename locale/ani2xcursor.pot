@@ -34,6 +34,10 @@ msgid "  --format, -f <mode>       Output format: xcursor (default) or source\n"
 msgstr ""
 
 #: src/cli.cpp:32
+msgid "  --version, -V             Show version information\n"
+msgstr ""
+
+#: src/cli.cpp:33
 msgid "  --help, -h                Show this help message\n"
 msgstr ""
 

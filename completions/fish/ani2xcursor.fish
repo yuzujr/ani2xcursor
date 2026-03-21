@@ -40,6 +40,10 @@ complete -c ani2xcursor -l verbose -s v \
 complete -c ani2xcursor -l skip-broken \
     -d "Continue on conversion errors"
 
+# --version, -V
+complete -c ani2xcursor -l version -s V \
+    -d "Show version information"
+
 # --help, -h
 complete -c ani2xcursor -l help -s h \
     -d "Show help message"

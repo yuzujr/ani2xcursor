@@ -4,28 +4,34 @@
 CXX      ?= c++
 CXXFLAGS ?= -std=c++20 -Wall -Wextra -O2
 PREFIX   ?= /usr
+VERSION  := $(strip $(shell cat VERSION))
+BUILDDIR := build
+OBJDIR   := $(BUILDDIR)/obj
 
 SRCS   := $(wildcard src/*.cpp)
-OBJS   := $(patsubst src/%.cpp, _build/%.o, $(SRCS))
-TARGET := _build/ani2xcursor
+OBJS   := $(patsubst src/%.cpp, $(OBJDIR)/%.o, $(SRCS))
+TARGET := $(BUILDDIR)/ani2xcursor
 
 PKG_CFLAGS := $(shell pkg-config --cflags spdlog xcursor stb)
 PKG_LIBS   := $(shell pkg-config --libs   spdlog xcursor) -lpthread
 
-ALL_CXXFLAGS := $(CXXFLAGS) -Iinclude $(PKG_CFLAGS)
+ALL_CXXFLAGS := $(CXXFLAGS) -Iinclude -DANI2XCURSOR_VERSION=\"$(VERSION)\" $(PKG_CFLAGS)
 
 .PHONY: all install clean
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS) | _build
+$(TARGET): $(OBJS) | $(BUILDDIR)
 	$(CXX) $(ALL_CXXFLAGS) -o $@ $^ $(PKG_LIBS)
 
-_build/%.o: src/%.cpp | _build
+$(OBJDIR)/%.o: src/%.cpp | $(OBJDIR)
 	$(CXX) $(ALL_CXXFLAGS) -c -o $@ $<
 
-_build:
-	mkdir -p _build
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
+
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
 
 install: all
 	install -Dm755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/ani2xcursor
@@ -43,4 +49,4 @@ install: all
 	done
 
 clean:
-	rm -rf _build
+	rm -rf $(OBJDIR) $(TARGET)

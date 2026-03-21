@@ -20,6 +20,7 @@
 #include "source_writer.h"
 #include <spdlog/fmt/fmt.h>
 #include "theme_installer.h"
+#include "version.h"
 #include "xcursor_writer.h"
 
 #ifndef _
@@ -192,6 +193,11 @@ int main(int argc, char* argv[]) {
 
         if (args.help) {
             ani2xcursor::print_usage(argv[0]);
+            return 0;
+        }
+
+        if (args.version) {
+            std::cout << "ani2xcursor " << ani2xcursor::kVersion << '\n';
             return 0;
         }
 

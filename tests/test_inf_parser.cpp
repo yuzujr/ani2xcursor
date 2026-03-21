@@ -5,6 +5,7 @@
 #include <cassert>
 #include <iostream>
 
+#include "cli.h"
 #include "inf_parser.h"
 
 // ============================================================================
@@ -342,6 +343,35 @@ HKCU,"Control Panel\Cursors",,0x00020000,"FromWregDefault"
 }
 
 // ============================================================================
+// Test 9: CLI version flag parsing
+// ============================================================================
+void test_version_flag() {
+    std::cout << "Test: CLI version flag parsing...\n";
+
+    {
+        char arg0[] = "ani2xcursor";
+        char arg1[] = "--version";
+        char* argv[] = {arg0, arg1};
+        auto args = ani2xcursor::parse_args(2, argv);
+        assert(args.version);
+        assert(!args.help);
+        assert(args.input_dir.empty());
+    }
+
+    {
+        char arg0[] = "ani2xcursor";
+        char arg1[] = "-V";
+        char* argv[] = {arg0, arg1};
+        auto args = ani2xcursor::parse_args(2, argv);
+        assert(args.version);
+        assert(!args.help);
+        assert(args.input_dir.empty());
+    }
+
+    std::cout << "  PASSED!\n";
+}
+
+// ============================================================================
 // Main
 // ============================================================================
 int main() {
@@ -358,6 +388,7 @@ int main() {
         test_case_insensitive_vars();
         test_reg_line_parser();
         test_theme_name_sources();
+        test_version_flag();
 
         std::cout << "\n=== All tests passed! ===\n\n";
         return 0;

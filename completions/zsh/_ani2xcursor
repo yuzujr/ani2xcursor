@@ -10,4 +10,5 @@ _arguments -s \
   '(-i --install)'{-i,--install}'[Install theme to $XDG_DATA_HOME/icons]' \
   '(-v --verbose)'{-v,--verbose}'[Enable verbose logging]' \
   '--skip-broken[Continue on conversion errors]' \
+  '(-V --version)'{-V,--version}'[Show version information]' \
   '(-h --help)'{-h,--help}'[Show help message]'

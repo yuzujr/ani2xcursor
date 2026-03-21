@@ -24,6 +24,7 @@ struct Args {
     bool manifest = false;
     bool list_sizes = false;
     bool help = false;
+    bool version = false;
     SizeFilter size_filter = SizeFilter::All;
     std::vector<uint32_t> specific_sizes;
     OutputFormat format = OutputFormat::Xcursor;

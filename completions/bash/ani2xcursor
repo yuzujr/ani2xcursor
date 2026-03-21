@@ -30,6 +30,7 @@ _ani2xcursor() {
       --install -i
       --verbose -v
       --skip-broken
+      --version -V
       --help -h
     " -- "$cur") )
     return 0

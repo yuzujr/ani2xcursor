@@ -29,6 +29,7 @@ void print_usage(const char* program) {
         << _("  --install, -i             Install theme to $XDG_DATA_HOME/icons\n")
         << _("  --verbose, -v             Enable verbose logging\n")
         << _("  --skip-broken             Continue on conversion errors\n")
+        << _("  --version, -V             Show version information\n")
         << _("  --help, -h                Show this help message\n");
 }
 
@@ -41,6 +42,9 @@ Args parse_args(int argc, char* argv[]) {
 
         if (arg == "--help" || arg == "-h") {
             args.help = true;
+            return args;
+        } else if (arg == "--version" || arg == "-V") {
+            args.version = true;
             return args;
         } else if (arg == "--verbose" || arg == "-v") {
             args.verbose = true;

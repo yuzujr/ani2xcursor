@@ -1,8 +1,11 @@
 -- ani2xcursor: Convert Windows Animated Cursors to Linux Xcursor themes
 -- Build system: xmake
 
+local project_version = assert((io.readfile("VERSION") or ""):match("%S+"), "VERSION is empty")
+local version_define = 'ANI2XCURSOR_VERSION="' .. project_version .. '"'
+
 set_project("ani2xcursor")
-set_version("1.0.0")
+set_version(project_version)
 
 -- C++20 standard
 set_languages("c++20")
@@ -40,6 +43,7 @@ end
 target("ani2xcursor")
     set_kind("binary")
     set_rundir("$(projectdir)")
+    add_defines(version_define)
     add_files("src/*.cpp")
     add_includedirs("include")
     add_packages("spdlog", "stb", "libxcursor")
@@ -89,8 +93,10 @@ target("ani2xcursor")
 target("ani2xcursor_test")
     set_kind("binary")
     set_default(false)
+    add_defines(version_define)
     
     add_files("tests/test_inf_parser.cpp")
+    add_files("src/cli.cpp")
     add_files("src/inf_parser.cpp")
     add_files("src/riff_reader.cpp")
     add_files("src/ani_parser.cpp")

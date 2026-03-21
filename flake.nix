@@ -6,13 +6,14 @@
     { self, nixpkgs }:
     let
       system = "x86_64-linux";
+      projectVersion = nixpkgs.lib.removeSuffix "\n" (builtins.readFile ./VERSION);
       pkgs = nixpkgs.legacyPackages.${system};
     in
     {
 
       packages.${system}.default = pkgs.stdenv.mkDerivation {
         pname = "ani2xcursor";
-        version = "1.0.0";
+        version = projectVersion;
         src = ./.;
 
         nativeBuildInputs = with pkgs; [

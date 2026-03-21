@@ -8,7 +8,16 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: Test (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
 
     steps:
     - uses: actions/checkout@v4
@@ -40,23 +49,39 @@ jobs:
     - name: Build test binary
       run: xmake build ani2xcursor_test
 
+    - name: Locate built binaries
+      id: locate
+      run: |
+        set -euo pipefail
+        BIN="$(find build -type f -path '*/release/ani2xcursor' -print -quit)"
+        TEST_BIN="$(find build -type f -path '*/release/ani2xcursor_test' -print -quit)"
+
+        test -n "$BIN"
+        test -n "$TEST_BIN"
+
+        echo "bin=$BIN" >> "$GITHUB_OUTPUT"
+        echo "test_bin=$TEST_BIN" >> "$GITHUB_OUTPUT"
+
     - name: Run tests
-      run: ./build/linux/x86_64/release/ani2xcursor_test
+      run: ${{ steps.locate.outputs.test_bin }}
 
     - name: Locale smoke test
       run: |
         set -euo pipefail
-        BIN=./build/linux/x86_64/release/ani2xcursor
+        BIN="${{ steps.locate.outputs.bin }}"
         locale -a
 
+        VERSION="$("$BIN" --version)"
         HELP_EN="$(LC_ALL=en_US.UTF-8 LANGUAGE=en_US:en "$BIN" --help | head -n 1)"
         HELP_ZH="$(LC_ALL=zh_CN.UTF-8 LANGUAGE=zh_CN:en "$BIN" --help | head -n 1)"
         ERR_ZH="$(LC_ALL=zh_CN.UTF-8 LANGUAGE=zh_CN:en "$BIN" /no/such/path 2>&1 || true)"
 
+        echo "VERSION=$VERSION"
         echo "HELP_EN=$HELP_EN"
         echo "HELP_ZH=$HELP_ZH"
         echo "ERR_ZH=$ERR_ZH"
 
+        echo "$VERSION" | grep -q "^ani2xcursor "
         echo "$HELP_EN" | grep -q "^Usage:"
         echo "$HELP_ZH" | grep -q "用法"
         echo "$ERR_ZH" | grep -q "输入目录不存在"

@@ -90,6 +90,7 @@ ani2xcursor /path/to/cursor/folder
   --install, -i             Install theme to $XDG_DATA_HOME/icons
   --verbose, -v             Enable verbose logging
   --skip-broken             Continue on conversion errors
+  --version, -V             Show version information
   --help, -h                Show this help message
 ```
 
