@@ -35,6 +35,11 @@ jobs:
     - name: Build
       run: make
 
+    - name: Prepare locale artifacts
+      run: |
+        mkdir -p build/locale/zh_CN/LC_MESSAGES
+        msgfmt -o build/locale/zh_CN/LC_MESSAGES/ani2xcursor.mo locale/zh_CN.po
+
     - name: Build test binary
       run: |
         c++ -std=c++20 -Wall -Wextra -O2 -Iinclude \
