@@ -89,7 +89,7 @@ void XcursorWriter::init_cursor_mappings() {
 
     // Diagonal resize (NW-SE)
     cursor_mappings_["dgn1"] = {"bd_double_arrow",
-                                {"nwse-resize", "size_fdiag", "fd_double_arrow", "nw-resize",
+                                {"nwse-resize", "size_fdiag", "nw-resize",
                                  "se-resize", "c7088f0f3e6c8088236ef8e1e3e70000", "top_left_corner",
                                  "bottom_right_corner", "bd_double_arrow"}};
 

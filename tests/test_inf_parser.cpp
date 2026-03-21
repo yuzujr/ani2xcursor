@@ -2,11 +2,15 @@
 // Tests cover: Scheme.Reg only, Wreg override, variable expansion, warnings
 #include <spdlog/spdlog.h>
 
+#include <algorithm>
 #include <cassert>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 
 #include "cli.h"
 #include "inf_parser.h"
+#include "xcursor_writer.h"
 
 // ============================================================================
 // Test 1: Scheme.Reg only (no Wreg) - mapping by position
@@ -372,6 +376,62 @@ void test_version_flag() {
 }
 
 // ============================================================================
+// Test 10: Diagonal cursor aliases stay distinct
+// ============================================================================
+void test_xcursor_diagonal_aliases() {
+    std::cout << "Test: Xcursor diagonal aliases stay distinct...\n";
+
+    const auto dgn1 = ani2xcursor::XcursorWriter::get_cursor_names("dgn1");
+    const auto dgn2 = ani2xcursor::XcursorWriter::get_cursor_names("dgn2");
+
+    assert(dgn1.primary == "bd_double_arrow");
+    assert(dgn2.primary == "fd_double_arrow");
+    assert(std::find(dgn1.aliases.begin(), dgn1.aliases.end(), "fd_double_arrow") ==
+           dgn1.aliases.end());
+    assert(std::find(dgn1.aliases.begin(), dgn1.aliases.end(), "bd_double_arrow") !=
+           dgn1.aliases.end());
+    assert(std::find(dgn2.aliases.begin(), dgn2.aliases.end(), "fd_double_arrow") !=
+           dgn2.aliases.end());
+
+    std::cout << "  PASSED!\n";
+}
+
+// ============================================================================
+// Test 11: dgn1 aliases must not pre-create the dgn2 primary path
+// ============================================================================
+void test_xcursor_diagonal_primary_path_collision() {
+    std::cout << "Test: Xcursor diagonal aliases do not shadow the second primary...\n";
+
+    namespace fs = std::filesystem;
+
+    const auto temp_dir = fs::temp_directory_path() / "ani2xcursor_test_diagonal_aliases";
+    std::error_code ec;
+    fs::remove_all(temp_dir, ec);
+    fs::create_directories(temp_dir);
+
+    try {
+        std::ofstream(temp_dir / "bd_double_arrow") << "dgn1";
+
+        const auto dgn1 = ani2xcursor::XcursorWriter::get_cursor_names("dgn1");
+        ani2xcursor::XcursorWriter::create_aliases(temp_dir, dgn1.primary, dgn1.aliases);
+
+        const auto dgn2_primary = temp_dir / "fd_double_arrow";
+        assert(!fs::exists(dgn2_primary));
+
+        std::ofstream(dgn2_primary) << "dgn2";
+        assert(fs::exists(dgn2_primary));
+        assert(!fs::is_symlink(dgn2_primary));
+
+        fs::remove_all(temp_dir);
+    } catch (...) {
+        fs::remove_all(temp_dir, ec);
+        throw;
+    }
+
+    std::cout << "  PASSED!\n";
+}
+
+// ============================================================================
 // Main
 // ============================================================================
 int main() {
@@ -389,6 +449,8 @@ int main() {
         test_reg_line_parser();
         test_theme_name_sources();
         test_version_flag();
+        test_xcursor_diagonal_aliases();
+        test_xcursor_diagonal_primary_path_collision();
 
         std::cout << "\n=== All tests passed! ===\n\n";
         return 0;

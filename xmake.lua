@@ -101,9 +101,10 @@ target("ani2xcursor_test")
     add_files("src/riff_reader.cpp")
     add_files("src/ani_parser.cpp")
     add_files("src/ico_cur_decoder.cpp")
+    add_files("src/xcursor_writer.cpp")
     
     add_includedirs("include")
-    add_packages("spdlog", "stb")
+    add_packages("spdlog", "stb", "libxcursor")
     if has_config("nix") then
         add_packages("fmt")
     end

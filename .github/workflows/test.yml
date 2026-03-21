@@ -43,11 +43,11 @@ jobs:
     - name: Build test binary
       run: |
         c++ -std=c++20 -Wall -Wextra -O2 -Iinclude \
-          $(pkg-config --cflags spdlog stb) \
-          tests/test_inf_parser.cpp src/cli.cpp src/inf_parser.cpp src/riff_reader.cpp src/ani_parser.cpp src/ico_cur_decoder.cpp \
+          $(pkg-config --cflags spdlog xcursor stb) \
+          tests/test_inf_parser.cpp src/cli.cpp src/inf_parser.cpp src/riff_reader.cpp src/ani_parser.cpp src/ico_cur_decoder.cpp src/xcursor_writer.cpp \
           -DANI2XCURSOR_VERSION=\"$(cat VERSION)\" \
           -o build/ani2xcursor_test \
-          $(pkg-config --libs spdlog) -lpthread
+          $(pkg-config --libs spdlog xcursor) -lpthread
 
     - name: Run tests
       run: ./build/ani2xcursor_test
