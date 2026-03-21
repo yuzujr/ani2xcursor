@@ -71,50 +71,32 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libxcursor-dev gettext locales
+        sudo apt-get install -y libxcursor-dev libx11-dev libspdlog-dev libfmt-dev libstb-dev gettext locales
         sudo locale-gen en_US.UTF-8 zh_CN.UTF-8
-
-    - name: Setup xmake
-      uses: xmake-io/github-action-setup-xmake@v1
-      with:
-        xmake-version: latest
 
     - name: Validate translation files
       run: |
         msgfmt --check --check-format -o /tmp/ani2xcursor-zh_CN.mo locale/zh_CN.po
 
     - name: Build
-      run: |
-        xmake config -m release -y
-        xmake build
-
-    - name: Verify locale artifacts
-      run: |
-        test -f build/locale/zh_CN/LC_MESSAGES/ani2xcursor.mo
+      run: make
 
     - name: Build test binary
-      run: xmake build ani2xcursor_test
-
-    - name: Locate built binaries
-      id: locate
       run: |
-        set -euo pipefail
-        BIN="$(find build -type f -path '*/release/ani2xcursor' -print -quit)"
-        TEST_BIN="$(find build -type f -path '*/release/ani2xcursor_test' -print -quit)"
-
-        test -n "$BIN"
-        test -n "$TEST_BIN"
-
-        echo "bin=$BIN" >> "$GITHUB_OUTPUT"
-        echo "test_bin=$TEST_BIN" >> "$GITHUB_OUTPUT"
+        c++ -std=c++20 -Wall -Wextra -O2 -Iinclude \
+          $(pkg-config --cflags spdlog stb) \
+          tests/test_inf_parser.cpp src/cli.cpp src/inf_parser.cpp src/riff_reader.cpp src/ani_parser.cpp src/ico_cur_decoder.cpp \
+          -DANI2XCURSOR_VERSION=\"$(cat VERSION)\" \
+          -o build/ani2xcursor_test \
+          $(pkg-config --libs spdlog) -lpthread
 
     - name: Run tests
-      run: ${{ steps.locate.outputs.test_bin }}
+      run: ./build/ani2xcursor_test
 
     - name: Locale smoke test
       run: |
         set -euo pipefail
-        BIN="${{ steps.locate.outputs.bin }}"
+        BIN=./build/ani2xcursor
         locale -a
 
         VERSION="$("$BIN" --version)"
@@ -132,14 +114,14 @@ jobs:
     - name: Package binary
       run: |
         set -euo pipefail
-        BIN="${{ steps.locate.outputs.bin }}"
         ASSET="ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-${{ matrix.arch }}.tar.gz"
 
         mkdir -p release/share
-        cp "$BIN" release/ani2xcursor
+        cp build/ani2xcursor release/ani2xcursor
         cp README.md LICENSE release/
         cp -r completions release/
-        cp -r build/locale release/share/
+        mkdir -p release/share/locale/zh_CN/LC_MESSAGES
+        msgfmt -o release/share/locale/zh_CN/LC_MESSAGES/ani2xcursor.mo locale/zh_CN.po
 
         tar -czf "$ASSET" -C release .
 
