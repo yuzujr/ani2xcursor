@@ -1,7 +1,7 @@
 -- ani2xcursor: Convert Windows Animated Cursors to Linux Xcursor themes
 -- Build system: xmake
 
-local project_version = assert((io.readfile("VERSION") or ""):match("%S+"), "VERSION is empty")
+local project_version = assert((os.iorun("cat VERSION") or ""):match("%S+"), "VERSION is empty")
 local version_define = 'ANI2XCURSOR_VERSION="' .. project_version .. '"'
 
 set_project("ani2xcursor")
