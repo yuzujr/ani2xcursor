@@ -9,35 +9,18 @@ set_version(project_version)
 
 -- C++20 standard
 set_languages("c++20")
+add_rules("mode.debug", "mode.release")
 
 -- Enable warnings
 set_warnings("all", "extra")
 
--- Dependency source:
---   default  : xmake downloads pinned versions from the internet.
---   --nix=y  : use nix:: packages (for `nix develop` devShell).
-option("nix")
-    set_default(false)
-    set_showmenu(true)
-    set_description("Use nix:: packages (for nix develop shell)")
-option_end()
-
--- Lock dependencies for reproducible builds (skip when nix:: packages are used)
-if not has_config("nix") then
-    set_policy("package.requires_lock", true)
-end
+-- Lock dependencies for reproducible builds
+set_policy("package.requires_lock", true)
 
 -- Dependencies
-if has_config("nix") then
-    add_requires("nix::spdlog",        {alias = "spdlog"})
-    add_requires("pkgconfig::fmt",     {alias = "fmt"})
-    add_requires("pkgconfig::stb",     {alias = "stb"})
-    add_requires("nix::libxcursor",   {alias = "libxcursor"})
-else
-    add_requires("spdlog v1.16.0", {configs = {fmt_external = false}})
-    add_requires("stb 2025.03.14")
-    add_requires("libxcursor 1.2.3")
-end
+add_requires("spdlog v1.16.0", {configs = {fmt_external = false}})
+add_requires("stb 2025.03.14")
+add_requires("libxcursor 1.2.3")
 
 -- Main target
 target("ani2xcursor")
@@ -47,9 +30,6 @@ target("ani2xcursor")
     add_files("src/*.cpp")
     add_includedirs("include")
     add_packages("spdlog", "stb", "libxcursor")
-    if has_config("nix") then
-        add_packages("fmt")
-    end
 
     if is_plat("linux") then
         add_syslinks("pthread")
@@ -105,6 +85,3 @@ target("ani2xcursor_test")
     
     add_includedirs("include")
     add_packages("spdlog", "stb", "libxcursor")
-    if has_config("nix") then
-        add_packages("fmt")
-    end

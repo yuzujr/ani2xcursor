@@ -62,8 +62,7 @@
         shellHook = ''
           echo "ani2xcursor dev shell"
           echo "  xmake                build (downloads pinned deps)"
-          echo "  xmake f --nix=y      build using nix:: packages"
-          echo "  make                 build with plain make"
+          echo "  make                 build for nix / pkg-config deps"
         '';
       };
     };
