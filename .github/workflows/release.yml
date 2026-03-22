@@ -186,7 +186,9 @@ jobs:
       with:
         tag_name: ${{ needs.prepare-release.outputs.tag_name }}
         target_commitish: ${{ github.sha }}
-        files: artifacts/*.tar.gz
+        files: |
+          artifacts/*.AppImage
+          artifacts/*.tar.gz
         body: |
           ## ani2xcursor v${{ needs.prepare-release.outputs.version }}
 
