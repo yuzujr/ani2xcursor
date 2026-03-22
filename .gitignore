@@ -4,7 +4,6 @@ build/
 
 # xmake
 .xmake/
-xmake-requires.lock
 
 # test
 example/
