@@ -145,33 +145,11 @@ jobs:
         path: ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-${{ matrix.arch }}.AppImage
         if-no-files-found: error
 
-  package-source:
-    name: Package source
-    needs: prepare-release
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Build source archive
-      run: |
-        set -euo pipefail
-        ASSET="ani2xcursor-v${{ needs.prepare-release.outputs.version }}-src.tar.gz"
-        bash scripts/build-source-archive.sh "${{ needs.prepare-release.outputs.version }}" "$ASSET"
-
-    - name: Upload source artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: release-source
-        path: ani2xcursor-v${{ needs.prepare-release.outputs.version }}-src.tar.gz
-        if-no-files-found: error
-
   publish-release:
     runs-on: ubuntu-latest
     needs:
       - prepare-release
       - build
-      - package-source
 
     steps:
     - name: Download release artifacts
@@ -186,9 +164,7 @@ jobs:
       with:
         tag_name: ${{ needs.prepare-release.outputs.tag_name }}
         target_commitish: ${{ github.sha }}
-        files: |
-          artifacts/*.AppImage
-          artifacts/*.tar.gz
+        files: artifacts/*.AppImage
         body: |
           ## ani2xcursor v${{ needs.prepare-release.outputs.version }}
 
@@ -198,7 +174,6 @@ jobs:
 
           - `ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-x86_64.AppImage`
           - `ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-aarch64.AppImage`
-          - `ani2xcursor-v${{ needs.prepare-release.outputs.version }}-src.tar.gz`
 
           ### Installation
 
