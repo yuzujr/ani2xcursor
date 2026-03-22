@@ -135,15 +135,25 @@ If a role is left empty, its current sizes are preserved.
 
 ## Enable Theme
 
-**GNOME/GTK:**
+**GNOME:**
 ```bash
 gsettings set org.gnome.desktop.interface cursor-theme 'ThemeName'
+```
+
+**XFCE:**
+Use Settings Manager -> Mouse and Touchpad -> Theme, or run:
+```bash
+xfconf-query -c xsettings -p /Gtk/CursorThemeName -s ThemeName
+xfconf-query -c xsettings -p /Gtk/CursorThemeSize -s 24
 ```
 
 **KDE Plasma:**
 ```bash
 plasma-apply-cursortheme ThemeName
 ```
+
+**LXQt:**
+Use `lxqt-config-appearance` and select the cursor theme there. On X11, the `~/.Xresources` settings below are also relevant.
 
 **Niri:**
 Add to `~/.config/niri/config.kdl`:
