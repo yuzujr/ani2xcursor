@@ -184,23 +184,13 @@ jobs:
           ./ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-<arch>.AppImage --version
           ```
 
-          Optional system-wide install:
-
-          ```bash
-          sudo install -Dm755 ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-<arch>.AppImage /usr/local/bin/ani2xcursor
-          ```
-
           If FUSE is unavailable on your system:
 
           ```bash
           APPIMAGE_EXTRACT_AND_RUN=1 ./ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-<arch>.AppImage --version
           ```
 
-          ### Usage
-
-          ```bash
-          ani2xcursor /path/to/cursor/folder
-          ```
+          On NixOS, run it with `appimage-run`.
 
           See [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) for detailed documentation.
         draft: false
