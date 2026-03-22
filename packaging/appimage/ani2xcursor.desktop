@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=ani2xcursor
+Comment=Convert Windows animated cursors to Linux Xcursor themes
+Exec=ani2xcursor
+Icon=ani2xcursor
+Terminal=true
+NoDisplay=true
+Categories=Utility;Graphics;

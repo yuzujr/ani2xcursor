@@ -61,8 +61,8 @@ jobs:
       matrix:
         include:
           - arch: x86_64
-            runner: ubuntu-latest
-          - arch: arm64
+            runner: ubuntu-24.04
+          - arch: aarch64
             runner: ubuntu-24.04-arm
 
     steps:
@@ -71,7 +71,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libxcursor-dev libx11-dev libspdlog-dev libfmt-dev libstb-dev gettext locales
+        sudo apt-get install -y libxcursor-dev libx11-dev libspdlog-dev libfmt-dev libstb-dev gettext locales squashfs-tools
         sudo locale-gen en_US.UTF-8 zh_CN.UTF-8
 
     - name: Validate translation files
@@ -85,6 +85,17 @@ jobs:
       run: |
         mkdir -p build/locale/zh_CN/LC_MESSAGES
         msgfmt -o build/locale/zh_CN/LC_MESSAGES/ani2xcursor.mo locale/zh_CN.po
+
+    - name: Download AppImage tools
+      run: |
+        set -euo pipefail
+        curl -L -o linuxdeploy.AppImage \
+          "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${{ matrix.arch }}.AppImage"
+        curl -L -o appimagetool.AppImage \
+          "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${{ matrix.arch }}.AppImage"
+        curl -L -o runtime \
+          "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-${{ matrix.arch }}"
+        chmod +x linuxdeploy.AppImage appimagetool.AppImage
 
     - name: Build test binary
       run: |
@@ -116,24 +127,43 @@ jobs:
         echo "$HELP_EN" | grep -q "^Usage:"
         echo "$HELP_ZH" | grep -q "用法"
 
-    - name: Package binary
+    - name: Package AppImage
       run: |
         set -euo pipefail
-        ASSET="ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-${{ matrix.arch }}.tar.gz"
-
-        mkdir -p release/share
-        cp build/ani2xcursor release/ani2xcursor
-        cp README.md LICENSE release/
-        cp -r completions release/
-        cp -r build/locale release/share/
-
-        tar -czf "$ASSET" -C release .
+        bash scripts/build-appimage.sh \
+          "${{ matrix.arch }}" \
+          "${{ needs.prepare-release.outputs.version }}" \
+          "$PWD/linuxdeploy.AppImage" \
+          "$PWD/appimagetool.AppImage" \
+          "ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-${{ matrix.arch }}.AppImage" \
+          "$PWD/runtime"
 
     - name: Upload release artifact
       uses: actions/upload-artifact@v4
       with:
         name: release-${{ matrix.arch }}
-        path: ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-${{ matrix.arch }}.tar.gz
+        path: ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-${{ matrix.arch }}.AppImage
+        if-no-files-found: error
+
+  package-source:
+    name: Package source
+    needs: prepare-release
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build source archive
+      run: |
+        set -euo pipefail
+        ASSET="ani2xcursor-v${{ needs.prepare-release.outputs.version }}-src.tar.gz"
+        bash scripts/build-source-archive.sh "${{ needs.prepare-release.outputs.version }}" "$ASSET"
+
+    - name: Upload source artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-source
+        path: ani2xcursor-v${{ needs.prepare-release.outputs.version }}-src.tar.gz
         if-no-files-found: error
 
   publish-release:
@@ -141,6 +171,7 @@ jobs:
     needs:
       - prepare-release
       - build
+      - package-source
 
     steps:
     - name: Download release artifacts
@@ -163,18 +194,29 @@ jobs:
 
           ### Assets
 
-          - `ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-x86_64.tar.gz`
-          - `ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-arm64.tar.gz`
+          - `ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-x86_64.AppImage`
+          - `ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-aarch64.AppImage`
+          - `ani2xcursor-v${{ needs.prepare-release.outputs.version }}-src.tar.gz`
 
           ### Installation
 
-          Extract the archive for your CPU architecture, then install the binary and locale files:
+          Download the AppImage for your CPU architecture, make it executable, and run it:
 
           ```bash
-          tar -xzf ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-<arch>.tar.gz
-          sudo install -Dm755 ani2xcursor /usr/local/bin/ani2xcursor
-          sudo mkdir -p /usr/local/share/locale
-          sudo cp -r share/locale/* /usr/local/share/locale/
+          chmod +x ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-<arch>.AppImage
+          ./ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-<arch>.AppImage --version
+          ```
+
+          Optional system-wide install:
+
+          ```bash
+          sudo install -Dm755 ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-<arch>.AppImage /usr/local/bin/ani2xcursor
+          ```
+
+          If FUSE is unavailable on your system:
+
+          ```bash
+          APPIMAGE_EXTRACT_AND_RUN=1 ./ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-<arch>.AppImage --version
           ```
 
           ### Usage

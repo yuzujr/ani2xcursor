@@ -20,11 +20,30 @@ Convert Windows animated cursor themes (.ani/.cur) to Linux Xcursor format.
 ## Installation
 
 ### Releases
-Install from [releases](https://github.com/yuzujr/ani2xcursor/releases).
+Download an AppImage from [releases](https://github.com/yuzujr/ani2xcursor/releases).
+
+Make it executable and run it directly:
+
+```bash
+chmod +x ani2xcursor-v<version>-linux-<arch>.AppImage
+./ani2xcursor-v<version>-linux-<arch>.AppImage --version
+```
+
+Optional install:
+
+```bash
+sudo install -Dm755 ani2xcursor-v<version>-linux-<arch>.AppImage /usr/local/bin/ani2xcursor
+```
+
+If FUSE is unavailable on your system:
+
+```bash
+APPIMAGE_EXTRACT_AND_RUN=1 ./ani2xcursor-v<version>-linux-<arch>.AppImage --version
+```
 
 ### Arch Linux (AUR)
-* `ani2xcursor` — build from source (xmake)
-* `ani2xcursor-bin` — prebuilt from Releases
+* `ani2xcursor` — build from source
+* `ani2xcursor-bin` — extracted from the release AppImage
 
 Install one of them:
 
@@ -66,11 +85,23 @@ nix run github:yuzujr/ani2xcursor -- /path/to/cursor/folder
 
 ## Build
 
+### xmake
+
 ```bash
 xmake
 ```
 
-Requirements: Linux, xmake
+Requirements: Linux, `xmake`, a C++20 compiler, and `msgfmt` from gettext.
+`xmake` downloads pinned third-party dependencies for local development builds.
+
+### make
+
+```bash
+make
+sudo make install PREFIX=/usr/local
+```
+
+Requirements: Linux, a C++20 compiler, `pkg-config`, `msgfmt` from gettext, and the development packages for `spdlog`, `fmt`, `stb`, `libXcursor`, and `libX11`.
 
 ## Usage
 

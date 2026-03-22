@@ -5,65 +5,80 @@
   outputs =
     { self, nixpkgs }:
     let
-      system = "x86_64-linux";
-      projectVersion = nixpkgs.lib.removeSuffix "\n" (builtins.readFile ./VERSION);
-      pkgs = nixpkgs.legacyPackages.${system};
+      lib = nixpkgs.lib;
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
+      forAllSystems = lib.genAttrs systems;
+      projectVersion = lib.removeSuffix "\n" (builtins.readFile ./VERSION);
     in
     {
+      packages = forAllSystems (system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        {
+          default = pkgs.stdenv.mkDerivation {
+            pname = "ani2xcursor";
+            version = projectVersion;
+            src = ./.;
 
-      packages.${system}.default = pkgs.stdenv.mkDerivation {
-        pname = "ani2xcursor";
-        version = projectVersion;
-        src = ./.;
+            nativeBuildInputs = with pkgs; [
+              clang
+              pkg-config
+              gettext # msgfmt for compiling translations
+            ];
+            buildInputs = with pkgs; [
+              spdlog
+              stb
+              libxcursor
+              libX11
+            ];
 
-        nativeBuildInputs = with pkgs; [
-          clang
-          pkg-config
-          gettext # msgfmt for compiling translations
-        ];
-        buildInputs = with pkgs; [
-          spdlog
-          stb
-          libxcursor
-          libX11
-        ];
+            buildPhase = ''
+              make -j$NIX_BUILD_CORES
+            '';
 
-        buildPhase = ''
-          make -j$NIX_BUILD_CORES
-        '';
+            installPhase = ''
+              runHook preInstall
+              make install PREFIX=$out
+              runHook postInstall
+            '';
 
-        installPhase = ''
-          runHook preInstall
-          make install PREFIX=$out
-          runHook postInstall
-        '';
+            meta = {
+              description = "Convert Windows animated cursors (.ani/.cur) to Xcursor themes";
+              homepage = "https://github.com/yuzujr/ani2xcursor";
+              license = lib.licenses.mit;
+              platforms = lib.platforms.linux;
+              mainProgram = "ani2xcursor";
+            };
+          };
+        });
 
-        meta = {
-          description = "Convert Windows animated cursors (.ani/.cur) to Xcursor themes";
-          homepage = "https://github.com/yuzujr/ani2xcursor";
-          license = pkgs.lib.licenses.mit;
-          platforms = pkgs.lib.platforms.linux;
-          mainProgram = "ani2xcursor";
-        };
-      };
-
-      devShells.${system}.default = pkgs.mkShell.override { stdenv = pkgs.clangStdenv; } {
-        packages = with pkgs; [
-          xmake
-          pkg-config
-          clang-tools
-          gettext
-          gdb
-          spdlog
-          stb
-          libxcursor
-          libX11
-        ];
-        shellHook = ''
-          echo "ani2xcursor dev shell"
-          echo "  xmake                build (downloads pinned deps)"
-          echo "  make                 build for nix / pkg-config deps"
-        '';
-      };
+      devShells = forAllSystems (system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        {
+          default = pkgs.mkShell.override { stdenv = pkgs.clangStdenv; } {
+            packages = with pkgs; [
+              xmake
+              pkg-config
+              clang-tools
+              gettext
+              gdb
+              spdlog
+              stb
+              libxcursor
+              libX11
+            ];
+            shellHook = ''
+              echo "ani2xcursor dev shell"
+              echo "  xmake                build (downloads pinned deps)"
+              echo "  make                 build for nix / pkg-config deps"
+            '';
+          };
+        });
     };
 }

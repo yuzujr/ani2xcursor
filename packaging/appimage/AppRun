@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+HERE="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+LIBDIR="$HERE/usr/lib"
+
+if [ -d "$LIBDIR" ]; then
+    export LD_LIBRARY_PATH="$LIBDIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+fi
+
+exec "$HERE/usr/bin/ani2xcursor" "$@"
