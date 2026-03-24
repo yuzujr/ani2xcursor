@@ -35,6 +35,10 @@ $(OBJDIR):
 
 install: all
 	install -Dm755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/ani2xcursor
+	install -Dm644 packaging/appimage/ani2xcursor.desktop \
+	  $(DESTDIR)$(PREFIX)/share/applications/ani2xcursor.desktop
+	install -Dm644 packaging/appimage/ani2xcursor.svg \
+	  $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps/ani2xcursor.svg
 	install -Dm644 completions/bash/ani2xcursor \
 	  $(DESTDIR)$(PREFIX)/share/bash-completion/completions/ani2xcursor
 	install -Dm644 completions/zsh/_ani2xcursor \
