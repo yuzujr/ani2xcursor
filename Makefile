@@ -2,7 +2,7 @@
 # For development, xmake is the primary build system.
 
 CXX      ?= c++
-CXXFLAGS ?= -std=c++20 -Wall -Wextra -O2
+CXXFLAGS += -std=c++20 -Wall -Wextra -O2
 PREFIX   ?= /usr
 VERSION  := $(strip $(shell cat VERSION))
 BUILDDIR := build
