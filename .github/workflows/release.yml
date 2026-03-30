@@ -2,13 +2,16 @@ name: Release
 
 on:
   push:
+    branches: [ main, master, dev, develop ]
     tags:
       - 'v*'
+  pull_request:
+    branches: [ main, master, dev, develop ]
   workflow_dispatch:
     inputs:
       tag:
         description: 'Tag to release (e.g., v1.0.0)'
-        required: true
+        required: false
         type: string
 
 permissions:
@@ -18,6 +21,8 @@ jobs:
   prepare-release:
     runs-on: ubuntu-latest
     outputs:
+      artifact_version: ${{ steps.meta.outputs.artifact_version }}
+      is_release: ${{ steps.meta.outputs.is_release }}
       tag_name: ${{ steps.meta.outputs.tag_name }}
       version: ${{ steps.meta.outputs.version }}
 
@@ -41,14 +46,25 @@ jobs:
     - name: Resolve release metadata
       id: meta
       run: |
-        if [ -n "${{ github.event.inputs.tag }}" ]; then
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag }}" ]; then
           TAG_NAME="${{ github.event.inputs.tag }}"
-        else
+          VERSION="${TAG_NAME#v}"
+          ARTIFACT_VERSION="${VERSION}"
+          IS_RELEASE=true
+        elif [ "${{ github.ref_type }}" = "tag" ]; then
           TAG_NAME="${GITHUB_REF_NAME}"
+          VERSION="${TAG_NAME#v}"
+          ARTIFACT_VERSION="${VERSION}"
+          IS_RELEASE=true
+        else
+          TAG_NAME=""
+          VERSION="$(cat VERSION)"
+          ARTIFACT_VERSION="${VERSION}+$(printf '%s' "${GITHUB_SHA}" | cut -c1-7)"
+          IS_RELEASE=false
         fi
 
-        VERSION="${TAG_NAME#v}"
-
+        echo "artifact_version=${ARTIFACT_VERSION}" >> "$GITHUB_OUTPUT"
+        echo "is_release=${IS_RELEASE}" >> "$GITHUB_OUTPUT"
         echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
         echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
@@ -56,6 +72,8 @@ jobs:
     name: Build (${{ matrix.arch }})
     needs: prepare-release
     runs-on: ${{ matrix.runner }}
+    env:
+      XMAKE_ROOT: y
     container:
       image: ${{ matrix.container_image }}
     defaults:
@@ -89,9 +107,7 @@ jobs:
           desktop-file-utils \
           file \
           gettext \
-          libfmt-dev \
-          libspdlog-dev \
-          libstb-dev \
+          git \
           libx11-dev \
           libxcursor-dev \
           locales \
@@ -99,17 +115,26 @@ jobs:
           squashfs-tools
         locale-gen en_US.UTF-8 zh_CN.UTF-8
 
+    - name: Set up xmake
+      uses: xmake-io/github-action-setup-xmake@v1
+      with:
+        xmake-version: latest
+        package-cache: true
+
     - name: Show build environment
       run: |
         uname -a
-        ldd --version | head -n 1
+        ldd --version | sed -n '1p'
+        xmake --version | sed -n '1p'
 
     - name: Validate translation files
       run: |
         msgfmt --check --check-format -o /tmp/ani2xcursor-zh_CN.mo locale/zh_CN.po
 
     - name: Build
-      run: make
+      run: |
+        xmake f -y -m release
+        xmake build -y ani2xcursor ani2xcursor_test
 
     - name: Prepare locale artifacts
       run: |
@@ -127,15 +152,6 @@ jobs:
           "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-${{ matrix.arch }}"
         chmod +x linuxdeploy.AppImage appimagetool.AppImage
 
-    - name: Build test binary
-      run: |
-        c++ -std=c++20 -Wall -Wextra -O2 -Iinclude \
-          $(pkg-config --cflags spdlog xcursor stb) \
-          tests/test_inf_parser.cpp src/cli.cpp src/inf_parser.cpp src/riff_reader.cpp src/ani_parser.cpp src/ico_cur_decoder.cpp src/xcursor_writer.cpp \
-          -DANI2XCURSOR_VERSION=\"$(cat VERSION)\" \
-          -o build/ani2xcursor_test \
-          $(pkg-config --libs spdlog xcursor) -lpthread
-
     - name: Run tests
       run: ./build/ani2xcursor_test
 
@@ -146,8 +162,8 @@ jobs:
         locale -a
 
         VERSION="$("$BIN" --version)"
-        HELP_EN="$(LC_ALL=en_US.UTF-8 LANGUAGE=en_US:en "$BIN" --help | head -n 1)"
-        HELP_ZH="$(LC_ALL=zh_CN.UTF-8 LANGUAGE=zh_CN:en "$BIN" --help | head -n 1)"
+        HELP_EN="$(LC_ALL=en_US.UTF-8 LANGUAGE=en_US:en "$BIN" --help | sed -n '1p')"
+        HELP_ZH="$(LC_ALL=zh_CN.UTF-8 LANGUAGE=zh_CN:en "$BIN" --help | sed -n '1p')"
 
         echo "VERSION=$VERSION"
         echo "HELP_EN=$HELP_EN"
@@ -165,7 +181,7 @@ jobs:
           "${{ needs.prepare-release.outputs.version }}" \
           "$PWD/linuxdeploy.AppImage" \
           "$PWD/appimagetool.AppImage" \
-          "ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-${{ matrix.arch }}.AppImage" \
+          "ani2xcursor-v${{ needs.prepare-release.outputs.artifact_version }}-linux-${{ matrix.arch }}.AppImage" \
           "$PWD/runtime"
 
     - name: Check glibc baseline
@@ -174,15 +190,25 @@ jobs:
         mapfile -d '' files < <(find build AppDir -type f -print0)
         bash scripts/check-glibc-baseline.sh "${{ matrix.glibc_baseline }}" "${files[@]}"
 
+    - name: Upload build artifact
+      if: ${{ needs.prepare-release.outputs.is_release != 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-${{ matrix.arch }}
+        path: ani2xcursor-v${{ needs.prepare-release.outputs.artifact_version }}-linux-${{ matrix.arch }}.AppImage
+        if-no-files-found: error
+
     - name: Upload release artifact
+      if: ${{ needs.prepare-release.outputs.is_release == 'true' }}
       uses: actions/upload-artifact@v4
       with:
         name: release-${{ matrix.arch }}
-        path: ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-${{ matrix.arch }}.AppImage
+        path: ani2xcursor-v${{ needs.prepare-release.outputs.artifact_version }}-linux-${{ matrix.arch }}.AppImage
         if-no-files-found: error
 
   publish-release:
     runs-on: ubuntu-latest
+    if: ${{ needs.prepare-release.outputs.is_release == 'true' }}
     needs:
       - prepare-release
       - build

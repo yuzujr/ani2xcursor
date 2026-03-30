@@ -25,29 +25,28 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libxcursor-dev libx11-dev libspdlog-dev libfmt-dev libstb-dev gettext locales
+        sudo apt-get install -y build-essential ca-certificates curl gettext git libxcursor-dev libx11-dev locales
         sudo locale-gen en_US.UTF-8 zh_CN.UTF-8
+
+    - name: Set up xmake
+      uses: xmake-io/github-action-setup-xmake@v1
+      with:
+        xmake-version: latest
+        package-cache: true
 
     - name: Validate translation files
       run: |
         msgfmt --check --check-format -o /tmp/ani2xcursor-zh_CN.mo locale/zh_CN.po
 
     - name: Build
-      run: make
+      run: |
+        xmake f -y -m release
+        xmake build -y ani2xcursor ani2xcursor_test
 
     - name: Prepare locale artifacts
       run: |
         mkdir -p build/locale/zh_CN/LC_MESSAGES
         msgfmt -o build/locale/zh_CN/LC_MESSAGES/ani2xcursor.mo locale/zh_CN.po
-
-    - name: Build test binary
-      run: |
-        c++ -std=c++20 -Wall -Wextra -O2 -Iinclude \
-          $(pkg-config --cflags spdlog xcursor stb) \
-          tests/test_inf_parser.cpp src/cli.cpp src/inf_parser.cpp src/riff_reader.cpp src/ani_parser.cpp src/ico_cur_decoder.cpp src/xcursor_writer.cpp \
-          -DANI2XCURSOR_VERSION=\"$(cat VERSION)\" \
-          -o build/ani2xcursor_test \
-          $(pkg-config --libs spdlog xcursor) -lpthread
 
     - name: Run tests
       run: ./build/ani2xcursor_test
@@ -59,8 +58,8 @@ jobs:
         locale -a
 
         VERSION="$("$BIN" --version)"
-        HELP_EN="$(LC_ALL=en_US.UTF-8 LANGUAGE=en_US:en "$BIN" --help | head -n 1)"
-        HELP_ZH="$(LC_ALL=zh_CN.UTF-8 LANGUAGE=zh_CN:en "$BIN" --help | head -n 1)"
+        HELP_EN="$(LC_ALL=en_US.UTF-8 LANGUAGE=en_US:en "$BIN" --help | sed -n '1p')"
+        HELP_ZH="$(LC_ALL=zh_CN.UTF-8 LANGUAGE=zh_CN:en "$BIN" --help | sed -n '1p')"
         ERR_ZH="$(LC_ALL=zh_CN.UTF-8 LANGUAGE=zh_CN:en "$BIN" /no/such/path 2>&1 || true)"
 
         echo "VERSION=$VERSION"
