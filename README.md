@@ -21,6 +21,7 @@ Convert Windows animated cursor themes (.ani/.cur) to Linux Xcursor format.
 
 ### Releases
 Download an AppImage from [releases](https://github.com/yuzujr/ani2xcursor/releases).
+Release AppImages are built in a Debian 11 userspace so they remain compatible with distributions that provide `glibc 2.31` or newer.
 
 ### Arch Linux (AUR)
 * `ani2xcursor` — build from source

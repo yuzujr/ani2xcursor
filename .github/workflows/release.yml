@@ -56,23 +56,53 @@ jobs:
     name: Build (${{ matrix.arch }})
     needs: prepare-release
     runs-on: ${{ matrix.runner }}
+    container:
+      image: ${{ matrix.container_image }}
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
         include:
           - arch: x86_64
             runner: ubuntu-24.04
+            container_image: debian:11
+            glibc_baseline: "2.31"
           - arch: aarch64
             runner: ubuntu-24.04-arm
+            container_image: debian:11
+            glibc_baseline: "2.31"
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y libxcursor-dev libx11-dev libspdlog-dev libfmt-dev libstb-dev gettext locales squashfs-tools
-        sudo locale-gen en_US.UTF-8 zh_CN.UTF-8
+        apt-get update
+        apt-get install -y --no-install-recommends \
+          bash \
+          binutils \
+          build-essential \
+          ca-certificates \
+          curl \
+          desktop-file-utils \
+          file \
+          gettext \
+          libfmt-dev \
+          libspdlog-dev \
+          libstb-dev \
+          libx11-dev \
+          libxcursor-dev \
+          locales \
+          pkg-config \
+          squashfs-tools
+        locale-gen en_US.UTF-8 zh_CN.UTF-8
+
+    - name: Show build environment
+      run: |
+        uname -a
+        ldd --version | head -n 1
 
     - name: Validate translation files
       run: |
@@ -138,6 +168,12 @@ jobs:
           "ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-${{ matrix.arch }}.AppImage" \
           "$PWD/runtime"
 
+    - name: Check glibc baseline
+      run: |
+        set -euo pipefail
+        mapfile -d '' files < <(find build AppDir -type f -print0)
+        bash scripts/check-glibc-baseline.sh "${{ matrix.glibc_baseline }}" "${files[@]}"
+
     - name: Upload release artifact
       uses: actions/upload-artifact@v4
       with:
@@ -189,6 +225,8 @@ jobs:
           ```bash
           APPIMAGE_EXTRACT_AND_RUN=1 ./ani2xcursor-v${{ needs.prepare-release.outputs.version }}-linux-<arch>.AppImage --version
           ```
+
+          The AppImages are built in a Debian 11 userspace, so they should stay compatible with systems that provide `glibc 2.31` or newer.
 
           On NixOS, run it with `appimage-run`.
 
