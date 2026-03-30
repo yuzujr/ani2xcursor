@@ -134,7 +134,8 @@ jobs:
     - name: Build
       run: |
         xmake f -y -m release
-        xmake build -y ani2xcursor ani2xcursor_test
+        xmake build -y ani2xcursor
+        xmake build -y ani2xcursor_test
 
     - name: Prepare locale artifacts
       run: |
