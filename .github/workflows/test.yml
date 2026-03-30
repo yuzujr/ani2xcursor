@@ -26,7 +26,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential ca-certificates curl gettext git libxcursor-dev libx11-dev locales
-        sudo locale-gen en_US.UTF-8 zh_CN.UTF-8
+        sudo localedef -i en_US -f UTF-8 en_US.UTF-8
+        sudo localedef -i zh_CN -f UTF-8 zh_CN.UTF-8
 
     - name: Set up xmake
       uses: xmake-io/github-action-setup-xmake@v1
