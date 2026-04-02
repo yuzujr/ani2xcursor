@@ -1,0 +1,167 @@
+{
+    __meta__ = {
+        version = "1.0"
+    },
+    ["linux|x86_64"] = {
+        ["ca-certificates#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "20250131"
+        },
+        ["libffi#0b3b0fcf"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "3.4.8"
+        },
+        ["libpthread-stubs#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "0.5"
+        },
+        ["libx11#a0c24696"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "1.8.13"
+        },
+        ["libxau#16fb575b"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "1.0.12"
+        },
+        ["libxcb#16fb575b"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "1.17.0"
+        },
+        ["libxcursor 1.2.3#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "1.2.3"
+        },
+        ["libxdmcp#16fb575b"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "1.1.5"
+        },
+        ["libxfixes#a0c24696"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "6.0.1"
+        },
+        ["libxrender#a0c24696"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "0.9.12"
+        },
+        ["openssl >=1.1.1-a#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "1.1.1-w"
+        },
+        ["pkg-config#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "0.29.2"
+        },
+        ["python 3.x#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "3.13.11"
+        },
+        ["spdlog v1.16.0#a28dfe71"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "v1.16.0"
+        },
+        ["stb 2025.03.14#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "2025.03.14"
+        },
+        ["util-macros#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "1.20.0"
+        },
+        ["xcb-proto#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "1.17.0"
+        },
+        ["xorgproto#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "2023.2"
+        },
+        ["xtrans#f56260b5"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "1.6.0"
+        },
+        ["zlib#0b3b0fcf"] = {
+            repo = {
+                branch = "master",
+                commit = "7244594cb23509183b0457a0a8bdbd40f3c20bb3",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "v1.3.2"
+        }
+    }
+}
