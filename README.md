@@ -109,7 +109,7 @@ ani2xcursor /path/to/cursor/folder
 
 Manifest controls both cursor role mapping and per-role size customization.
 
-If `Install.inf` is missing, ani2xcursor will use this mode automatically.
+If no theme `.inf` file is found, ani2xcursor will use this mode automatically.
 You can also force this mode with `--manifest`:
 
 ```
@@ -119,7 +119,7 @@ You can also force this mode with `--manifest`:
     └── *.png
 ```
 
-Edit `manifest.toml` and re-run the command. If `manifest.toml` exists, it takes priority over `Install.inf`,
+Edit `manifest.toml` and re-run the command. If `manifest.toml` exists, it takes priority over any theme `.inf` file,
 and its size settings override `--size`.
 
 ### Manifest sizes
@@ -142,11 +142,15 @@ gsettings set org.gnome.desktop.interface cursor-theme 'ThemeName'
 ```
 
 **XFCE:**
-Use Settings Manager -> Mouse and Touchpad -> Theme, or run:
+This program installs cursor themes in ~/.local/share/icons, but XFCE’s cursor settings only look in ~/.icons and /usr/share/icons. You can either move the generated theme to ~/.icons, or create a symlink:
+
 ```bash
-xfconf-query -c xsettings -p /Gtk/CursorThemeName -s ThemeName
-xfconf-query -c xsettings -p /Gtk/CursorThemeSize -s 24
+mv ~/.local/share/icons/ThemeName ~/.icons/
+# or
+ln -s ~/.local/share/icons/ThemeName ~/.icons/ThemeName
 ```
+
+XFCE Settings -> Mouse and Touchpad -> Theme
 
 **KDE Plasma:**
 ```bash

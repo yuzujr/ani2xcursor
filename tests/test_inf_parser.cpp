@@ -10,6 +10,7 @@
 
 #include "cli.h"
 #include "inf_parser.h"
+#include "path_utils.h"
 #include "xcursor_writer.h"
 
 // ============================================================================
@@ -432,6 +433,114 @@ void test_xcursor_diagonal_primary_path_collision() {
 }
 
 // ============================================================================
+// Test 12: find_inf_file supports localized filenames
+// ============================================================================
+void test_find_inf_file_localized_name() {
+    std::cout << "Test: find_inf_file accepts localized .inf names...\n";
+
+    namespace fs = std::filesystem;
+
+    const auto temp_dir = fs::temp_directory_path() / "ani2xcursor_test_find_inf_localized";
+    const auto localized_name = fs::path(std::u8string(u8"\u5b89\u88c5.inf"));
+
+    std::error_code ec;
+    fs::remove_all(temp_dir, ec);
+    fs::create_directories(temp_dir);
+
+    try {
+        std::ofstream(temp_dir / localized_name) << R"(
+[DefaultInstall]
+AddReg = Wreg
+
+[Wreg]
+HKCU,"Control Panel\Cursors",Arrow,0x00020000,"%10%\Theme\Arrow.ani"
+)";
+
+        const auto found = ani2xcursor::find_inf_file(temp_dir);
+        assert(found.has_value());
+        assert(found->filename() == localized_name);
+
+        fs::remove_all(temp_dir, ec);
+    } catch (...) {
+        fs::remove_all(temp_dir, ec);
+        throw;
+    }
+
+    std::cout << "  PASSED!\n";
+}
+
+// ============================================================================
+// Test 13: find_inf_file prefers installer-like INF when several exist
+// ============================================================================
+void test_find_inf_file_prefers_installer_like_candidate() {
+    std::cout << "Test: find_inf_file prefers installer-like .inf candidates...\n";
+
+    namespace fs = std::filesystem;
+
+    const auto temp_dir = fs::temp_directory_path() / "ani2xcursor_test_find_inf_scoring";
+    const auto installer_name = fs::path(std::u8string(u8"\u53f3\u952e\u5b89\u88c5.inf"));
+
+    std::error_code ec;
+    fs::remove_all(temp_dir, ec);
+    fs::create_directories(temp_dir);
+
+    try {
+        std::ofstream(temp_dir / "readme.inf") << "[Version]\nsignature=\"$CHICAGO$\"\n";
+        std::ofstream(temp_dir / installer_name) << R"(
+[DefaultInstall]
+CopyFiles = Scheme.Cur
+AddReg = Scheme.Reg, Wreg
+
+[Wreg]
+HKCU,"Control Panel\Cursors",Arrow,0x00020000,"%10%\Theme\Arrow.ani"
+)";
+
+        const auto found = ani2xcursor::find_inf_file(temp_dir);
+        assert(found.has_value());
+        assert(found->filename() == installer_name);
+
+        fs::remove_all(temp_dir, ec);
+    } catch (...) {
+        fs::remove_all(temp_dir, ec);
+        throw;
+    }
+
+    std::cout << "  PASSED!\n";
+}
+
+// ============================================================================
+// Test 14: find_inf_file still prefers Install.inf when present
+// ============================================================================
+void test_find_inf_file_prefers_install_inf() {
+    std::cout << "Test: find_inf_file still prefers Install.inf...\n";
+
+    namespace fs = std::filesystem;
+
+    const auto temp_dir = fs::temp_directory_path() / "ani2xcursor_test_find_inf_install";
+    const auto localized_name = fs::path(std::u8string(u8"\u53f3\u952e\u5b89\u88c5.inf"));
+
+    std::error_code ec;
+    fs::remove_all(temp_dir, ec);
+    fs::create_directories(temp_dir);
+
+    try {
+        std::ofstream(temp_dir / "INSTALL.INF") << "[DefaultInstall]\nAddReg = Wreg\n";
+        std::ofstream(temp_dir / localized_name) << "[DefaultInstall]\nAddReg = Wreg\n";
+
+        const auto found = ani2xcursor::find_inf_file(temp_dir);
+        assert(found.has_value());
+        assert(found->filename() == fs::path("INSTALL.INF"));
+
+        fs::remove_all(temp_dir, ec);
+    } catch (...) {
+        fs::remove_all(temp_dir, ec);
+        throw;
+    }
+
+    std::cout << "  PASSED!\n";
+}
+
+// ============================================================================
 // Main
 // ============================================================================
 int main() {
@@ -451,6 +560,9 @@ int main() {
         test_version_flag();
         test_xcursor_diagonal_aliases();
         test_xcursor_diagonal_primary_path_collision();
+        test_find_inf_file_localized_name();
+        test_find_inf_file_prefers_installer_like_candidate();
+        test_find_inf_file_prefers_install_inf();
 
         std::cout << "\n=== All tests passed! ===\n\n";
         return 0;

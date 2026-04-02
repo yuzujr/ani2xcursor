@@ -14,7 +14,7 @@ void print_usage(const char* program) {
         << _("Usage: ") << program << _(" <input_dir> [options]\n\n")
         << _("Convert Windows Animated Cursors (.ani) to Linux Xcursor theme.\n\n")
         << _("Arguments:\n")
-        << _("  <input_dir>               Directory containing Install.inf and .ani "
+        << _("  <input_dir>               Directory containing a theme .inf file and .ani "
              "files\n\n")
         << _("Options:\n") << _("  --out, -o <dir>           Output directory (default: ./out)\n")
         << _("  --format, -f <mode>       Output format: xcursor (default) or source\n")

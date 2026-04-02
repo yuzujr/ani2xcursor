@@ -122,21 +122,9 @@ bool build_mappings_from_manifest(const ani2xcursor::Args& args,
     return !missing_required;
 }
 
-std::optional<fs::path> find_inf_path(const fs::path& input_dir) {
-    auto inf_path = input_dir / "Install.inf";
-    if (fs::exists(inf_path)) {
-        return inf_path;
-    }
-    inf_path = input_dir / "install.inf";
-    if (fs::exists(inf_path)) {
-        return inf_path;
-    }
-    return std::nullopt;
-}
-
 int generate_manifest_for_missing_inf(const ani2xcursor::Args& args, const fs::path& manifest_path,
                                       const fs::path& manifest_dir) {
-    spdlog::warn(_("Install.inf not found and manifest.toml not present."));
+    spdlog::warn(_("No theme .inf file found and manifest.toml not present."));
     auto preview_dir = manifest_dir / "previews";
     auto preview_result = ani2xcursor::generate_previews(args.input_dir, preview_dir,
                                                          args.size_filter, args.specific_sizes);
@@ -245,7 +233,7 @@ int main(int argc, char* argv[]) {
                 spdlog::error(spdlog::fmt_lib::runtime(_("Failed to parse {}: {}")), label,
                               e.what());
                 spdlog::warn(spdlog::fmt_lib::runtime(
-                                 _("Falling back to Install.inf because {} could not be parsed")),
+                                 _("Falling back to a theme .inf file because {} could not be parsed")),
                              label);
                 manifest_failed_label = label;
             }
@@ -263,12 +251,12 @@ int main(int argc, char* argv[]) {
                 return 1;
             }
         } else {
-            // Fallback to Install.inf
-            auto inf_path = find_inf_path(args.input_dir);
+            // Fallback to a theme .inf file.
+            auto inf_path = ani2xcursor::find_inf_file(args.input_dir);
             if (!inf_path) {
                 if (manifest_failed_label) {
                     spdlog::error(
-                        spdlog::fmt_lib::runtime(_("Install.inf not found and {} failed to parse")),
+                        spdlog::fmt_lib::runtime(_("No theme .inf file found and {} failed to parse")),
                         *manifest_failed_label);
                     return 1;
                 }

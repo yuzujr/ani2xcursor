@@ -71,7 +71,8 @@ msgstr ""
 
 #: src/cli.cpp:17
 msgid ""
-"  <input_dir>               Directory containing Install.inf and .ani files\n"
+"  <input_dir>               Directory containing a theme .inf file and .ani "
+"files\n"
 "\n"
 msgstr ""
 
@@ -401,7 +402,7 @@ msgstr ""
 
 #: src/main.cpp:218
 #, c++-format
-msgid "Falling back to Install.inf because {} could not be parsed"
+msgid "Falling back to a theme .inf file because {} could not be parsed"
 msgstr ""
 
 #: src/source_writer.cpp:145
@@ -483,12 +484,12 @@ msgid "Input directory does not exist: {}"
 msgstr ""
 
 #: src/main.cpp:138
-msgid "Install.inf not found and manifest.toml not present."
+msgid "No theme .inf file found and manifest.toml not present."
 msgstr ""
 
 #: src/main.cpp:241
 #, c++-format
-msgid "Install.inf not found and {} failed to parse"
+msgid "No theme .inf file found and {} failed to parse"
 msgstr ""
 
 #: src/theme_installer.cpp:32

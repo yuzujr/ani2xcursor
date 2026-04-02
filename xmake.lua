@@ -80,6 +80,7 @@ target("ani2xcursor_test")
     add_files("src/riff_reader.cpp")
     add_files("src/ani_parser.cpp")
     add_files("src/ico_cur_decoder.cpp")
+    add_files("src/path_utils.cpp")
     add_files("src/xcursor_writer.cpp")
     
     add_includedirs("include")

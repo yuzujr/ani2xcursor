@@ -77,10 +77,11 @@ msgstr "  --verbose, -v             启用详细日志\n"
 
 #: src/cli.cpp:17
 msgid ""
-"  <input_dir>               Directory containing Install.inf and .ani files\n"
+"  <input_dir>               Directory containing a theme .inf file and .ani "
+"files\n"
 "\n"
 msgstr ""
-"  <输入目录>                包含 Install.inf 和 .ani 文件的目录\n"
+"  <输入目录>                包含主题 .inf 文件和 .ani 文件的目录\n"
 "\n"
 
 #: src/size_tools.cpp:212
@@ -416,8 +417,8 @@ msgstr "写入预览 PNG 失败"
 
 #: src/main.cpp:218
 #, c++-format
-msgid "Falling back to Install.inf because {} could not be parsed"
-msgstr "因为 {} 无法解析，回退到 Install.inf"
+msgid "Falling back to a theme .inf file because {} could not be parsed"
+msgstr "因为 {} 无法解析，回退到主题 .inf 文件"
 
 #: src/source_writer.cpp:145
 msgid "Frame/delay count mismatch for cursor: "
@@ -498,13 +499,13 @@ msgid "Input directory does not exist: {}"
 msgstr "输入目录不存在：{}"
 
 #: src/main.cpp:138
-msgid "Install.inf not found and manifest.toml not present."
-msgstr "未找到 Install.inf 且 manifest.toml 不存在。"
+msgid "No theme .inf file found and manifest.toml not present."
+msgstr "未找到主题 .inf 文件且 manifest.toml 不存在。"
 
 #: src/main.cpp:241
 #, c++-format
-msgid "Install.inf not found and {} failed to parse"
-msgstr "未找到 Install.inf 且 {} 解析失败"
+msgid "No theme .inf file found and {} failed to parse"
+msgstr "未找到主题 .inf 文件且 {} 解析失败"
 
 #: src/theme_installer.cpp:32
 #, c++-format
