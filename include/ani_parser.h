@@ -16,7 +16,6 @@ namespace fs = std::filesystem;
 // A single frame of an animated cursor
 struct AniFrame {
     std::vector<uint8_t> icon_data;  // Raw ICO/CUR data for this frame
-    uint32_t delay_ms;               // Delay in milliseconds
     uint16_t hotspot_x;
     uint16_t hotspot_y;
     uint32_t width;
@@ -27,6 +26,7 @@ struct AniFrame {
 struct Animation {
     std::vector<AniFrame> frames;
     std::vector<uint32_t> sequence;  // Frame playback order (indices into frames)
+    std::vector<uint32_t> rates;     // Duration of each step in jiffies
     uint32_t num_frames;             // From anih header
     uint32_t num_steps;              // From anih header
     uint32_t display_rate;           // Default rate from anih (jiffies = 1/60 sec)
@@ -66,12 +66,6 @@ private:
     // Parse icon frames from LIST fram chunk
     static std::vector<AniFrame> parse_frames(const RiffReader& reader, const RiffChunk& fram_list,
                                               uint32_t num_frames);
-
-    // Convert jiffies (1/60 sec) to milliseconds
-    static constexpr uint32_t jiffies_to_ms(uint32_t jiffies) {
-        // 1 jiffy = 1/60 second = 16.667 ms
-        return (jiffies * 1000 + 30) / 60;  // Round to nearest
-    }
 
     // Default delay if not specified (10 jiffies = ~167ms)
     static constexpr uint32_t DEFAULT_JIFFIES = 10;

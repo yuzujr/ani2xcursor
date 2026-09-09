@@ -10,6 +10,12 @@
 
 namespace ani2xcursor {
 
+// Convert jiffies (1/60 sec) to milliseconds
+static constexpr uint32_t jiffies_to_ms(uint32_t jiffies) {
+    // 1 jiffy = 1/60 second = 16.667 ms
+    return (jiffies * 1000 + 30) / 60;  // Round to nearest
+}
+
 const AniFrame& Animation::get_step_frame(size_t step) const {
     if (step >= num_steps) {
         throw std::out_of_range(_("Animation step index out of range"));
@@ -31,10 +37,12 @@ uint32_t Animation::get_step_delay_ms(size_t step) const {
     if (step >= num_steps) {
         return 0;
     }
+    if (step >= rates.size()) {
+        // No specific rate information for this step, use the default rate.
+        return jiffies_to_ms(display_rate);
+    }
 
-    // If we have per-frame delays in the frame data, use those
-    const auto& frame = get_step_frame(step);
-    return frame.delay_ms;
+    return jiffies_to_ms(rates[step]);
 }
 
 uint32_t Animation::total_duration_ms() const {
@@ -104,10 +112,9 @@ Animation AniParser::parse_impl(std::span<const uint8_t> data) {
         anim.num_frames, anim.num_steps, anim.display_rate, jiffies_to_ms(anim.display_rate));
 
     // Parse optional rate chunk
-    std::vector<uint32_t> rates;
     if (rate_chunk) {
-        rates = parse_rate(*rate_chunk, anim.num_steps);
-        spdlog::debug("ANI: Found 'rate' chunk with {} entries", rates.size());
+        anim.rates = parse_rate(*rate_chunk, anim.num_steps);
+        spdlog::debug("ANI: Found 'rate' chunk with {} entries", anim.rates.size());
     }
 
     // Parse optional sequence chunk
@@ -125,30 +132,6 @@ Animation AniParser::parse_impl(std::span<const uint8_t> data) {
 
     if (anim.frames.empty()) {
         throw std::runtime_error(_("ANI file contains no frames"));
-    }
-
-    // Apply delays to frames
-    uint32_t default_delay = jiffies_to_ms(anim.display_rate);
-    for (size_t i = 0; i < anim.frames.size(); ++i) {
-        if (i < rates.size()) {
-            anim.frames[i].delay_ms = jiffies_to_ms(rates[i]);
-        } else {
-            anim.frames[i].delay_ms = default_delay;
-        }
-    }
-
-    // If we have a sequence and step-specific rates, apply them
-    // (rates are per-step, not per-frame when sequence exists)
-    if (!anim.sequence.empty() && !rates.empty()) {
-        // Store per-step delays - we'll use them when generating output
-        for (size_t step = 0; step < anim.num_steps && step < rates.size(); ++step) {
-            size_t frame_idx = anim.sequence[step];
-            if (frame_idx < anim.frames.size()) {
-                // Note: This overwrites if same frame used multiple times
-                // That's OK - we query delay via get_step_delay_ms which handles this
-                anim.frames[frame_idx].delay_ms = jiffies_to_ms(rates[step]);
-            }
-        }
     }
 
     spdlog::info(spdlog::fmt_lib::runtime(_("ANI: Parsed {} frames successfully")),
@@ -243,7 +226,6 @@ std::vector<AniFrame> AniParser::parse_frames(const RiffReader& reader, const Ri
         if (chunk.fourcc == "icon") {
             AniFrame frame;
             frame.icon_data.assign(chunk.data.begin(), chunk.data.end());
-            frame.delay_ms = 0;  // Will be set later
             frame.hotspot_x = 0;
             frame.hotspot_y = 0;
             frame.width = 0;
