@@ -107,10 +107,19 @@ jobs:
           > /etc/apt/sources.list
         printf '%s\n' 'Acquire::Check-Valid-Until "false";' \
           > /etc/apt/apt.conf.d/99ani2xcursor-archive
+        set +e
         apt-get \
           -o Acquire::Check-Valid-Until=false \
           -o Acquire::AllowInsecureRepositories=true \
-          update
+          update > /tmp/apt-update.log 2>&1
+        apt_status=$?
+        if [ "$apt_status" -ne 0 ]; then
+          while IFS= read -r line; do
+            echo "::error title=apt-get update::$line"
+          done < /tmp/apt-update.log
+          exit "$apt_status"
+        fi
+        set -e
         apt-get install -y --allow-unauthenticated --no-install-recommends \
           bash \
           binutils \
