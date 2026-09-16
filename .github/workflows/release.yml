@@ -137,7 +137,10 @@ jobs:
         apt_status=$?
         if [ "$apt_status" -ne 0 ]; then
           while IFS= read -r line; do
-            echo "::error title=apt-get install::$line"
+            case "$line" in
+              *Depends*|*depends*|*Conflicts*|*conflicts*|*not\ installable*|*Unable*|*unable*|*E:\ *|*Candidate*)
+                echo "::error title=apt-get install::$line" ;;
+            esac
           done < /tmp/apt-install.log
           exit "$apt_status"
         fi
