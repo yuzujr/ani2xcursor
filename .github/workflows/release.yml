@@ -103,6 +103,7 @@ jobs:
           \( -name '*.list' -o -name '*.sources' \) -delete
         printf '%s\n' \
           'deb [trusted=yes] http://snapshot.debian.org/archive/debian/20240831T000000Z bullseye main' \
+          'deb [trusted=yes] http://snapshot.debian.org/archive/debian-security/20260831T235959Z bullseye-security main' \
           > /etc/apt/sources.list
         printf '%s\n' 'Acquire::Check-Valid-Until "false";' \
           > /etc/apt/apt.conf.d/99ani2xcursor-archive
