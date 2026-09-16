@@ -27,7 +27,7 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_ani_file(
 
     for (size_t step = 0; step < animation.num_steps; ++step) {
         const auto& frame = animation.get_step_frame(step);
-        uint32_t delay = frame.delay_ms;
+        uint32_t delay = animation.get_step_delay_ms(step);
 
         auto images = IcoCurDecoder::decode_all(frame.icon_data);
 
