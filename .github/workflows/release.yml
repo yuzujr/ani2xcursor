@@ -119,7 +119,6 @@ jobs:
           done < /tmp/apt-update.log
           exit "$apt_status"
         fi
-        set -e
         apt-get install -y --allow-unauthenticated --no-install-recommends \
           bash \
           binutils \
@@ -134,7 +133,15 @@ jobs:
           libxcursor-dev \
           locales \
           pkg-config \
-          squashfs-tools
+          squashfs-tools > /tmp/apt-install.log 2>&1
+        apt_status=$?
+        if [ "$apt_status" -ne 0 ]; then
+          while IFS= read -r line; do
+            echo "::error title=apt-get install::$line"
+          done < /tmp/apt-install.log
+          exit "$apt_status"
+        fi
+        set -e
         localedef -i en_US -f UTF-8 en_US.UTF-8
         localedef -i zh_CN -f UTF-8 zh_CN.UTF-8
 
