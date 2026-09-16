@@ -100,8 +100,8 @@ jobs:
         # Debian 11 reached end of LTS on 2026-08-31. Keep the Debian 11
         # userspace for the glibc 2.31 baseline, but use the Debian archive.
         printf '%s\n' \
-          'deb https://archive.debian.org/debian bullseye main' \
-          'deb https://archive.debian.org/debian bullseye-updates main' \
+          'deb http://archive.debian.org/debian bullseye main' \
+          'deb http://archive.debian.org/debian bullseye-updates main' \
           > /etc/apt/sources.list
         printf '%s\n' 'Acquire::Check-Valid-Until "false";' \
           > /etc/apt/apt.conf.d/99ani2xcursor-archive
