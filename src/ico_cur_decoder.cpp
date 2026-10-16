@@ -207,6 +207,10 @@ CursorImage IcoCurDecoder::decode_bmp(std::span<const uint8_t> data, const DirEn
     uint16_t bpp = reader.read_u16_le();
     uint32_t compression = reader.read_u32_le();
     [[maybe_unused]] uint32_t image_size = reader.read_u32_le();
+    [[maybe_unused]] int32_t x_px_per_meter = reader.read_i32_le();
+    [[maybe_unused]] int32_t y_px_per_meter = reader.read_i32_le();
+    uint32_t used_color_count = reader.read_u32_le();
+    [[maybe_unused]] uint32_t important_color_count = reader.read_u32_le();
     reader.skip(16);  // Skip resolution and color counts
 
     spdlog::debug("ICO/CUR BMP: header_size={}, {}x{}, planes={}, bpp={}, compression={}",
@@ -245,7 +249,9 @@ CursorImage IcoCurDecoder::decode_bmp(std::span<const uint8_t> data, const DirEn
     // Handle color palette
     std::vector<uint32_t> palette;
     if (bpp <= 8) {
-        uint32_t num_colors = 1u << bpp;
+        uint32_t num_colors = used_color_count;
+        if(!num_colors) num_colors = 1u << bpp;
+
         color_table_size = num_colors * 4;
         palette.reserve(num_colors);
 
