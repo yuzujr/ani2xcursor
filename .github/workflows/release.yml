@@ -63,6 +63,11 @@ jobs:
           IS_RELEASE=false
         fi
 
+        if [ "$IS_RELEASE" = true ] && [ "$VERSION" != "$(cat VERSION)" ]; then
+          echo "Release tag version ${VERSION} does not match VERSION ($(cat VERSION))." >&2
+          exit 1
+        fi
+
         echo "artifact_version=${ARTIFACT_VERSION}" >> "$GITHUB_OUTPUT"
         echo "is_release=${IS_RELEASE}" >> "$GITHUB_OUTPUT"
         echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
@@ -229,6 +234,8 @@ jobs:
       - build
 
     steps:
+    - uses: actions/checkout@v4
+
     - name: Download release artifacts
       uses: actions/download-artifact@v4
       with:
@@ -236,12 +243,23 @@ jobs:
         pattern: release-*
         merge-multiple: true
 
+    - name: Select release notes
+      id: release_notes
+      env:
+        RELEASE_VERSION: ${{ needs.prepare-release.outputs.version }}
+      run: |
+        notes_path="docs/releases/${RELEASE_VERSION}.md"
+        if [ -f "$notes_path" ]; then
+          echo "path=${notes_path}" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ needs.prepare-release.outputs.tag_name }}
         target_commitish: ${{ github.sha }}
         files: artifacts/*.AppImage
+        body_path: ${{ steps.release_notes.outputs.path }}
         body: |
           ## ani2xcursor v${{ needs.prepare-release.outputs.version }}
 
