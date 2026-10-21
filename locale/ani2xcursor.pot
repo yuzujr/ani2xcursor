@@ -731,3 +731,11 @@ msgstr ""
 #: src/ico_cur_decoder.cpp
 msgid "ICO/CUR: Invalid BMP color table"
 msgstr ""
+
+#: src/cli.cpp
+msgid "  --resample <mode>         Resampling: bilinear (default), nearest, auto\n"
+msgstr ""
+
+#: src/cli.cpp
+msgid "Invalid resampling mode: "
+msgstr ""

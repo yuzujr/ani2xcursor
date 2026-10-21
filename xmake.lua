@@ -76,6 +76,7 @@ target("ani2xcursor_test")
     
     add_files("tests/test_inf_parser.cpp")
     add_files("tests/test_cursor_regressions.cpp")
+    add_files("src/size_tools.cpp")
     add_files("src/cli.cpp")
     add_files("src/inf_parser.cpp")
     add_files("src/riff_reader.cpp")

@@ -97,6 +97,7 @@ ani2xcursor /path/to/cursor/folder
                                 max    - Export only largest size
                                 standard - Ensure sizes 24,30,32,36,40,48,64
                                 24,32  - Ensure sizes (reuse if present, rescale if missing)
+  --resample <mode>         Resampling: bilinear (default), nearest, auto
   --manifest, -m            Generate previews + manifest.toml then exit
   --list, -l                Show available sizes in cursor files then exit
   --install, -i             Install theme to $XDG_DATA_HOME/icons
@@ -164,6 +165,24 @@ text = "24,30,32,36,40,48,64"
 Repeat for the other mapped roles, including any cursor with an unusual native
 size. The manifest accepts numeric lists; use the list above rather than the word
 `standard`. Rescaling cannot add detail absent from the original image.
+
+### Resampling quality
+
+Use `--resample` to choose how missing target sizes are generated:
+
+| Mode | Behavior |
+| --- | --- |
+| `bilinear` (default) | Interpolate pixels for smoother edges when enlarging or reducing. This can blur pixel art. |
+| `nearest` | Copy the nearest source pixels, preserving the original colors and hard pixel edges. Reduction can discard fine details. |
+| `auto` | Use nearest neighbor for enlargement and bilinear interpolation for reduction. |
+
+```bash
+ani2xcursor /path/to/cursor/folder --size standard --resample nearest
+```
+
+The option applies to ANI and CUR conversion in both output formats, including
+when sizes come from a manifest. Images already at a requested size are reused.
+Every mode scales the hotspot directly from the source dimensions once.
 
 ## Enable Theme
 

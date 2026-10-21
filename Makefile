@@ -13,7 +13,7 @@ OBJS   := $(patsubst src/%.cpp, $(OBJDIR)/%.o, $(SRCS))
 TARGET := $(BUILDDIR)/ani2xcursor
 TEST_TARGET := $(BUILDDIR)/ani2xcursor_test
 TEST_OBJS := $(OBJDIR)/test_inf_parser.o $(OBJDIR)/test_cursor_regressions.o
-TEST_LIB_OBJS := $(addprefix $(OBJDIR)/,cli.o inf_parser.o riff_reader.o ani_parser.o ico_cur_decoder.o path_utils.o xcursor_writer.o)
+TEST_LIB_OBJS := $(addprefix $(OBJDIR)/,cli.o inf_parser.o riff_reader.o ani_parser.o ico_cur_decoder.o path_utils.o xcursor_writer.o size_tools.o)
 
 PKG_CFLAGS := $(shell pkg-config --cflags spdlog xcursor stb)
 PKG_LIBS   := $(shell pkg-config --libs   spdlog xcursor) -lpthread

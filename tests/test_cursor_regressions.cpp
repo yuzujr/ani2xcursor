@@ -1,5 +1,6 @@
 #include "cli.h"
 #include "ico_cur_decoder.h"
+#include "size_tools.h"
 
 #include <cstdint>
 #include <iostream>
@@ -111,5 +112,65 @@ void test_cursor_regressions() {
             "All mode retained old sizes");
     auto last_preset = parse_sizes({"-s", "16", "-s", "standard"});
     require(last_preset.specific_sizes == standard, "Preset retained old numeric sizes");
+
+    std::cout << "Test: resampling selection, pixel art colors, and hotspots...\n";
+    using ani2xcursor::Resampling;
+    using ani2xcursor::rescale_cursor;
+    require(parse_sizes({"--resample", "nearest"}).resampling == Resampling::Nearest,
+            "CLI did not select nearest neighbor");
+    require(parse_sizes({"--resample", "auto"}).resampling == Resampling::Auto,
+            "CLI did not select automatic resampling");
+    require(parse_sizes({"--resample", "bilinear"}).resampling == Resampling::Bilinear,
+            "CLI did not select bilinear resampling");
+    require(parse_sizes({}).resampling == Resampling::Bilinear,
+            "Default resampling changed");
+    bool invalid_mode = false;
+    try {
+        parse_sizes({"--resample", "unknown"});
+    } catch (const std::exception&) {
+        invalid_mode = true;
+    }
+    require(invalid_mode, "Unknown resampling mode was accepted");
+
+    ani2xcursor::CursorImage checker{};
+    checker.width = checker.height = 2;
+    checker.hotspot_x = checker.hotspot_y = 1;
+    checker.pixels = {0, 0, 0, 255, 255, 255, 255, 255,
+                     255, 255, 255, 255, 0, 0, 0, 255};
+    auto nearest = rescale_cursor(checker, 4, Resampling::Nearest);
+    for (uint32_t y = 0; y < 4; ++y) {
+        for (uint32_t x = 0; x < 4; ++x) {
+            uint8_t expected = ((x / 2) == (y / 2)) ? 0 : 255;
+            size_t p = (y * 4 + x) * 4;
+            require(nearest.pixels[p] == expected && nearest.pixels[p + 1] == expected &&
+                        nearest.pixels[p + 2] == expected && nearest.pixels[p + 3] == 255,
+                    "Nearest neighbor changed pixel art colors or block boundaries");
+        }
+    }
+    require(nearest.hotspot_x == 2 && nearest.hotspot_y == 2, "Enlarged hotspot is wrong");
+    auto bilinear = rescale_cursor(checker, 4, Resampling::Bilinear);
+    require(bilinear.pixels[4] > 0 && bilinear.pixels[4] < 255,
+            "Bilinear interpolation did not blend the edge");
+    require(rescale_cursor(checker, 4).pixels == bilinear.pixels,
+            "Default no longer matches bilinear");
+    require(rescale_cursor(checker, 4, Resampling::Auto).pixels == nearest.pixels,
+            "Auto enlargement did not preserve pixel art");
+    require(rescale_cursor(checker, 1, Resampling::Auto).pixels ==
+                std::vector<uint8_t>({128, 128, 128, 255}),
+            "Auto reduction did not blend checkerboard pixels");
+    require(rescale_cursor(checker, 1, Resampling::Nearest).pixels ==
+                std::vector<uint8_t>({0, 0, 0, 255}),
+            "Nearest reduction did not preserve the source color");
+    for (Resampling mode : {Resampling::Bilinear, Resampling::Nearest, Resampling::Auto}) {
+        require(rescale_cursor(checker, 2, mode).pixels == checker.pixels,
+                "Same-size resampling modified pixels");
+        ani2xcursor::CursorImage large{};
+        large.width = large.height = 64;
+        large.hotspot_x = large.hotspot_y = 3;
+        large.pixels.assign(64 * 64 * 4, 255);
+        auto reduced = rescale_cursor(large, 30, mode);
+        require(reduced.hotspot_x == 1 && reduced.hotspot_y == 1,
+                "Hotspot was rounded through an intermediate size");
+    }
     std::cout << "  PASSED!\n";
 }

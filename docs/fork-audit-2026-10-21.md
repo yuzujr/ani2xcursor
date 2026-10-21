@@ -38,7 +38,11 @@ not submitting a PR.
 Recommended follow-up: an explicit resampling option, preserving the existing
 default and offering nearest neighbor for pixel art. Evaluate reduction quality
 and hotspot accuracy separately before adopting the second fork's approach.
-No fork resizing changes were incorporated during this maintenance pass.
+No fork commits were merged during this maintenance pass. A follow-up now offers
+`--resample bilinear|nearest|auto`: bilinear retains the existing default; nearest
+preserves source pixel colors; auto uses nearest neighbor for enlargement and
+bilinear interpolation for reduction. Each mode calculates the hotspot directly
+from the source dimensions once, avoiding the intermediate-size rounding above.
 
 ## Validation of the current maintenance changes
 
@@ -52,6 +56,14 @@ No fork resizing changes were incorporated during this maintenance pass.
 - Verified that `--size standard` creates all seven requested sizes for a theme
   configured through an INF file. Existing manifest precedence is documented.
 - Validated the Chinese gettext catalog and built and ran the local test suite.
+- Reproduced the original artifacts with the upstream decoder and visually
+  inspected a comparison of all ten original cursors, broken output, and fixed
+  output. The local comparison is saved in `build/validation/issue5-comparison.png`.
+- Checked all three resampling modes against independent pixel and hotspot
+  calculations using the ten real ANI files at 30px and 96px: all 300 combinations
+  matched. Also converted manifest-configured CUR files to source output in each
+  mode. Added regression tests for pixel colors, auto selection, and hotspot
+  rounding.
 
 The sample checks validate conversion output. They do not reproduce a KDE/Wayland
 desktop session or establish how each compositor selects and displays sizes.

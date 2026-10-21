@@ -348,10 +348,12 @@ int main(int argc, char* argv[]) {
                     frames_delays;
                 if (ani2xcursor::is_cur_file(cursor_path)) {
                     frames_delays =
-                        ani2xcursor::process_cur_file(cursor_path, size_filter, specific_sizes);
+                        ani2xcursor::process_cur_file(cursor_path, size_filter, specific_sizes,
+                                                     args.resampling);
                 } else if (ani2xcursor::is_ani_file(cursor_path)) {
                     frames_delays =
-                        ani2xcursor::process_ani_file(cursor_path, size_filter, specific_sizes);
+                        ani2xcursor::process_ani_file(cursor_path, size_filter, specific_sizes,
+                                                     args.resampling);
                 } else {
                     throw std::runtime_error(_("Unsupported cursor file type"));
                 }

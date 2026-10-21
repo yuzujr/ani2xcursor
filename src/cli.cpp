@@ -24,6 +24,7 @@ void print_usage(const char* program) {
         << _("                                standard - Ensure sizes 24,30,32,36,40,48,64\n")
         << _("                                24,32  - Ensure sizes (reuse if present, rescale "
              "if missing)\n")
+        << _("  --resample <mode>         Resampling: bilinear (default), nearest, auto\n")
         << _("  --manifest, -m            Generate previews + manifest.toml then exit\n")
         << _("  --list, -l                Show available sizes in cursor files then "
              "exit\n")
@@ -65,6 +66,17 @@ Args parse_args(int argc, char* argv[]) {
                 args.format = OutputFormat::Source;
             } else {
                 throw std::runtime_error(gettext("Invalid format: ") + fmt);
+            }
+        } else if (arg == "--resample" && i + 1 < argc) {
+            std::string mode = argv[++i];
+            if (mode == "bilinear") {
+                args.resampling = Resampling::Bilinear;
+            } else if (mode == "nearest") {
+                args.resampling = Resampling::Nearest;
+            } else if (mode == "auto") {
+                args.resampling = Resampling::Auto;
+            } else {
+                throw std::runtime_error(_("Invalid resampling mode: ") + mode);
             }
         } else if ((arg == "--out" || arg == "-o") && i + 1 < argc) {
             args.output_dir = argv[++i];

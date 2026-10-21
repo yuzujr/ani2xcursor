@@ -746,3 +746,11 @@ msgstr "ICO/CUR：无效的 BMP 头大小"
 #: src/ico_cur_decoder.cpp
 msgid "ICO/CUR: Invalid BMP color table"
 msgstr "ICO/CUR：无效的 BMP 调色板"
+
+#: src/cli.cpp
+msgid "  --resample <mode>         Resampling: bilinear (default), nearest, auto\n"
+msgstr "  --resample <mode>         缩放算法：bilinear（默认）、nearest、auto\n"
+
+#: src/cli.cpp
+msgid "Invalid resampling mode: "
+msgstr "无效的缩放算法："
