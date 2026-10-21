@@ -11,15 +11,27 @@ OBJDIR   := $(BUILDDIR)/obj
 SRCS   := $(wildcard src/*.cpp)
 OBJS   := $(patsubst src/%.cpp, $(OBJDIR)/%.o, $(SRCS))
 TARGET := $(BUILDDIR)/ani2xcursor
+TEST_TARGET := $(BUILDDIR)/ani2xcursor_test
+TEST_OBJS := $(OBJDIR)/test_inf_parser.o $(OBJDIR)/test_cursor_regressions.o
+TEST_LIB_OBJS := $(addprefix $(OBJDIR)/,cli.o inf_parser.o riff_reader.o ani_parser.o ico_cur_decoder.o path_utils.o xcursor_writer.o)
 
 PKG_CFLAGS := $(shell pkg-config --cflags spdlog xcursor stb)
 PKG_LIBS   := $(shell pkg-config --libs   spdlog xcursor) -lpthread
 
 ALL_CXXFLAGS := $(CXXFLAGS) -Iinclude -DANI2XCURSOR_VERSION=\"$(VERSION)\" $(PKG_CFLAGS)
 
-.PHONY: all install clean
+.PHONY: all install clean test
 
 all: $(TARGET)
+
+test: $(TEST_TARGET)
+	./$(TEST_TARGET)
+
+$(TEST_TARGET): $(TEST_OBJS) $(TEST_LIB_OBJS) | $(BUILDDIR)
+	$(CXX) $(ALL_CXXFLAGS) -o $@ $^ $(PKG_LIBS)
+
+$(OBJDIR)/test_%.o: tests/test_%.cpp | $(OBJDIR)
+	$(CXX) $(ALL_CXXFLAGS) -c -o $@ $<
 
 $(TARGET): $(OBJS) | $(BUILDDIR)
 	$(CXX) $(ALL_CXXFLAGS) -o $@ $^ $(PKG_LIBS)
@@ -53,4 +65,4 @@ install: all
 	done
 
 clean:
-	rm -rf $(OBJDIR) $(TARGET)
+	rm -rf $(OBJDIR) $(TARGET) $(TEST_TARGET)

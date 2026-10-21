@@ -17,7 +17,7 @@ complete -c ani2xcursor -l format -s f -r -f \
 
 # --size, -s <mode>
 complete -c ani2xcursor -l size -s s -r -f \
-    -a "all max" \
+    -a "all max standard" \
     -d "Size selection mode (default: all)"
 
 # --manifest, -m

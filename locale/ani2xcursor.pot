@@ -719,3 +719,15 @@ msgstr ""
 #, c++-format
 msgid "{}: {}"
 msgstr ""
+
+#: src/cli.cpp
+msgid "                                standard - Ensure sizes 24,30,32,36,40,48,64\n"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp
+msgid "ICO/CUR: Invalid BMP header size"
+msgstr ""
+
+#: src/ico_cur_decoder.cpp
+msgid "ICO/CUR: Invalid BMP color table"
+msgstr ""

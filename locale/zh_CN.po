@@ -734,3 +734,15 @@ msgstr "超出范围"
 #, c++-format
 msgid "{}: {}"
 msgstr "{}: {}"
+
+#: src/cli.cpp
+msgid "                                standard - Ensure sizes 24,30,32,36,40,48,64\n"
+msgstr "                                standard - 确保导出 24,30,32,36,40,48,64 尺寸\n"
+
+#: src/ico_cur_decoder.cpp
+msgid "ICO/CUR: Invalid BMP header size"
+msgstr "ICO/CUR：无效的 BMP 头大小"
+
+#: src/ico_cur_decoder.cpp
+msgid "ICO/CUR: Invalid BMP color table"
+msgstr "ICO/CUR：无效的 BMP 调色板"

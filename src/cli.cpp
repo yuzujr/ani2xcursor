@@ -21,6 +21,7 @@ void print_usage(const char* program) {
         << _("  --size, -s <mode>         Size selection mode:\n")
         << _("                                all    - Export all sizes (default)\n")
         << _("                                max    - Export only largest size\n")
+        << _("                                standard - Ensure sizes 24,30,32,36,40,48,64\n")
         << _("                                24,32  - Ensure sizes (reuse if present, rescale "
              "if missing)\n")
         << _("  --manifest, -m            Generate previews + manifest.toml then exit\n")
@@ -69,10 +70,14 @@ Args parse_args(int argc, char* argv[]) {
             args.output_dir = argv[++i];
         } else if ((arg == "--size" || arg == "-s") && i + 1 < argc) {
             std::string sizes_arg = argv[++i];
+            args.specific_sizes.clear();
             if (sizes_arg == "all") {
                 args.size_filter = SizeFilter::All;
             } else if (sizes_arg == "max") {
                 args.size_filter = SizeFilter::Max;
+            } else if (sizes_arg == "standard") {
+                args.size_filter = SizeFilter::Specific;
+                args.specific_sizes = {24, 30, 32, 36, 40, 48, 64};
             } else {
                 // Parse comma-separated list of sizes
                 args.size_filter = SizeFilter::Specific;

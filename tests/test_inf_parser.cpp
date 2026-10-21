@@ -543,6 +543,8 @@ void test_find_inf_file_prefers_install_inf() {
 // ============================================================================
 // Main
 // ============================================================================
+void test_cursor_regressions();
+
 int main() {
     spdlog::set_level(spdlog::level::warn);  // Reduce noise during tests
 
@@ -563,6 +565,7 @@ int main() {
         test_find_inf_file_localized_name();
         test_find_inf_file_prefers_installer_like_candidate();
         test_find_inf_file_prefers_install_inf();
+        test_cursor_regressions();
 
         std::cout << "\n=== All tests passed! ===\n\n";
         return 0;
