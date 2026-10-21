@@ -17,8 +17,13 @@ complete -c ani2xcursor -l format -s f -r -f \
 
 # --size, -s <mode>
 complete -c ani2xcursor -l size -s s -r -f \
-    -a "all max" \
+    -a "all max standard" \
     -d "Size selection mode (default: all)"
+
+# --resample
+complete -c ani2xcursor -l resample -r -f \
+    -a "bilinear nearest auto" \
+    -d "Resampling method (default: bilinear)"
 
 # --manifest, -m
 complete -c ani2xcursor -l manifest -s m \

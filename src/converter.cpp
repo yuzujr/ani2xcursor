@@ -17,7 +17,7 @@ namespace ani2xcursor {
 
 std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_ani_file(
     const std::filesystem::path& ani_path, SizeFilter filter,
-    const std::vector<uint32_t>& specific_sizes) {
+    const std::vector<uint32_t>& specific_sizes, Resampling resampling) {
     spdlog::info(spdlog::fmt_lib::runtime(_("Processing: {}")), ani_path.filename().string());
 
     auto animation = AniParser::parse(ani_path);
@@ -79,7 +79,7 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_ani_file(
             for (size_t step = 0; step < frames_by_step.size(); ++step) {
                 const auto& img = frames_by_step[step][source_idx];
                 if (needs_rescale) {
-                    decoded_frames.push_back(rescale_cursor(img, target_size));
+                    decoded_frames.push_back(rescale_cursor(img, target_size, resampling));
                 } else {
                     decoded_frames.push_back(img);
                 }
@@ -126,7 +126,7 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_ani_file(
 
 std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_cur_file(
     const std::filesystem::path& cur_path, SizeFilter filter,
-    const std::vector<uint32_t>& specific_sizes) {
+    const std::vector<uint32_t>& specific_sizes, Resampling resampling) {
     spdlog::info(spdlog::fmt_lib::runtime(_("Processing: {}")), cur_path.filename().string());
     auto data = utils::read_file(cur_path);
     auto images = IcoCurDecoder::decode_all(data);
@@ -155,7 +155,7 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_cur_file(
             if (needs_rescale) {
                 spdlog::info(spdlog::fmt_lib::runtime(_("Rescaling {}x{} -> {}x{}")), source_size,
                              source_size, target_size, target_size);
-                decoded_images.push_back(rescale_cursor(images[source_idx], target_size));
+                decoded_images.push_back(rescale_cursor(images[source_idx], target_size, resampling));
             } else {
                 decoded_images.push_back(images[source_idx]);
             }

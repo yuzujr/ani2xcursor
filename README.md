@@ -95,7 +95,9 @@ ani2xcursor /path/to/cursor/folder
   --size, -s <mode>         Size selection mode:
                                 all    - Export all sizes (default)
                                 max    - Export only largest size
+                                standard - Ensure sizes 24,30,32,36,40,48,64
                                 24,32  - Ensure sizes (reuse if present, rescale if missing)
+  --resample <mode>         Resampling: bilinear (default), nearest, auto
   --manifest, -m            Generate previews + manifest.toml then exit
   --list, -l                Show available sizes in cursor files then exit
   --install, -i             Install theme to $XDG_DATA_HOME/icons
@@ -133,6 +135,54 @@ text    = "32, 48"
 ```
 
 If a role is left empty, its current sizes are preserved.
+
+### Wayland and fractional scaling
+
+By default, `--size all` preserves the sizes present in each input file. It does not
+generate additional sizes or normalize differences between cursors in a theme
+(for example, 32px and 33px).
+
+For KDE Plasma, fractional scaling, or a custom cursor size such as 30px, try:
+
+```bash
+ani2xcursor /path/to/cursor/folder --size standard --install
+```
+
+The `standard` preset exports 24, 30, 32, 36, 40, 48, and 64px, rescaling when
+necessary. Use a numeric list if your desktop requests another size. This can help
+when cursors appear at different sizes or look blurry across applications; behavior
+also depends on the compositor and application.
+
+**If `manifest.toml` exists, its sizes take priority and `--size` is ignored.**
+Set the same numeric list for each mapped role in its `[sizes]` section:
+
+```toml
+[sizes]
+pointer = "24,30,32,36,40,48,64"
+text = "24,30,32,36,40,48,64"
+```
+
+Repeat for the other mapped roles, including any cursor with an unusual native
+size. The manifest accepts numeric lists; use the list above rather than the word
+`standard`. Rescaling cannot add detail absent from the original image.
+
+### Resampling quality
+
+Use `--resample` to choose how missing target sizes are generated:
+
+| Mode | Behavior |
+| --- | --- |
+| `bilinear` (default) | Interpolate pixels for smoother edges when enlarging or reducing. This can blur pixel art. |
+| `nearest` | Copy the nearest source pixels, preserving the original colors and hard pixel edges. Reduction can discard fine details. |
+| `auto` | Use nearest neighbor for enlargement and bilinear interpolation for reduction. |
+
+```bash
+ani2xcursor /path/to/cursor/folder --size standard --resample nearest
+```
+
+The option applies to ANI and CUR conversion in both output formats, including
+when sizes come from a manifest. Images already at a requested size are reused.
+Every mode scales the hotspot directly from the source dimensions once.
 
 ## Enable Theme
 

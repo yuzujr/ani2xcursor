@@ -45,7 +45,7 @@ size_t find_closest_size_index(std::span<const CursorImage> images, uint32_t tar
     return best_idx;
 }
 
-CursorImage rescale_cursor(const CursorImage& src, uint32_t target_size) {
+CursorImage rescale_cursor(const CursorImage& src, uint32_t target_size, Resampling resampling) {
     if (target_size == 0) {
         throw std::runtime_error(_("Invalid target size"));
     }
@@ -85,6 +85,21 @@ CursorImage rescale_cursor(const CursorImage& src, uint32_t target_size) {
         std::clamp(std::round(src.hotspot_x * scale_x), 0.0, static_cast<double>(new_w - 1)));
     out.hotspot_y = static_cast<uint16_t>(
         std::clamp(std::round(src.hotspot_y * scale_y), 0.0, static_cast<double>(new_h - 1)));
+
+    bool nearest = resampling == Resampling::Nearest ||
+                   (resampling == Resampling::Auto && target_size > src_nominal);
+    if (nearest) {
+        for (uint32_t y = 0; y < new_h; ++y) {
+            uint32_t src_y = static_cast<uint32_t>(static_cast<uint64_t>(y) * src.height / new_h);
+            for (uint32_t x = 0; x < new_w; ++x) {
+                uint32_t src_x = static_cast<uint32_t>(static_cast<uint64_t>(x) * src.width / new_w);
+                size_t src_idx = (static_cast<size_t>(src_y) * src.width + src_x) * 4;
+                size_t dst_idx = (static_cast<size_t>(y) * new_w + x) * 4;
+                std::copy_n(src.pixels.begin() + src_idx, 4, out.pixels.begin() + dst_idx);
+            }
+        }
+        return out;
+    }
 
     auto sample = [&](int x, int y, int c) -> uint8_t {
         size_t idx = (static_cast<size_t>(y) * src.width + static_cast<size_t>(x)) * 4 + c;

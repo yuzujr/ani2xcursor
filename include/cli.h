@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "size_filter.h"
+#include "resampling.h"
 
 #define _(String) gettext(String)
 
@@ -28,6 +29,7 @@ struct Args {
     SizeFilter size_filter = SizeFilter::All;
     std::vector<uint32_t> specific_sizes;
     OutputFormat format = OutputFormat::Xcursor;
+    Resampling resampling = Resampling::Bilinear;
 };
 
 void print_usage(const char* program);
